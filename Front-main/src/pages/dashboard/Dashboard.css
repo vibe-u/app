@@ -34,7 +34,7 @@ h3 {
   margin: auto;
   gap: 18px;
   padding: 0 14px;
-  background-color: green;
+  background: linear-gradient(140deg, #fdf7fb 0%, #f8f4ff 45%, #f3f9ff 100%);
 }
 
 .sidebar__dash,
@@ -160,8 +160,8 @@ button {
   border: 0;
   border-radius: 12px;
   padding: 10px 16px;
-  background: linear-gradient(135deg, var(--brand) 0%, var(--brand-dark) 100%);
-  color: #fff;
+  background: linear-gradient(135deg, #6c0063 0%, #b0005c 100%);
+  color: rgb(255, 245, 245);
   font-weight: 700;
   cursor: pointer;
 }
@@ -264,6 +264,36 @@ button:hover {
   padding: 10px;
   margin-bottom: 8px;
   background: #fff;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+}
+
+.chat_item__dash p {
+  margin: 6px 0 0;
+  color: #7a2f73;
+}
+
+.chat_item_row__dash {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.chat_item_row__dash span {
+  color: #7a2f73;
+  font-size: 0.8rem;
+}
+
+.chat_item_active__dash {
+  border-color: #d68bb8;
+  background: #fff6fb;
+}
+
+.chat_hint__dash {
+  color: #7a2f73;
+  margin: 10px 0;
 }
 
 .chat_messages__dash {
@@ -287,6 +317,12 @@ button:hover {
   background: #f6e7ff;
 }
 
+.chat_messages__dash .chat_empty__dash {
+  max-width: 100%;
+  text-align: center;
+  color: #7a2f73;
+}
+
 .chat_input__dash {
   display: flex;
   gap: 8px;
@@ -295,6 +331,11 @@ button:hover {
 
 .chat_input__dash input {
   flex: 1;
+}
+
+.chat_error__dash {
+  color: #b0005c;
+  margin: 8px 0 0;
 }
 
 .events_grid__dash {
@@ -344,6 +385,8 @@ button:hover {
   display: grid;
   gap: 8px;
   margin-top: 12px;
+  background-color: #dca5c6;
+  color: black;
 }
 
 .hub_grid__dash {

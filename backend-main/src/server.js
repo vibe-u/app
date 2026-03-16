@@ -7,6 +7,7 @@ import gruposRouter from "./routers/grupos_routes.js";
 import adminRoutes from './routers/admin_routes.js';
 import automatizacionRouter from "./routers/automatizacion_routes.js";
 import postsRouter from "./routers/posts.routes.js";
+import chatRouter from "./routers/chat_routes.js";
 import path from "path";
 import { fileURLToPath } from "url";
 
@@ -31,6 +32,7 @@ app.use("/api/grupos", gruposRouter);
 app.use("/api/admins", adminRoutes);
 app.use("/api/automatizacion", automatizacionRouter);
 app.use("/api", postsRouter);
+app.use("/api/chat", chatRouter);
 
 app.use((req, res) => res.status(404).send("Endpoint no encontrado - 404"));
 

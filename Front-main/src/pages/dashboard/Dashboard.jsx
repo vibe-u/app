@@ -119,10 +119,10 @@ const Dashboard = () => {
           <section className="panel__dash">
             <h3>Cuenta</h3>
             <div className="settings_grid__dash">
-              <button className="button__dash" onClick={() => navigate("/actualizar-info")}>Actualizar informacion</button>
-              <button className="button__dash" onClick={() => navigate("/actualizar-pass")}>Cambiar password</button>
-              <button className="button__dash" onClick={() => navigate("/ajustes")}>Abrir ajustes</button>
-              <button className="button__dash" onClick={cerrarSesion}>Cerrar sesion</button>
+              <button className="button__dash1" onClick={() => navigate("/actualizar-info")}>Actualizar informacion</button>
+              <button className="button__dash1" onClick={() => navigate("/actualizar-pass")}>Cambiar password</button>
+              <button className="button__dash1" onClick={() => navigate("/ajustes")}>Abrir ajustes</button>
+              <button className="button__dash1" onClick={cerrarSesion}>Cerrar sesion</button>
             </div>
           </section>
         )}

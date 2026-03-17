@@ -238,7 +238,15 @@ h3 {
   font-weight: 700;
   cursor: pointer;
 }
-
+.button__dash1 {
+  border: 0;
+  border-radius: 12px;
+  padding: 10px 16px;
+  background: linear-gradient(135deg, #20041d6f 0%, #b0005c 100%);
+  color: rgb(255, 245, 245);
+  font-weight: 700;
+  cursor: pointer;
+}   
 .button__dash:hover {
   filter: brightness(1.05);
 }
@@ -378,6 +386,40 @@ h3 {
   font-size: 0.74rem;
 }
 
+.confirm_modal_overlay__dash {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 6, 20, 0.48);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1200;
+}
+
+.confirm_modal__dash {
+  width: min(92vw, 420px);
+  background: #fff;
+  border: 1px solid #ebc5dc;
+  border-radius: 14px;
+  box-shadow: 0 12px 28px rgba(108, 0, 99, 0.2);
+  padding: 16px;
+}
+
+.confirm_modal__dash h4 {
+  margin: 0 0 8px;
+}
+
+.confirm_modal__dash p {
+  margin: 0 0 12px;
+  color: #5d2056;
+}
+
+.confirm_modal_actions__dash {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
 .post_meta__dash {
   display: flex;
   justify-content: space-between;
@@ -410,6 +452,13 @@ h3 {
   display: grid;
   grid-template-columns: 320px 1fr;
   gap: 12px;
+  overflow: hidden;
+}
+
+.chat_layout__dash > .panel__dash {
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .chat_item__dash {
@@ -453,7 +502,7 @@ h3 {
 .chat_conversation_panel__dash {
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 130px);
+  min-height: 0;
 }
 
 .chat_messages__dash {
@@ -547,7 +596,6 @@ h3 {
   display: grid;
   gap: 8px;
   margin-top: 12px;
-  background-color: #dca5c6;
   color: black;
 }
 
@@ -586,18 +634,11 @@ h3 {
 
   .chat_layout__dash {
     grid-template-columns: 1fr;
-  }
-
-  .chat_conversation_panel__dash {
-    height: auto;
+    height: calc(100vh - 210px);
   }
 
   .chat_messages__dash {
-    max-height: 60vh;
-  }
-
-  .actions__dash .input__dash {
-    width: 100%;
+    max-height: none;
   }
 
   .profile_public__dash {

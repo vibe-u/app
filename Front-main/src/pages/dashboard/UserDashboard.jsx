@@ -191,11 +191,11 @@ export const PostCard = ({ post, onLike, onComment, onDeletePost, onDeleteCommen
 
       <div className="post_actions__dash">
         <button type="button" className="post_like_btn__dash" onClick={() => onLike?.(post._id)}>
-          Me gusta
+          ❤️ Me gusta
         </button>
         {currentUserId && postOwnerId === currentUserId ? (
           <button type="button" className="post_delete_btn__dash" onClick={() => onDeletePost?.(post._id)}>
-            Eliminar post
+            🗑️ Eliminar post
           </button>
         ) : null}
         <button
@@ -203,7 +203,7 @@ export const PostCard = ({ post, onLike, onComment, onDeletePost, onDeleteCommen
           className="post_comment_btn__dash"
           onClick={() => setShowComments((prev) => !prev)}
         >
-          Comentarios ({comentarios})
+          💬 Comentarios ({comentarios})
         </button>
       </div>
 
@@ -224,7 +224,7 @@ export const PostCard = ({ post, onLike, onComment, onDeletePost, onDeleteCommen
                       className="comment_delete_btn__dash"
                       onClick={() => onDeleteComment?.(post._id, comment._id)}
                     >
-                      Eliminar
+                      🗑️ Eliminar
                     </button>
                   ) : null}
                 </div>
@@ -250,7 +250,7 @@ export const PostCard = ({ post, onLike, onComment, onDeletePost, onDeleteCommen
                 setCommentText("");
               }}
             >
-              Comentar
+              💬 Comentar
             </button>
           </div>
         </>
@@ -261,6 +261,12 @@ export const PostCard = ({ post, onLike, onComment, onDeletePost, onDeleteCommen
 
 export const Feed = ({ refreshKey = 0 }) => {
   const [posts, setPosts] = useState([]);
+  const [confirmModal, setConfirmModal] = useState({
+    open: false,
+    type: null,
+    postId: null,
+    commentId: null,
+  });
 
   useEffect(() => {
     const cargarPosts = async () => {
@@ -303,26 +309,47 @@ export const Feed = ({ refreshKey = 0 }) => {
   };
 
   const handleDeletePost = async (postId) => {
-    try {
-      if (!token) return;
-      const confirmed = window.confirm("Estas seguro de eliminar esta publicacion?");
-      if (!confirmed) return;
-      await eliminarPost(postId, token);
-      setPosts((prev) => prev.filter((post) => post._id !== postId));
-    } catch (error) {
-      console.error(error);
-    }
+    setConfirmModal({
+      open: true,
+      type: "post",
+      postId,
+      commentId: null,
+    });
   };
 
   const handleDeleteComment = async (postId, commentId) => {
+    setConfirmModal({
+      open: true,
+      type: "comment",
+      postId,
+      commentId,
+    });
+  };
+
+  const closeConfirmModal = () => {
+    setConfirmModal({
+      open: false,
+      type: null,
+      postId: null,
+      commentId: null,
+    });
+  };
+
+  const confirmDeleteAction = async () => {
     try {
       if (!token) return;
-      const confirmed = window.confirm("Estas seguro de eliminar este comentario?");
-      if (!confirmed) return;
-      const res = await eliminarComentarioPost(postId, commentId, token);
-      replacePostInState(res.data);
+      if (confirmModal.type === "post" && confirmModal.postId) {
+        await eliminarPost(confirmModal.postId, token);
+        setPosts((prev) => prev.filter((post) => post._id !== confirmModal.postId));
+      }
+      if (confirmModal.type === "comment" && confirmModal.postId && confirmModal.commentId) {
+        const res = await eliminarComentarioPost(confirmModal.postId, confirmModal.commentId, token);
+        replacePostInState(res.data);
+      }
     } catch (error) {
       console.error(error);
+    } finally {
+      closeConfirmModal();
     }
   };
 
@@ -349,6 +376,27 @@ export const Feed = ({ refreshKey = 0 }) => {
           />
         ))}
       </div>
+
+      {confirmModal.open ? (
+        <div className="confirm_modal_overlay__dash" role="dialog" aria-modal="true">
+          <div className="confirm_modal__dash">
+            <h4>Confirmar eliminacion</h4>
+            <p>
+              {confirmModal.type === "post"
+                ? "Seguro de eliminar esta publicacion?"
+                : "Seguro de eliminar este comentario?"}
+            </p>
+            <div className="confirm_modal_actions__dash">
+              <button type="button" className="button__dash" onClick={closeConfirmModal}>
+                Cancelar
+              </button>
+              <button type="button" className="post_delete_btn__dash" onClick={confirmDeleteAction}>
+                Eliminar
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 };

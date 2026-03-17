@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import axios from "axios";
 import storeAuth from "./storeAuth";
+import { isTokenExpired } from "../utils/authToken";
 
 const storeProfile = create((set) => ({
   user: null,
@@ -8,17 +9,15 @@ const storeProfile = create((set) => ({
   clearUser: () => set({ user: null }),
 
   profile: async () => {
-    const token = storeAuth.getState().token;
-
-    // 🚫 NO pedir perfil si no hay token
-    if (!token) {
-      console.log("⛔ No hay token, no se pide perfil");
+    const { token, clearToken } = storeAuth.getState();
+    if (!token || isTokenExpired(token)) {
+      clearToken();
+      localStorage.removeItem("token");
       return;
     }
 
     try {
       const url = `${import.meta.env.VITE_BACKEND_URL}/api/usuarios/perfil`;
-
       const respuesta = await axios.get(url, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -27,10 +26,11 @@ const storeProfile = create((set) => ({
 
       set({ user: respuesta.data });
     } catch (error) {
-      console.error(
-        "Error al obtener perfil:",
-        error.response?.data || error
-      );
+      if (error?.response?.status === 401) {
+        clearToken();
+        localStorage.removeItem("token");
+      }
+      console.error("Error al obtener perfil:", error.response?.data || error);
     }
   },
 }));

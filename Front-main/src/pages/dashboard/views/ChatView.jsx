@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   getChatConversations,
   getChatUsers,
@@ -23,6 +23,7 @@ const ChatView = () => {
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
+  const messagesEndRef = useRef(null);
 
   const loadUsers = async (searchValue = "") => {
     const { data } = await getChatUsers(searchValue);
@@ -110,6 +111,10 @@ const ChatView = () => {
     return () => clearInterval(interval);
   }, [activeUserId]);
 
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+  }, [messages]);
+
   const handleSearch = async (value) => {
     setSearch(value);
     try {
@@ -140,7 +145,7 @@ const ChatView = () => {
     <section className="chat_layout__dash">
       <div className="panel__dash">
         <h3>Chats recientes</h3>
-        <input
+        <input className="input__dash"
           value={search}
           onChange={(e) => handleSearch(e.target.value)}
           placeholder="Buscar por nombre o correo..."
@@ -167,7 +172,7 @@ const ChatView = () => {
         ))}
       </div>
 
-      <div className="panel__dash">
+      <div className="panel__dash chat_conversation_panel__dash">
         <h3>Conversacion con {activeUser?.nombre || "..."}</h3>
         <div className="chat_messages__dash">
           {messages.map((msg) => (
@@ -178,9 +183,11 @@ const ChatView = () => {
           {!messages.length && activeUser ? (
             <p className="chat_empty__dash">Aun no hay mensajes. Escribe el primero.</p>
           ) : null}
+          <div ref={messagesEndRef} />
         </div>
         <div className="chat_input__dash">
           <input
+            className="input__dash"
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
             onKeyDown={(e) => {
@@ -190,6 +197,7 @@ const ChatView = () => {
             disabled={!activeUser}
           />
           <button
+            className="button__dash"
             type="button"
             onClick={handleSendMessage}
             disabled={!draft.trim() || !activeUser || sending}

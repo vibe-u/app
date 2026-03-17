@@ -1,7 +1,11 @@
 import axios from "./axios";
+import { isTokenExpired } from "../utils/authToken";
 
 const getAuthConfig = () => {
   const token = localStorage.getItem("token");
+  if (!token || isTokenExpired(token)) {
+    throw new Error("Sesion expirada");
+  }
   return {
     headers: {
       Authorization: `Bearer ${token}`,

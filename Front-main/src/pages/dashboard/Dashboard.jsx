@@ -85,7 +85,7 @@ const Dashboard = () => {
             <p>{isAdmin ? "Panel de administracion" : "Panel de estudiante"}</p>
           </div>
           <div className="actions__dash">
-            <button onClick={cerrarSesion}>Cerrar sesion</button>
+            <button className="button__dash" onClick={cerrarSesion}>Cerrar sesion</button>
           </div>
         </header>
 
@@ -109,7 +109,7 @@ const Dashboard = () => {
               <article className="hub_card__dash" key={item.title}>
                 <h3>{item.title}</h3>
                 <p>{item.text}</p>
-                <button onClick={() => navigate(item.to)}>{item.cta}</button>
+                <button className="button__dash" onClick={() => navigate(item.to)}>{item.cta}</button>
               </article>
             ))}
           </section>
@@ -119,10 +119,10 @@ const Dashboard = () => {
           <section className="panel__dash">
             <h3>Cuenta</h3>
             <div className="settings_grid__dash">
-              <button onClick={() => navigate("/actualizar-info")}>Actualizar informacion</button>
-              <button onClick={() => navigate("/actualizar-pass")}>Cambiar password</button>
-              <button onClick={() => navigate("/ajustes")}>Abrir ajustes</button>
-              <button onClick={cerrarSesion}>Cerrar sesion</button>
+              <button className="button__dash" onClick={() => navigate("/actualizar-info")}>Actualizar informacion</button>
+              <button className="button__dash" onClick={() => navigate("/actualizar-pass")}>Cambiar password</button>
+              <button className="button__dash" onClick={() => navigate("/ajustes")}>Abrir ajustes</button>
+              <button className="button__dash" onClick={cerrarSesion}>Cerrar sesion</button>
             </div>
           </section>
         )}

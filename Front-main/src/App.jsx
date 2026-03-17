@@ -3,7 +3,6 @@ import { useEffect } from "react";
 import AOS from "aos";
 import "aos/dist/aos.css";
 
-// 📄 Páginas públicas
 import Landing from "./pages/Landing";
 import Register from "./pages/register/Register";
 import Login from "./pages/login/Login";
@@ -15,7 +14,6 @@ import ForgotPassword from "./pages/forgot-password/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import { Confirm } from "./pages/confirm";
 
-// 🔐 Páginas privadas
 import Dashboard from "./pages/dashboard/Dashboard";
 import UserDashboard from "./pages/dashboard/UserDashboard";
 import FeedView from "./pages/dashboard/views/FeedView";
@@ -23,6 +21,7 @@ import CreatePostView from "./pages/dashboard/views/CreatePostView";
 import ChatView from "./pages/dashboard/views/ChatView";
 import EventsView from "./pages/dashboard/views/EventsView";
 import ProfileView from "./pages/dashboard/views/ProfileView";
+import UserPublicProfileView from "./pages/dashboard/views/UserPublicProfileView";
 import NotificationsView from "./pages/dashboard/views/NotificationsView";
 import SettingsView from "./pages/dashboard/views/SettingsView";
 import Perfil from "./pages/perfil/Perfil";
@@ -35,27 +34,29 @@ import Grupos from "./pages/Grupos/Grupos.jsx";
 import Gusuario from "./pages/gusuarios/Gusuarios.jsx";
 import Gautomatizacion from "./pages/Gautomatizacion/Gautomatizacion.jsx";
 
-// 🧭 Rutas protegidas
 import PublicRoute from "./routes/PublicRouter.jsx";
 import PrivateRoute from "./routes/PrivateRouter.jsx";
 import MobileOnlyRoute from "./routes/MobileOnlyRoute.jsx";
 
-// 🗃️ Stores
 import storeProfile from "./context/storeProfile";
 import storeAuth from "./context/storeAuth";
+import { isTokenExpired } from "./utils/authToken";
 
 function App() {
   const profile = storeProfile((state) => state.profile);
   const token = storeAuth((state) => state.token);
+  const clearToken = storeAuth((state) => state.clearToken);
 
-  // 🔹 Cargar perfil si existe sesión
   useEffect(() => {
-    if (token) {
-      profile();
+    if (!token) return;
+    if (isTokenExpired(token)) {
+      clearToken();
+      localStorage.removeItem("token");
+      return;
     }
-  }, [token, profile]);
+    profile();
+  }, [token, profile, clearToken]);
 
-  // 🔹 Inicializar animaciones
   useEffect(() => {
     AOS.init({ once: true, duration: 800 });
   }, []);
@@ -63,7 +64,6 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* 🌐 RUTAS QUE SÓLO SE VEN SI NO ESTÁS LOGUEADO */}
         <Route element={<PublicRoute />}>
           <Route path="/" element={<Landing />} />
           <Route path="login" element={<Login />} />
@@ -74,7 +74,6 @@ function App() {
           <Route path="recuperarpassword/:token" element={<ResetPassword />} />
         </Route>
 
-        {/* 🔒 RUTAS PROTEGIDAS (REQUIEREN LOGIN) */}
         <Route element={<PrivateRoute />}>
           <Route path="panel" element={<Dashboard />} />
           <Route path="dashboard" element={<UserDashboard />}>
@@ -84,6 +83,7 @@ function App() {
             <Route path="chat" element={<ChatView />} />
             <Route path="eventos" element={<EventsView />} />
             <Route path="perfil" element={<ProfileView />} />
+            <Route path="usuario/:id" element={<UserPublicProfileView />} />
             <Route path="micuenta" element={<MUsuario />} />
             <Route path="notificaciones" element={<NotificationsView />} />
             <Route path="ajustes" element={<SettingsView />} />
@@ -103,13 +103,10 @@ function App() {
           </Route>
         </Route>
 
-        {/* 📢 RUTAS ABIERTAS A TODO EL MUNDO */}
         <Route path="contacto" element={<Contacto />} />
         <Route path="eventos" element={<Eventos />} />
         <Route path="beneficios" element={<Beneficios />} />
-
-        {/* 404 - Opcional: Redirigir si la ruta no existe */}
-        <Route path="*" element={<div>Página no encontrada</div>} />
+        <Route path="*" element={<div>Pagina no encontrada</div>} />
       </Routes>
     </BrowserRouter>
   );

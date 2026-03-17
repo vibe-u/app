@@ -6,6 +6,13 @@ import bcrypt from "bcryptjs";
 import { verificarTokenJWT } from "../middlewares/JWT.js";
 import { perfil, actualizarUsuario, actualizarPassword } 
 from "../controllers/usuario_controller.js";
+import {
+    searchUsers,
+    getPublicProfile,
+    sendFriendRequest,
+    respondFriendRequest,
+    getFriendRequestNotifications
+} from "../controllers/friend_controller.js";
 import fetch from "node-fetch";
 
 const router = express.Router();
@@ -286,5 +293,10 @@ router.get("/frase", async (req, res) => {
 router.get("/perfil", verificarTokenJWT, perfil);
 router.put("/actualizar-perfil", verificarTokenJWT, actualizarUsuario);
 router.put("/actualizar-password", verificarTokenJWT, actualizarPassword);
+router.get("/buscar", verificarTokenJWT, searchUsers);
+router.get("/publico/:id", verificarTokenJWT, getPublicProfile);
+router.post("/amistad/solicitar", verificarTokenJWT, sendFriendRequest);
+router.post("/amistad/responder", verificarTokenJWT, respondFriendRequest);
+router.get("/amistad/notificaciones", verificarTokenJWT, getFriendRequestNotifications);
 
 export default router;

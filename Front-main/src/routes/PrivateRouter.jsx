@@ -1,15 +1,21 @@
 import { Navigate, Outlet } from "react-router-dom";
 import storeAuth from "../context/storeAuth";
+import { isTokenExpired } from "../utils/authToken";
 
 const PrivateRoute = () => {
   const token = storeAuth((state) => state.token);
+  const clearToken = storeAuth((state) => state.clearToken);
+  const expired = isTokenExpired(token);
 
-  // 🔐 Si no hay token → login
-  if (!token) {
+  if (token && expired) {
+    clearToken();
+    localStorage.removeItem("token");
+  }
+
+  if (!token || expired) {
     return <Navigate to="/login" replace />;
   }
 
-  // ✅ Si hay token → renderizar rutas hijas
   return <Outlet />;
 };
 

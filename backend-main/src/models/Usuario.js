@@ -20,7 +20,10 @@ const usuarioSchema = new mongoose.Schema({
   cedula: { type: String, default: "" },
   descripcion: { type: String, default: "" },
   universidad: { type: String, default: "" },
-  carrera: { type: String, default: "" }
+  carrera: { type: String, default: "" },
+  amigos: [{ type: mongoose.Schema.Types.ObjectId, ref: "Usuario" }],
+  solicitudesEnviadas: [{ type: mongoose.Schema.Types.ObjectId, ref: "Usuario" }],
+  solicitudesRecibidas: [{ type: mongoose.Schema.Types.ObjectId, ref: "Usuario" }]
 }, { timestamps: true });
 
 // 🔐 Encriptar contraseña

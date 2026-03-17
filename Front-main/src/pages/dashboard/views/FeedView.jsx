@@ -1,11 +1,10 @@
-import Feed from "../../../components/Feed";
+import { Feed } from "../UserDashboard";
 
 const FeedView = () => {
   return (
-    <section className="view__dash">
+    <section className="view__dash feed_view__dash">
       <section className="panel__dash">
-        <h3>Bienvenida</h3>
-        <p>Aqui ves publicaciones de tu comunidad universitaria.</p>
+        <h3>Bienvenidos</h3>
       </section>
       <Feed />
     </section>
@@ -13,4 +12,3 @@ const FeedView = () => {
 };
 
 export default FeedView;
-

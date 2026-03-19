@@ -7,13 +7,18 @@ export const crearPost = (data, token) =>
     headers: { Authorization: `Bearer ${token}` },
   });
 
-export const subirMediaPost = (file, token) => {
+export const subirMediaPost = (file, token, onProgress) => {
   const formData = new FormData();
   formData.append("media", file);
   return axios.post("/posts/upload-media", formData, {
     headers: {
       Authorization: `Bearer ${token}`,
       "Content-Type": "multipart/form-data",
+    },
+    onUploadProgress: (event) => {
+      if (!event?.total || typeof onProgress !== "function") return;
+      const progress = Math.min(100, Math.round((event.loaded * 100) / event.total));
+      onProgress(progress);
     },
   });
 };

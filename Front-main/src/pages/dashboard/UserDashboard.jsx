@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import Sidebar from "../../components/Sidebar";
+import CreatePostView from "./views/CreatePostView";
 import {
   comentarPost,
   eliminarComentarioPost,
@@ -14,7 +15,6 @@ import "./Dashboard.css";
 
 const titleMap = {
   "/dashboard/feed": "Feed",
-  "/dashboard/publicar": "Publicar",
   "/dashboard/chat": "Chat",
   "/dashboard/eventos": "Eventos U",
   "/dashboard/perfil": "Perfil",
@@ -24,7 +24,6 @@ const titleMap = {
 
 const subtitleMap = {
   "/dashboard/feed": "Publicaciones recientes de la comunidad",
-  "/dashboard/publicar": "Comparte algo con tu universidad",
   "/dashboard/chat": "Tus conversaciones activas",
   "/dashboard/eventos": "Eventos y actividades del campus",
   "/dashboard/perfil": "Informacion visible de tu cuenta",
@@ -46,6 +45,7 @@ const UserDashboard = () => {
   const [searchUsers, setSearchUsers] = useState([]);
   const [searchGroups, setSearchGroups] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [showCreateModal, setShowCreateModal] = useState(false);
 
   useEffect(() => {
     const term = search.trim();
@@ -146,12 +146,32 @@ const UserDashboard = () => {
                 </div>
               ) : null}
             </div>
-            <button className="button__dash" onClick={() => navigate("/dashboard/publicar")}>Nueva publicacion</button>
+            <button className="button__dash" onClick={() => setShowCreateModal(true)}>Nueva publicacion</button>
           </div>
         </header>
 
         <Outlet />
       </main>
+
+      {showCreateModal ? (
+        <div className="create_modal_overlay__dash" role="dialog" aria-modal="true">
+          <div className="create_modal__dash">
+            <button
+              type="button"
+              className="create_modal_close__dash"
+              onClick={() => setShowCreateModal(false)}
+              aria-label="Cerrar modal"
+            >
+              x
+            </button>
+            <CreatePostView
+              asModal
+              onClose={() => setShowCreateModal(false)}
+              onPublished={() => navigate("/dashboard/feed")}
+            />
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 };
@@ -176,7 +196,11 @@ export const PostCard = ({ post, onLike, onComment, onDeletePost, onDeleteCommen
       </div>
 
       {post.texto && <p>{post.texto}</p>}
-      {post.imagen && <img src={post.imagen} alt="post" />}
+      {post.imagen ? (
+        <div className="post_image_frame__dash">
+          <img src={post.imagen} alt="post" className="post_image__dash" />
+        </div>
+      ) : null}
       {post.video ? (
         <video controls className="post_video__dash">
           <source src={post.video} />
@@ -279,6 +303,12 @@ export const Feed = ({ refreshKey = 0 }) => {
     };
 
     cargarPosts();
+
+    const handlePostCreated = () => {
+      cargarPosts();
+    };
+    window.addEventListener("dash:post-created", handlePostCreated);
+    return () => window.removeEventListener("dash:post-created", handlePostCreated);
   }, [refreshKey]);
 
   const token = localStorage.getItem("token");

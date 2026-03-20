@@ -4,6 +4,7 @@ import { sendMailToRegister, sendMailToRecoveryPassword } from "../config/nodema
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
+import { mapAvatarToPublicUrl, extractStoredFilename, toPublicUploadUrl } from "../utils/mediaUrl.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -11,7 +12,11 @@ const UPLOADS_DIR = path.join(__dirname, "..", "..", "uploads", "avatars");
 
 const saveAvatarIfBase64 = (avatar, userId) => {
     if (!avatar || typeof avatar !== "string" || !avatar.startsWith("data:image/")) {
-        return avatar;
+        if (/^https?:\/\//i.test(avatar || "")) {
+            const isLocalOrUploads = /https?:\/\/(localhost|127\.0\.0\.1)/i.test(avatar) || /\/uploads\/avatars\//i.test(avatar);
+            if (!isLocalOrUploads) return avatar;
+        }
+        return extractStoredFilename(avatar);
     }
 
     const match = avatar.match(/^data:image\/([a-zA-Z0-9+.-]+);base64,(.+)$/);
@@ -28,8 +33,7 @@ const saveAvatarIfBase64 = (avatar, userId) => {
     const fullPath = path.join(UPLOADS_DIR, filename);
     fs.writeFileSync(fullPath, Buffer.from(base64Data, "base64"));
 
-    const baseUrl = process.env.URL_BACKEND || "http://localhost:3000";
-    return `${baseUrl}/uploads/avatars/${filename}`;
+    return filename;
 };
 
 /* =========================================
@@ -160,7 +164,7 @@ const loginUsuario = async (req, res) => {
             nombre: usuarioBDD.nombre,
             apellido: usuarioBDD.apellido,
             rol: usuarioBDD.rol,
-            fotoPerfil: usuarioBDD.avatar || null
+            fotoPerfil: toPublicUploadUrl(req, "avatars", usuarioBDD.avatar) || null
         });
     } catch (error) {
         res.status(500).json({ msg: `Error: ${error.message}` });
@@ -172,7 +176,7 @@ const loginUsuario = async (req, res) => {
 ========================================= */
 const perfil = (req, res) => {
     const { password, token, ...usuarioSeguro } = req.usuario;
-    res.status(200).json(usuarioSeguro);
+    res.status(200).json(mapAvatarToPublicUrl(req, usuarioSeguro));
 };
 
 /* =========================================
@@ -209,7 +213,7 @@ const actualizarUsuario = async (req, res) => {
         res.status(200).json({
             msg: "Usuario actualizado",
             rol: usuarioBDD.rol,
-            fotoPerfil: usuarioBDD.avatar
+            fotoPerfil: toPublicUploadUrl(req, "avatars", usuarioBDD.avatar)
         });
     } catch (error) {
         res.status(500).json({ msg: "Error al actualizar usuario" });
@@ -258,7 +262,7 @@ const deleteUser = async (req, res) => {
 const getAllUsers = async (req, res) => {
     try {
         const usuarios = await Usuario.find().select("-password -token");
-        res.status(200).json(usuarios);
+        res.status(200).json(usuarios.map((user) => mapAvatarToPublicUrl(req, user.toObject())));
     } catch (error) {
         res.status(500).json({ msg: "Error al obtener usuarios" });
     }

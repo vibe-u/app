@@ -3,6 +3,7 @@ import axios from "axios";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import "./MUsuario.css";
+import { resolveAvatarUrl } from "../../utils/mediaUrl";
 
 const MUsuario = () => {
   const fileInputRef = useRef(null);
@@ -16,7 +17,10 @@ const MUsuario = () => {
   const [userUniversity, setUserUniversity] = useState("");
   const [userCareer, setUserCareer] = useState("");
 
-  const getAvatarUrl = (url) => (url ? `${url}?t=${Date.now()}` : null);
+  const getAvatarUrl = (url) => {
+    const resolved = resolveAvatarUrl(url);
+    return resolved ? `${resolved}${resolved.includes("?") ? "&" : "?"}t=${Date.now()}` : null;
+  };
 
   useEffect(() => {
     const fetchUserInfo = async () => {

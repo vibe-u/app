@@ -2,6 +2,8 @@ import Post from "../models/Post.js";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
+import { getPublicBaseUrl } from "../utils/publicBaseUrl.js";
+import { toStoredUploadRef, mapPostMediaToPublicUrl } from "../utils/mediaUrl.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -13,7 +15,8 @@ export const obtenerPosts = async (req, res) => {
       .populate("usuario", "nombre avatar correoInstitucional")
       .sort({ createdAt: -1 });
 
-    res.json(posts);
+    const payload = posts.map((post) => mapPostMediaToPublicUrl(req, post.toObject()));
+    res.json(payload);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -26,14 +29,14 @@ export const crearPost = async (req, res) => {
     const post = new Post({
       usuario: req.usuario._id,
       texto,
-      imagen,
-      video,
+      imagen: toStoredUploadRef(imagen, "posts"),
+      video: toStoredUploadRef(video, "posts"),
     });
 
     await post.save();
     await post.populate("usuario", "nombre avatar correoInstitucional");
 
-    res.status(201).json(post);
+    res.status(201).json(mapPostMediaToPublicUrl(req, post.toObject()));
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -58,9 +61,10 @@ export const uploadPostMedia = async (req, res) => {
     const fullPath = path.join(POSTS_UPLOAD_DIR, filename);
     fs.writeFileSync(fullPath, req.file.buffer);
 
-    const baseUrl = process.env.URL_BACKEND || "http://localhost:3000";
+    const baseUrl = getPublicBaseUrl(req);
     const url = `${baseUrl}/uploads/posts/${filename}`;
     res.status(201).json({
+      filename,
       url,
       mediaType: isVideo ? "video" : "image",
     });
@@ -86,7 +90,7 @@ export const toggleLikePost = async (req, res) => {
     post.likes = post.likedBy.length;
     await post.save();
 
-    res.json(post);
+    res.json(mapPostMediaToPublicUrl(req, post.toObject()));
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -108,7 +112,7 @@ export const comentarPost = async (req, res) => {
     });
 
     await post.save();
-    res.json(post);
+    res.json(mapPostMediaToPublicUrl(req, post.toObject()));
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -148,7 +152,7 @@ export const eliminarComentarioPost = async (req, res) => {
 
     post.comentarios = (post.comentarios || []).filter((item) => item._id?.toString() !== commentId);
     await post.save();
-    res.json(post);
+    res.json(mapPostMediaToPublicUrl(req, post.toObject()));
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

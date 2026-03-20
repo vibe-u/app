@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
+import { FaHeart, FaPlus, FaSearch, FaUsers } from "react-icons/fa";
 import Sidebar from "../../components/Sidebar";
 import CreatePostView from "./views/CreatePostView";
 import {
@@ -11,6 +12,7 @@ import {
 } from "../../Services/posts";
 import { searchRegisteredUsers } from "../../Services/users";
 import { getTokenPayload } from "../../utils/authToken";
+import { resolveUploadUrl } from "../../utils/mediaUrl";
 import "./Dashboard.css";
 
 const titleMap = {
@@ -46,6 +48,20 @@ const UserDashboard = () => {
   const [searchGroups, setSearchGroups] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [isMobileLayout, setIsMobileLayout] = useState(
+    typeof window !== "undefined" ? window.innerWidth <= 770 : false
+  );
+  const [showMobileSearch, setShowMobileSearch] = useState(false);
+
+  useEffect(() => {
+    const onResize = () => {
+      const mobile = window.innerWidth <= 770;
+      setIsMobileLayout(mobile);
+      if (!mobile) setShowMobileSearch(false);
+    };
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
 
   useEffect(() => {
     const term = search.trim();
@@ -87,6 +103,59 @@ const UserDashboard = () => {
     [searchUsers, searchGroups]
   );
 
+  const renderSearchBox = (isMobile = false) => (
+    <div className={`search_box__dash ${isMobile ? "mobile_search_panel__dash" : ""}`}>
+      <input
+        className="input__dash"
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        onFocus={() => {
+          if (search.trim()) setShowSuggestions(true);
+        }}
+        onBlur={() => {
+          setTimeout(() => setShowSuggestions(false), 120);
+        }}
+        placeholder="Buscar personas, grupos o eventos..."
+      />
+      {showSuggestions && hasSuggestions ? (
+        <div className="search_suggestions__dash">
+          {searchUsers.map((user) => (
+            <button
+              type="button"
+              key={user._id}
+              className="suggestion_item__dash"
+              onClick={() => {
+                setSearch(user.nombre);
+                setShowSuggestions(false);
+                if (isMobile) setShowMobileSearch(false);
+                navigate(`/dashboard/usuario/${user._id}`);
+              }}
+            >
+              <strong>{user.nombre}</strong>
+              <span>Persona registrada</span>
+            </button>
+          ))}
+          {searchGroups.map((group) => (
+            <button
+              type="button"
+              key={group._id}
+              className="suggestion_item__dash"
+              onClick={() => {
+                setSearch(group.nombre);
+                setShowSuggestions(false);
+                if (isMobile) setShowMobileSearch(false);
+                navigate("/grupos");
+              }}
+            >
+              <strong>{group.nombre}</strong>
+              <span>Grupo</span>
+            </button>
+          ))}
+        </div>
+      ) : null}
+    </div>
+  );
+
   return (
     <div className="shell__dash">
       <Sidebar />
@@ -95,58 +164,57 @@ const UserDashboard = () => {
         <header className="topbar__dash">
           <div>
             <h2>{title}</h2>
-            <p>{subtitle}</p>
+            {!isMobileLayout ? <p>{subtitle}</p> : null}
           </div>
           <div className="actions__dash">
-            <div className="search_box__dash">
-              <input
-                className="input__dash"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                onFocus={() => {
-                  if (search.trim()) setShowSuggestions(true);
-                }}
-                onBlur={() => {
-                  setTimeout(() => setShowSuggestions(false), 120);
-                }}
-                placeholder="Buscar personas, grupos o eventos..."
-              />
-              {showSuggestions && hasSuggestions ? (
-                <div className="search_suggestions__dash">
-                  {searchUsers.map((user) => (
-                    <button
-                      type="button"
-                      key={user._id}
-                      className="suggestion_item__dash"
-                      onClick={() => {
-                        setSearch(user.nombre);
-                        setShowSuggestions(false);
-                        navigate(`/dashboard/usuario/${user._id}`);
-                      }}
-                    >
-                      <strong>{user.nombre}</strong>
-                      <span>Persona registrada</span>
-                    </button>
-                  ))}
-                  {searchGroups.map((group) => (
-                    <button
-                      type="button"
-                      key={group._id}
-                      className="suggestion_item__dash"
-                      onClick={() => {
-                        setSearch(group.nombre);
-                        setShowSuggestions(false);
-                        navigate("/grupos");
-                      }}
-                    >
-                      <strong>{group.nombre}</strong>
-                      <span>Grupo</span>
-                    </button>
-                  ))}
+            {isMobileLayout ? (
+              <>
+                <div className="mobile_actions__dash">
+                  <button
+                    type="button"
+                    className="mobile_action_btn__dash"
+                    onClick={() => setShowMobileSearch((prev) => !prev)}
+                    aria-label="Buscar personas y grupos"
+                    title="Buscar"
+                  >
+                    <FaSearch />
+                  </button>
+                  <button
+                    type="button"
+                    className="mobile_action_btn__dash"
+                    onClick={() => navigate("/grupos")}
+                    aria-label="Ir a grupos"
+                    title="Grupos"
+                  >
+                    <FaUsers />
+                  </button>
+                  <button
+                    type="button"
+                    className="mobile_action_btn__dash"
+                    onClick={() => navigate("/matches")}
+                    aria-label="Ir a match"
+                    title="Match"
+                  >
+                    <FaHeart />
+                  </button>
+                  <button
+                    type="button"
+                    className="mobile_action_btn__dash"
+                    onClick={() => setShowCreateModal(true)}
+                    aria-label="Nueva publicacion"
+                    title="Nueva publicacion"
+                  >
+                    <FaPlus />
+                  </button>
                 </div>
-              ) : null}
-            </div>
-            <button className="button__dash" onClick={() => setShowCreateModal(true)}>Nueva publicacion</button>
+                {showMobileSearch ? renderSearchBox(true) : null}
+              </>
+            ) : (
+              <>
+                {renderSearchBox()}
+                <button className="button__dash" onClick={() => setShowCreateModal(true)}>Nueva publicacion</button>
+              </>
+            )}
           </div>
         </header>
 
@@ -180,7 +248,9 @@ export const PostCard = ({ post, onLike, onComment, onDeletePost, onDeleteCommen
   const usuario = post?.usuario || {};
   const postOwnerId = usuario?._id?.toString?.() || "";
   const nombre = usuario.nombre || "Usuario";
-  const avatar = usuario.avatar || "https://via.placeholder.com/36";
+  const avatar = resolveUploadUrl(usuario.avatar, "avatars") || "https://via.placeholder.com/36";
+  const postImage = resolveUploadUrl(post.imagen, "posts");
+  const postVideo = resolveUploadUrl(post.video, "posts");
   const comentarios = Array.isArray(post.comentarios) ? post.comentarios.length : 0;
   const [commentText, setCommentText] = useState("");
   const [showComments, setShowComments] = useState(false);
@@ -196,14 +266,14 @@ export const PostCard = ({ post, onLike, onComment, onDeletePost, onDeleteCommen
       </div>
 
       {post.texto && <p>{post.texto}</p>}
-      {post.imagen ? (
+      {postImage ? (
         <div className="post_image_frame__dash">
-          <img src={post.imagen} alt="post" className="post_image__dash" />
+          <img src={postImage} alt="post" className="post_image__dash" />
         </div>
       ) : null}
-      {post.video ? (
+      {postVideo ? (
         <video controls className="post_video__dash">
-          <source src={post.video} />
+          <source src={postVideo} />
           Tu navegador no soporta video.
         </video>
       ) : null}
@@ -385,14 +455,6 @@ export const Feed = ({ refreshKey = 0 }) => {
 
   return (
     <div>
-      <div className="stories__dash">
-        <div className="story__dash">Tu historia</div>
-        <div className="story__dash">Ana</div>
-        <div className="story__dash">Diego</div>
-        <div className="story__dash">Vale</div>
-        <div className="story__dash">CodeClub</div>
-      </div>
-
       <div className="card_grid__dash">
         {posts.map((post) => (
           <PostCard

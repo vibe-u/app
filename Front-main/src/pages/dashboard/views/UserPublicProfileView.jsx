@@ -6,6 +6,7 @@ import {
   sendFriendRequest,
 } from "../../../Services/users";
 import { PostCard } from "../UserDashboard";
+import { resolveAvatarUrl } from "../../../utils/mediaUrl";
 
 const UserPublicProfileView = () => {
   const { id } = useParams();
@@ -102,7 +103,7 @@ const UserPublicProfileView = () => {
     <section className="view__dash">
       <section className="panel__dash profile_public__dash">
         <img
-          src={data.user.avatar || "https://via.placeholder.com/120"}
+          src={resolveAvatarUrl(data.user.avatar) || "https://via.placeholder.com/120"}
           alt={data.user.nombre}
         />
         <div>

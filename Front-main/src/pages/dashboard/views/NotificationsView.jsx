@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getFriendNotifications, respondFriendRequest } from "../../../Services/users";
+import { getEventNotifications } from "../../../Services/events";
 
 const NotificationsView = () => {
   const navigate = useNavigate();
@@ -10,8 +11,16 @@ const NotificationsView = () => {
   const loadNotifications = async () => {
     try {
       setError("");
-      const res = await getFriendNotifications();
-      setNotifications(Array.isArray(res.data) ? res.data : []);
+      const [friendsRes, eventsRes] = await Promise.all([
+        getFriendNotifications(),
+        getEventNotifications(),
+      ]);
+      const friendItems = Array.isArray(friendsRes?.data) ? friendsRes.data : [];
+      const eventItems = Array.isArray(eventsRes?.data) ? eventsRes.data : [];
+      const merged = [...friendItems, ...eventItems].sort(
+        (a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0)
+      );
+      setNotifications(merged);
     } catch (e) {
       setError(e?.response?.data?.msg || "No se pudieron cargar notificaciones");
     }
@@ -44,17 +53,27 @@ const NotificationsView = () => {
           {notifications.map((item) => (
             <article key={item._id} className="post_card__dash">
               <p>{item.message}</p>
-              <div className="friend_actions__dash">
-                <button className="button__dash" type="button" onClick={() => navigate(`/dashboard/usuario/${item.fromUser._id}`)}>
-                  Ver perfil
-                </button>
-                <button className="button__dash" type="button" onClick={() => handleAction(item.fromUser._id, "accept")}>
-                  Aceptar
-                </button>
-                <button className="button__dash" type="button" onClick={() => handleAction(item.fromUser._id, "reject")}>
-                  Rechazar
-                </button>
-              </div>
+              {item.type === "friend_request" ? (
+                <div className="friend_actions__dash">
+                  <button className="button__dash" type="button" onClick={() => navigate(`/dashboard/usuario/${item.fromUser._id}`)}>
+                    Ver perfil
+                  </button>
+                  <button className="button__dash" type="button" onClick={() => handleAction(item.fromUser._id, "accept")}>
+                    Aceptar
+                  </button>
+                  <button className="button__dash" type="button" onClick={() => handleAction(item.fromUser._id, "reject")}>
+                    Rechazar
+                  </button>
+                </div>
+              ) : null}
+
+              {item.type === "event_reminder" ? (
+                <div className="friend_actions__dash">
+                  <button className="button__dash" type="button" onClick={() => navigate("/dashboard/eventos")}>
+                    Ver evento
+                  </button>
+                </div>
+              ) : null}
             </article>
           ))}
         </div>

@@ -2,12 +2,88 @@
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
-  color-scheme: light dark;
+  color-scheme: light;
   background: linear-gradient(90deg,#5a0153,#771c4b);
+  --app-bg: linear-gradient(90deg,#5a0153,#771c4b);
+  --app-text: #1b2430;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+  --app-bg: linear-gradient(180deg, #0f1118 0%, #131a22 50%, #0d1218 100%);
+  --app-text: #e6edf7;
+}
+
+[data-theme="light"] .panel__dash,
+[data-theme="light"] .post_card__dash,
+[data-theme="light"] .event_card__dash,
+[data-theme="light"] .hub_card__dash,
+[data-theme="light"] .chat_item__dash,
+[data-theme="light"] .chat_messages__dash,
+[data-theme="light"] .login-card,
+[data-theme="light"] .register-card,
+[data-theme="light"] .forgot-card,
+[data-theme="light"] .ajustes-card,
+[data-theme="light"] .password-change-card,
+[data-theme="light"] .usuario-card,
+[data-theme="light"] .miembro-card,
+[data-theme="light"] .beneficio-card,
+[data-theme="light"] .slide-card,
+[data-theme="light"] .modal-card,
+[data-theme="light"] .fb-card-white {
+  color: #1b2430;
+}
+
+[data-theme="light"] .panel__dash h1,
+[data-theme="light"] .panel__dash h2,
+[data-theme="light"] .panel__dash h3,
+[data-theme="light"] .panel__dash h4,
+[data-theme="light"] .panel__dash p,
+[data-theme="light"] .post_card__dash h1,
+[data-theme="light"] .post_card__dash h2,
+[data-theme="light"] .post_card__dash h3,
+[data-theme="light"] .post_card__dash h4,
+[data-theme="light"] .post_card__dash p,
+[data-theme="light"] .hub_card__dash h1,
+[data-theme="light"] .hub_card__dash h2,
+[data-theme="light"] .hub_card__dash h3,
+[data-theme="light"] .hub_card__dash h4,
+[data-theme="light"] .hub_card__dash p,
+[data-theme="light"] .login-card h1,
+[data-theme="light"] .login-card h2,
+[data-theme="light"] .login-card h3,
+[data-theme="light"] .login-card p,
+[data-theme="light"] .register-card h1,
+[data-theme="light"] .register-card h2,
+[data-theme="light"] .register-card h3,
+[data-theme="light"] .register-card p,
+[data-theme="light"] .forgot-card h1,
+[data-theme="light"] .forgot-card h2,
+[data-theme="light"] .forgot-card h3,
+[data-theme="light"] .forgot-card p,
+[data-theme="light"] .usuario-card h1,
+[data-theme="light"] .usuario-card h2,
+[data-theme="light"] .usuario-card h3,
+[data-theme="light"] .usuario-card p,
+[data-theme="light"] .fb-card-white h1,
+[data-theme="light"] .fb-card-white h2,
+[data-theme="light"] .fb-card-white h3,
+[data-theme="light"] .fb-card-white h4,
+[data-theme="light"] .fb-card-white p {
+  color: #1b2430;
+}
+
+[data-theme="dark"] .login-container,
+[data-theme="dark"] .register-page,
+[data-theme="dark"] .forgot-page,
+[data-theme="dark"] .beneficios-container,
+[data-theme="dark"] .contacto-container,
+[data-theme="dark"] .eventos-container {
+  filter: brightness(0.92);
 }
 a {
   font-weight: 500;
@@ -21,6 +97,8 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
+  background: var(--app-bg);
+  color: var(--app-text);
   overflow-x: hidden; /* Evita que se desborde horizontalmente */
 }
 h1 {

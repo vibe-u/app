@@ -41,6 +41,7 @@ import MobileOnlyRoute from "./routes/MobileOnlyRoute.jsx";
 import storeProfile from "./context/storeProfile";
 import storeAuth from "./context/storeAuth";
 import { isTokenExpired } from "./utils/authToken";
+import { applyTheme, getInitialTheme } from "./utils/theme";
 
 function App() {
   const profile = storeProfile((state) => state.profile);
@@ -59,6 +60,10 @@ function App() {
 
   useEffect(() => {
     AOS.init({ once: true, duration: 800 });
+  }, []);
+
+  useEffect(() => {
+    applyTheme(getInitialTheme());
   }, []);
 
   return (

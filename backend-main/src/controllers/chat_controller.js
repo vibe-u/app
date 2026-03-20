@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import Usuario from "../models/Usuario.js";
 import ChatConversation from "../models/ChatConversation.js";
 import ChatMessage from "../models/ChatMessage.js";
+import { mapAvatarToPublicUrl } from "../utils/mediaUrl.js";
 
 const CHAT_USER_FIELDS = "_id nombre correoInstitucional avatar universidad carrera";
 
@@ -40,7 +41,7 @@ const listAvailableUsers = async (req, res) => {
       .limit(100)
       .lean();
 
-    res.status(200).json(users);
+    res.status(200).json(users.map((user) => mapAvatarToPublicUrl(req, user)));
   } catch (error) {
     res.status(500).json({ msg: "Error al listar usuarios para chat" });
   }
@@ -65,7 +66,7 @@ const listConversations = async (req, res) => {
 
         return {
           _id: conversation._id,
-          otherUser,
+          otherUser: mapAvatarToPublicUrl(req, otherUser),
           lastMessage: conversation.lastMessage || "",
           lastMessageAt: conversation.lastMessageAt || conversation.updatedAt,
           updatedAt: conversation.updatedAt,
@@ -105,7 +106,7 @@ const getMessagesByUser = async (req, res) => {
     if (!conversation) {
       return res.status(200).json({
         conversation: null,
-        otherUser,
+        otherUser: mapAvatarToPublicUrl(req, otherUser),
         messages: [],
       });
     }
@@ -125,7 +126,7 @@ const getMessagesByUser = async (req, res) => {
         _id: otherUser._id,
         nombre: otherUser.nombre,
         correoInstitucional: otherUser.correoInstitucional,
-        avatar: otherUser.avatar,
+        avatar: mapAvatarToPublicUrl(req, otherUser).avatar,
         universidad: otherUser.universidad,
         carrera: otherUser.carrera,
       },

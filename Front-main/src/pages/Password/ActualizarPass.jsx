@@ -5,6 +5,7 @@ import storeAuth from "../../context/storeAuth";
 import './ActualizarPass.css';
 import { toast, ToastContainer } from "react-toastify";
 import 'react-toastify/dist/ReactToastify.css';
+import { resolveAvatarUrl } from "../../utils/mediaUrl";
 
 // --- OJITOS KAWAII ADAPTADOS ---
 const KawaiiEyeIcon = () => (
@@ -50,7 +51,7 @@ const ChangePasswordForm = () => {
         });
 
         setUsername(res.data?.nombre || "Usuario");
-        setAvatarUrl(res.data?.avatar || "https://upload.wikimedia.org/wikipedia/commons/2/2c/Default_pfp.svg");
+        setAvatarUrl(resolveAvatarUrl(res.data?.avatar) || "https://upload.wikimedia.org/wikipedia/commons/2/2c/Default_pfp.svg");
 
       } catch (error) {
         console.error("Error al cargar usuario:", error);

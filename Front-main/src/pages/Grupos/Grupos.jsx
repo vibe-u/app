@@ -8,6 +8,7 @@ import {
     FaRegBookmark, FaBookmark, FaPaperPlane
 } from 'react-icons/fa';
 import './Grupos.css';
+import { resolveAvatarUrl } from "../../utils/mediaUrl";
 
 const API_URL = `${import.meta.env.VITE_BACKEND_URL}/api/grupos`;
 
@@ -303,7 +304,7 @@ const Grupos = () => {
                         <div className="fb-card-white publish-area">
                             <div className="publish-input-row">
                                 <div className="avatar-circle-wrapper">
-                                    {avatar ? <img src={avatar} className="mini-avatar-fb" alt="yo" /> : <FaUserCircle size={40} color="#ccc" className="mini-avatar-fb" />}
+                                    {avatar ? <img src={resolveAvatarUrl(avatar)} className="mini-avatar-fb" alt="yo" /> : <FaUserCircle size={40} color="#ccc" className="mini-avatar-fb" />}
                                 </div>
                                 <input style={{color: '#000'}} placeholder={`¿Qué compartes hoy, ${userName}?`} value={nuevoPost} onChange={(e) => setNuevoPost(e.target.value)} />
                             </div>
@@ -330,7 +331,7 @@ const Grupos = () => {
                                 <div key={post._id} className="fb-card-white post-container">
                                     <div className="post-top-header">
                                         <div className="mini-avatar-fb avatar-circle-wrapper">
-                                            {esMiPost ? (avatar ? <img src={avatar} alt="yo" className="round-img" /> : <FaUserCircle size={40} color="#ccc" />) : (post.autorFoto ? <img src={post.autorFoto} alt="autor" className="round-img" /> : <FaUserCircle size={40} color="#ccc" />)}
+                                            {esMiPost ? (avatar ? <img src={resolveAvatarUrl(avatar)} alt="yo" className="round-img" /> : <FaUserCircle size={40} color="#ccc" />) : (post.autorFoto ? <img src={resolveAvatarUrl(post.autorFoto)} alt="autor" className="round-img" /> : <FaUserCircle size={40} color="#ccc" />)}
                                         </div>
                                         <div className="post-user-meta">
                                             <span className="author-fb" style={{color: '#000'}}>{esMiPost ? userName : (post.autor || "Usuario")}</span>
@@ -361,7 +362,7 @@ const Grupos = () => {
                                         <div className="fb-comments-section">
                                             {post.comentarios?.map((com, index) => (
                                                 <div key={index} className="comment-item">
-                                                    <img src={com.autorFoto || "https://via.placeholder.com/32"} alt="avatar" className="comment-mini-avatar" />
+                                                    <img src={resolveAvatarUrl(com.autorFoto) || "https://via.placeholder.com/32"} alt="avatar" className="comment-mini-avatar" />
                                                     <div className="comment-bubble">
                                                         <span className="comment-author-name">{com.autor}</span>
                                                         <span className="comment-text">{com.contenido}</span>
@@ -371,7 +372,7 @@ const Grupos = () => {
                                             
                                             <form onSubmit={(e) => handleComentar(e, post._id)} className="comment-input-wrapper">
                                                 <div className="avatar-circle-wrapper">
-                                                    {avatar ? <img src={avatar} className="comment-mini-avatar" alt="yo" /> : <FaUserCircle size={32} color="#ccc" />}
+                                                    {avatar ? <img src={resolveAvatarUrl(avatar)} className="comment-mini-avatar" alt="yo" /> : <FaUserCircle size={32} color="#ccc" />}
                                                 </div>
                                                 <div className="comment-input-container-with-btn">
                                                     <input 
@@ -509,3 +510,4 @@ const Grupos = () => {
 };
 
 export default Grupos;
+

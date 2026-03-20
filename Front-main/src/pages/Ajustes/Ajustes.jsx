@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import storeAuth from "../../context/storeAuth";
 import "./Ajustes.css";
+import { resolveAvatarUrl } from "../../utils/mediaUrl";
 
 const Ajustes = () => {
   const [notificaciones, setNotificaciones] = useState(true);
@@ -61,7 +62,7 @@ const Ajustes = () => {
           <div className="avatar-section">
             <div className="avatar-container">
               {avatar ? (
-                <img src={avatar} alt="Avatar" className="avatar-img" />
+                <img src={resolveAvatarUrl(avatar)} alt="Avatar" className="avatar-img" />
               ) : (
                 <span className="default-avatar">👤</span>
               )}
@@ -162,6 +163,7 @@ const Ajustes = () => {
 };
 
 export default Ajustes;
+
 
 
 

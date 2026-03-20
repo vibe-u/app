@@ -246,11 +246,11 @@ const CreatePostView = ({ asModal = false, onClose, onPublished }) => {
           onDragLeave={() => setIsDragOver(false)}
           onDrop={handleDrop}
         >
-          <p>Arrastra y suelta aqui tu archivo o selecciona desde el dispositivo.</p>
-          <p>
-            Limites: imagen hasta {MAX_IMAGE_SIZE_MB}MB (JPG/PNG/WEBP/GIF), video hasta {MAX_VIDEO_SIZE_MB}MB
-            (MP4/WEBM/OGG/MOV) y maximo {Math.floor(MAX_VIDEO_DURATION_SECONDS / 60)} minutos.
-          </p>
+          {!(imagen || video || selectedFileName || uploading) ? (
+            <p className="upload_hint__dash">
+              Arrastra o selecciona. Img {MAX_IMAGE_SIZE_MB}MB, video {MAX_VIDEO_SIZE_MB}MB.
+            </p>
+          ) : null}
           <button
             className="button__dash"
             type="button"

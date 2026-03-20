@@ -8,6 +8,7 @@ import adminRoutes from './routers/admin_routes.js';
 import automatizacionRouter from "./routers/automatizacion_routes.js";
 import postsRouter from "./routers/posts.routes.js";
 import chatRouter from "./routers/chat_routes.js";
+import eventosRouter from "./routers/eventos_routes.js";
 import path from "path";
 import { fileURLToPath } from "url";
 
@@ -18,7 +19,9 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 app.use(cors({
-    origin: process.env.URL_FRONTEND
+    // de todos lados
+    origin: "*"
+    //origin: process.env.URL_FRONTEND
 }));
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ limit: "50mb", extended: true }));
@@ -33,6 +36,7 @@ app.use("/api/admins", adminRoutes);
 app.use("/api/automatizacion", automatizacionRouter);
 app.use("/api", postsRouter);
 app.use("/api/chat", chatRouter);
+app.use("/api/eventos", eventosRouter);
 
 app.use((req, res) => res.status(404).send("Endpoint no encontrado - 404"));
 

@@ -1,4 +1,4 @@
-import express from "express";
+﻿import express from "express";
 import Usuario from "../models/Usuario.js";
 import jwt from "jsonwebtoken";
 import { sendMailToRegister, sendMailToRecoveryPassword } from "../config/nodemailer.js";
@@ -14,8 +14,48 @@ import {
     getFriendRequestNotifications
 } from "../controllers/friend_controller.js";
 import fetch from "node-fetch";
+import { toPublicUploadUrl } from "../utils/mediaUrl.js";
 
 const router = express.Router();
+const FRASE_CACHE_MS = 10 * 60 * 1000;
+let fraseCache = { value: null, expiresAt: 0 };
+const FRASES_FALLBACK_ES = [
+    { q: "La educación es el arma más poderosa que puedes usar para cambiar el mundo.", a: "Nelson Mandela" },
+    { q: "La vida es aquello que te va sucediendo mientras te empeñas en hacer otros planes.", a: "John Lennon" },
+    { q: "No hay caminos para la paz; la paz es el camino.", a: "Mahatma Gandhi" },
+    { q: "El que tiene un porqué para vivir puede soportar casi cualquier cómo.", a: "Friedrich Nietzsche" },
+    { q: "Nunca consideres el estudio como una obligación, sino como una oportunidad para penetrar en el bello y maravilloso mundo del saber.", a: "Albert Einstein" },
+    { q: "La suerte favorece a la mente preparada.", a: "Louis Pasteur" },
+    { q: "El éxito es la suma de pequeños esfuerzos repetidos día tras día.", a: "Robert Collier" },
+    { q: "La imaginación es más importante que el conocimiento.", a: "Albert Einstein" }
+];
+
+const getRandomFallback = () =>
+    FRASES_FALLBACK_ES[Math.floor(Math.random() * FRASES_FALLBACK_ES.length)];
+
+const fetchJsonWithTimeout = async (url, timeoutMs = 4000) => {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+        const response = await fetch(url, { signal: controller.signal });
+        if (!response.ok) return null;
+        return await response.json();
+    } catch {
+        return null;
+    } finally {
+        clearTimeout(timer);
+    }
+};
+
+const translateToSpanish = async (text) => {
+    if (!text) return null;
+    const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=en|es`;
+    const data = await fetchJsonWithTimeout(url, 4500);
+    const translated = data?.responseData?.translatedText;
+    if (!translated || typeof translated !== "string") return null;
+    const clean = translated.trim();
+    return clean || null;
+};
 
 const BLACKLISTED_DOMAINS = [
     "hotmail.com", "outlook.com", "yahoo.com",
@@ -187,7 +227,7 @@ router.post("/login", async (req, res) => {
             nombre: usuario.nombre,
             correoInstitucional: usuario.correoInstitucional,
             rol: usuario.rol,
-            fotoPerfil: usuario.avatar || null
+            fotoPerfil: toPublicUploadUrl(req, "avatars", usuario.avatar) || null
         });
     } catch (error) {
         console.error(error);
@@ -273,20 +313,35 @@ router.post("/reset-password/:token", async (req, res) => {
 ---------------------------------------------------- */
 router.get("/frase", async (req, res) => {
     try {
-        const response = await fetch("https://zenquotes.io/api/random");
-        const data = await response.json();
-
-        // Validación para no romper React si data está vacío
-        if (!data || !data[0]) {
-            return res.json({ q: "¡Sigue adelante!", a: "Sistema" });
+        if (fraseCache.value && Date.now() < fraseCache.expiresAt) {
+            return res.json(fraseCache.value);
         }
 
-        // Devolver solo un objeto {q, a} para React
-        res.json({ q: data[0].q, a: data[0].a });
+        const zenData = await fetchJsonWithTimeout("https://zenquotes.io/api/random", 4000);
+        const quote = Array.isArray(zenData) ? zenData[0] : null;
+        const rawQuote = typeof quote?.q === "string" ? quote.q.trim() : "";
+        const author = typeof quote?.a === "string" && quote.a.trim() ? quote.a.trim() : "Autor desconocido";
+
+        let payload = null;
+        if (rawQuote) {
+            const translated = await translateToSpanish(rawQuote);
+            payload = translated ? { q: translated, a: author } : null;
+        }
+
+        if (!payload) {
+            payload = getRandomFallback();
+        }
+
+        fraseCache = {
+            value: payload,
+            expiresAt: Date.now() + FRASE_CACHE_MS,
+        };
+        res.json(payload);
 
     } catch (error) {
         console.error("ERROR FRASE:", error);
-        res.status(500).json({ q: "¡Sigue adelante!", a: "Sistema" });
+        const payload = fraseCache.value || getRandomFallback();
+        res.json(payload);
     }
 });
 

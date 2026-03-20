@@ -70,7 +70,7 @@ const Perfil = () => {
 
   return (
     <main className="perfil-main">
-      <h1 className="main-title">Mi Perfil</h1>
+      <h1 className="main-title">Mi HOLA</h1>
 
       <div className="perfil-content">
         <section className="perfil-form-section">

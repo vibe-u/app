@@ -279,27 +279,27 @@
 /* =================================== */
 
 .user-profile-section {
-  max-width: 400px;
-  margin: 30px auto;
-  background: #ffffff;
-  border-radius: 15px;
-  padding: 25px 20px;
-  box-shadow: 0 8px 20px rgba(0,0,0,0.25);
-  font-family: 'Inter', sans-serif;
-  border: 2px solid #920ae6; 
+    max-width: 400px;
+    margin: 30px auto;
+    background: #ffffff;
+    border-radius: 15px;
+    padding: 25px 20px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+    font-family: 'Inter', sans-serif;
+    border: 2px solid #920ae6; 
 }
 
 .avatar-circle-large {
-  width: 120px;
-  height: 120px;
-  border-radius: 50%;
-  overflow: hidden;
-  background-color: #ffffff;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin: 0 auto 15px;
-  border: 2px solid #760265; /* Borde al avatar grande */
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    overflow: hidden;
+    background-color: #ffffff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0 auto 15px;
+    border: 2px solid #760265; /* Borde al avatar grande */
 }
 
 .avatar-img-large {
@@ -309,29 +309,48 @@
 }
 
 .default-avatar-large {
-  font-size: 80px;
-  color: #920ae6;
+    font-size: 80px;
+    color: #920ae6;
 }
 
 .profile-info {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
 }
 
 .info-row {
-  display: flex;
-  justify-content: space-between;
-  background: #f3f3f3;
-  padding: 8px 12px;
-  border-radius: 8px;
-  border: 1px solid #ddd;
-  font-size: 14px;
+    display: flex;
+    justify-content: space-between;
+    background: #f3f3f3;
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    font-size: 14px;
+    color: #1b2430;
+}
+
+.info-row span {
+    color: #1b2430;
+}
+
+[data-theme="dark"] .info-row {
+    background: #1a2432;
+    border-color: #2f445c;
+    color: #e6edf7;
+}
+
+[data-theme="dark"] .info-row strong {
+    color: #d7a8ff;
+}
+
+[data-theme="dark"] .info-row span {
+    color: #e6edf7;
 }
 
 .info-row strong {
-  color: #760265; /* Morado más oscuro */
-  font-weight: 600;
+    color: #760265; /* Morado más oscuro */
+    font-weight: 600;
 }
 
 /* ---------------------------------------------------- */
@@ -385,9 +404,7 @@
     
     /* 6. La cartilla de perfil ocupa todo el ancho disponible */
     .user-profile-section {
-        width: 100%;
-        max-width: 100%;
-        margin: 0 auto;
+        width: auto;
     }
 }
 
@@ -416,10 +433,11 @@
 
 /* Ajustes para uso embebido en el dashboard */
 .panel__dash .user-profile-section {
-  margin: 0 auto;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+    margin: 0 auto;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
 }
 
 .panel__dash .avatar-circle-large {
-  cursor: pointer;
+    cursor: pointer;
 }
+

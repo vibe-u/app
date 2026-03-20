@@ -5,63 +5,105 @@ import {
   FaPlusCircle,
   FaComments,
   FaCalendarAlt,
-  FaUsers,
-  FaHeart,
   FaUser,
   FaCog,
   FaBell,
   FaIdBadge,
   FaUserShield,
   FaChartBar,
+  FaBars,
+  FaTimes,
 } from "react-icons/fa";
 import { isMobileAccess } from "../utils/mobileAccess";
 
 const Sidebar = () => {
-  const navClass = ({ isActive }) => `menu_btn__dash ${isActive ? "menu_btn_active__dash" : ""}`;
+  const navClass = ({ isActive }) =>
+    `menu_btn__dash ${isActive ? "menu_btn_active__dash" : ""}`;
+
   const rol = localStorage.getItem("rol");
   const isAdmin = rol === "administrador";
+
   const [isMobileUser, setIsMobileUser] = useState(isMobileAccess());
+  const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
-    const onResize = () => setIsMobileUser(isMobileAccess());
+    const onResize = () => {
+      setIsMobileUser(isMobileAccess());
+      // Si pasa a escritorio, cerrar el menú para que no quede oculto
+      if (window.innerWidth > 770) setIsOpen(false);
+    };
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
   }, []);
 
+  // Cierra el menú al navegar en móvil
+  const handleNavClick = () => {
+    if (isMobileUser) setIsOpen(false);
+  };
+
   return (
-    <aside className="sidebar__dash">
-      <h1>Vibe-U</h1>
-      <p>La app que pone a la U en modo social</p>
+    <aside className={`sidebar__dash ${isOpen ? "is-open" : ""}`}>
 
-      <nav className="menu__dash">
-        <span className="menu_label__dash">Dashboard</span>
-        <NavLink className={navClass} to="/dashboard/feed"><FaHome /> Feed</NavLink>
-        <NavLink className={navClass} to="/dashboard/publicar"><FaPlusCircle /> Publicar</NavLink>
-        <NavLink className={navClass} to="/dashboard/chat"><FaComments /> Chat</NavLink>
-        <NavLink className={navClass} to="/dashboard/eventos"><FaCalendarAlt /> Eventos U</NavLink>
-        <NavLink className={navClass} to="/dashboard/perfil"><FaUser /> Perfil</NavLink>
-        <NavLink className={navClass} to="/dashboard/micuenta"><FaIdBadge /> Mi cuenta</NavLink>
-        <NavLink className={navClass} to="/dashboard/notificaciones"><FaBell /> Notificaciones</NavLink>
-        <NavLink className={navClass} to="/dashboard/ajustes"><FaCog /> Ajustes</NavLink>
+      {/* Cabecera: siempre visible */}
+      <div className="sidebar_header__dash">
+        <div className="sidebar_brand__dash">
+          <h1>Vibe-U</h1>
+          <p>La app que pone a la U en modo social</p>
+        </div>
 
-      </nav>
+        {/* Botón hamburguesa — solo visible en móvil vía CSS */}
+        <button
+          className="sidebar_toggle__dash"
+          onClick={() => setIsOpen((prev) => !prev)}
+          aria-label={isOpen ? "Cerrar menú" : "Abrir menú"}
+        >
+          {isOpen ? <FaTimes /> : <FaBars />}
+        </button>
+      </div>
 
-      <div className="quick_links__dash">
-        {isMobileUser && (
-          <>
-            <span className="menu_label__dash">Comunidad</span>
-            <NavLink className={navClass} to="/grupos"><FaUsers /> Grupos</NavLink>
-            <NavLink className={navClass} to="/matches"><FaHeart /> Match</NavLink>
-          </>
-        )}
+      {/* Cuerpo: oculto en móvil hasta que isOpen sea true */}
+      <div className="sidebar_body__dash">
+        <nav className="menu__dash">
+          <span className="menu_label__dash">Dashboard</span>
+          <NavLink className={navClass} to="/dashboard/feed" onClick={handleNavClick}>
+            <FaHome /> Feed
+          </NavLink>
+          <NavLink className={navClass} to="/dashboard/publicar" onClick={handleNavClick}>
+            <FaPlusCircle /> Publicar
+          </NavLink>
+          <NavLink className={navClass} to="/dashboard/chat" onClick={handleNavClick}>
+            <FaComments /> Chat
+          </NavLink>
+          <NavLink className={navClass} to="/dashboard/eventos" onClick={handleNavClick}>
+            <FaCalendarAlt /> Eventos U
+          </NavLink>
+          <NavLink className={navClass} to="/dashboard/perfil" onClick={handleNavClick}>
+            <FaUser /> Perfil
+          </NavLink>
+          <NavLink className={navClass} to="/dashboard/micuenta" onClick={handleNavClick}>
+            <FaIdBadge /> Mi cuenta
+          </NavLink>
+          <NavLink className={navClass} to="/dashboard/notificaciones" onClick={handleNavClick}>
+            <FaBell /> Notificaciones
+          </NavLink>
+          <NavLink className={navClass} to="/dashboard/ajustes" onClick={handleNavClick}>
+            <FaCog /> Ajustes
+          </NavLink>
+        </nav>
 
-        {isAdmin && (
-          <>
-            <span className="menu_label__dash">Administracion</span>
-            <NavLink className={navClass} to="/gusuarios"><FaUserShield /> Gestion usuarios</NavLink>
-            <NavLink className={navClass} to="/gautomatizacion"><FaChartBar /> Automatizacion</NavLink>
-          </>
-        )}
+        <div className="quick_links__dash">
+          {isAdmin && (
+            <>
+              <span className="menu_label__dash">Administracion</span>
+              <NavLink className={navClass} to="/gusuarios" onClick={handleNavClick}>
+                <FaUserShield /> Gestion usuarios
+              </NavLink>
+              <NavLink className={navClass} to="/gautomatizacion" onClick={handleNavClick}>
+                <FaChartBar /> Automatizacion
+              </NavLink>
+            </>
+          )}
+        </div>
       </div>
     </aside>
   );

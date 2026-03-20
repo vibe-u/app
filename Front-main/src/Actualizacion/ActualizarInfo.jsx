@@ -4,6 +4,7 @@ import axios from "axios";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import "./ActualizarInfo.css";
+import { resolveAvatarUrl } from "../utils/mediaUrl";
 
 // ➡️ Ruta correcta de tu AvatarCropperModal
 import AvatarCropperModal from "../components/Avatar/AvatarCropperModal.jsx";
@@ -141,21 +142,27 @@ const ActualizarInfo = () => {
       <div className="avatar-wrapper">
         <div className="avatar-circle" onClick={handleFileClick}>
           {avatar ? (
-            <img src={avatar} alt="Avatar" className="avatar-img-preview" />
+            <img src={resolveAvatarUrl(avatar)} alt="Avatar" className="avatar-img-preview" />
           ) : (
             <span className="default-avatar">👤</span>
           )}
         </div>
 
         <div className="btns-avatar">
-          <button className="btn-upload" onClick={handleFileClick}>
-            Subir foto
+          <button className="btn-upload" type="button" onClick={handleFileClick}>
+            <img
+              src="https://cdn-icons-png.flaticon.com/512/16462/16462616.png"
+              alt="Galería"
+            /> 
           </button>
           <button
             className="btn-select"
+            type="button"
             onClick={() => setAvatarModalOpen(!avatarModalOpen)}
+            title="Elegir avatar"
+            aria-label="Elegir avatar"
           >
-            Elegir avatar
+            🧑
           </button>
         </div>
 
@@ -167,7 +174,6 @@ const ActualizarInfo = () => {
           onChange={handleFileChange}
         />
       </div>
-
       {avatarModalOpen && (
         <div className="avatar-modal-overlay">
           <div className="avatar-modal-content">

@@ -1,10 +1,27 @@
 import Grupo from '../models/Grupos.js';
+import { extractStoredFilename, toPublicUploadUrl } from "../utils/mediaUrl.js";
+
+const mapCommentMedia = (req, comment = {}) => ({
+    ...comment,
+    autorFoto: toPublicUploadUrl(req, "avatars", comment.autorFoto),
+});
+
+const mapPostMedia = (req, post = {}) => ({
+    ...post,
+    autorFoto: toPublicUploadUrl(req, "avatars", post.autorFoto),
+    comentarios: (post.comentarios || []).map((comment) => mapCommentMedia(req, comment)),
+});
+
+const mapGroupMedia = (req, grupo = {}) => ({
+    ...grupo,
+    posts: (grupo.posts || []).map((post) => mapPostMedia(req, post)),
+});
 
 // Listar grupos
 export const listarGrupos = async (req, res) => {
     try {
         const grupos = await Grupo.find().sort({ createdAt: -1 });
-        res.json(grupos);
+        res.json(grupos.map((grupo) => mapGroupMedia(req, grupo.toObject())));
     } catch (error) {
         res.status(500).json({ message: "Error al listar grupos" });
     }
@@ -25,7 +42,7 @@ export const crearGrupo = async (req, res) => {
         });
 
         const grupoGuardado = await nuevoGrupo.save();
-        res.status(201).json(grupoGuardado);
+        res.status(201).json(mapGroupMedia(req, grupoGuardado.toObject()));
     } catch (error) {
         res.status(400).json({ message: "Error al crear el grupo" });
     }
@@ -46,7 +63,7 @@ export const unirseGrupo = async (req, res) => {
             grupo.miembrosArray.push(correo);
             await grupo.save();
         }
-        res.json({ message: "Unido con exito", grupo });
+        res.json({ message: "Unido con exito", grupo: mapGroupMedia(req, grupo.toObject()) });
     } catch (error) {
         res.status(400).json({ message: "Error al unirse" });
     }
@@ -100,7 +117,7 @@ export const crearPost = async (req, res) => {
         if (!grupo) return res.status(404).json({ message: "Grupo no encontrado" });
 
         const autor = req.usuario?.nombre || "Usuario";
-        const autorFoto = req.usuario?.avatar || "";
+        const autorFoto = extractStoredFilename(req.usuario?.avatar || "");
         const autorEmail = req.usuario?.correoInstitucional || "";
 
         const nuevoPost = {
@@ -114,7 +131,7 @@ export const crearPost = async (req, res) => {
         grupo.posts.unshift(nuevoPost);
         await grupo.save();
 
-        res.status(201).json(grupo.posts[0]);
+        res.status(201).json(mapPostMedia(req, grupo.posts[0].toObject()));
     } catch (error) {
         res.status(400).json({ message: "Error al publicar post" });
     }
@@ -127,7 +144,7 @@ export const comentarPost = async (req, res) => {
         const { contenido } = req.body;
 
         const autor = req.usuario?.nombre || "Usuario";
-        const autorFoto = req.usuario?.avatar || "";
+        const autorFoto = extractStoredFilename(req.usuario?.avatar || "");
         const autorEmail = req.usuario?.correoInstitucional || "";
 
         const grupo = await Grupo.findById(id);
@@ -147,7 +164,7 @@ export const comentarPost = async (req, res) => {
         post.comentarios.push(nuevoComentario);
         await grupo.save();
 
-        res.status(201).json(post.comentarios[post.comentarios.length - 1]);
+        res.status(201).json(mapCommentMedia(req, post.comentarios[post.comentarios.length - 1].toObject()));
     } catch (error) {
         console.error(error);
         res.status(400).json({ message: "Error al agregar comentario" });

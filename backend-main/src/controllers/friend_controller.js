@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import Usuario from "../models/Usuario.js";
 import Post from "../models/Post.js";
 import Grupo from "../models/Grupos.js";
+import { mapAvatarToPublicUrl, mapPostMediaToPublicUrl } from "../utils/mediaUrl.js";
 
 const PUBLIC_USER_FIELDS = "nombre avatar descripcion universidad carrera rol correoInstitucional";
 
@@ -31,7 +32,7 @@ const searchUsers = async (req, res) => {
       .limit(8)
       .lean();
 
-    res.json(users);
+    res.json(users.map((user) => mapAvatarToPublicUrl(req, user)));
   } catch {
     res.status(500).json({ msg: "Error al buscar usuarios" });
   }
@@ -68,18 +69,20 @@ const getPublicProfile = async (req, res) => {
         .lean(),
     ]);
 
+    const mappedPosts = posts.map((post) => mapPostMediaToPublicUrl(req, post));
+
     res.json({
       user: {
         _id: user._id,
         nombre: user.nombre,
-        avatar: user.avatar,
+        avatar: mapAvatarToPublicUrl(req, user).avatar,
         descripcion: user.descripcion,
         universidad: user.universidad,
         carrera: user.carrera,
         rol: user.rol,
       },
       friendStatus: getFriendStatus(viewer, user._id),
-      posts,
+      posts: mappedPosts,
       groups,
     });
   } catch {
@@ -170,7 +173,7 @@ const getFriendRequestNotifications = async (req, res) => {
     const notifications = (me?.solicitudesRecibidas || []).map((user) => ({
       _id: `fr-${user._id}`,
       type: "friend_request",
-      fromUser: user,
+      fromUser: mapAvatarToPublicUrl(req, user),
       message: `${user.nombre} te envio una solicitud de amistad`,
       createdAt: new Date().toISOString(),
     }));

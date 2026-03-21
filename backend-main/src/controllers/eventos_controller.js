@@ -153,6 +153,72 @@ const toggleAsistire = async (req, res) => {
   }
 };
 
+const eliminarEvento = async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ msg: "Evento invalido." });
+    }
+
+    const evento = await Evento.findById(id);
+    if (!evento) return res.status(404).json({ msg: "Evento no encontrado." });
+
+    if (toId(evento.creador) !== toId(req.usuario?._id)) {
+      return res.status(403).json({ msg: "Solo el creador puede eliminar este evento." });
+    }
+
+    await Evento.findByIdAndDelete(id);
+    res.json({ msg: "Evento eliminado correctamente.", id });
+  } catch {
+    res.status(500).json({ msg: "Error al eliminar evento" });
+  }
+};
+
+const actualizarEvento = async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ msg: "Evento invalido." });
+    }
+
+    const evento = await Evento.findById(id);
+    if (!evento) return res.status(404).json({ msg: "Evento no encontrado." });
+
+    if (toId(evento.creador) !== toId(req.usuario?._id)) {
+      return res.status(403).json({ msg: "Solo el creador puede editar este evento." });
+    }
+
+    const {
+      nombreEvento,
+      portada,
+      fechaHora,
+      lugar,
+      descripcionEvento,
+      costo,
+    } = req.body || {};
+
+    if (typeof nombreEvento === "string" && nombreEvento.trim()) evento.nombreEvento = nombreEvento.trim();
+    if (typeof lugar === "string" && lugar.trim()) evento.lugar = lugar.trim();
+    if (typeof descripcionEvento === "string" && descripcionEvento.trim()) evento.descripcionEvento = descripcionEvento.trim();
+    if (typeof costo === "string" && costo.trim()) evento.costo = costo.trim();
+    if (typeof portada === "string" && portada.trim()) evento.portada = savePortadaIfBase64(portada, req.usuario._id);
+
+    if (typeof fechaHora === "string" && fechaHora.trim()) {
+      const fecha = new Date(fechaHora);
+      if (Number.isNaN(fecha.getTime())) {
+        return res.status(400).json({ msg: "Fecha y hora invalidas." });
+      }
+      evento.fechaHora = fecha;
+    }
+
+    await evento.save();
+    await evento.populate("creador", "_id nombre avatar");
+    res.json(mapEvento(req, evento, toId(req.usuario?._id)));
+  } catch {
+    res.status(500).json({ msg: "Error al actualizar evento" });
+  }
+};
+
 const notificacionesEventos = async (req, res) => {
   try {
     const universidad = getUniversidad(req);
@@ -197,6 +263,8 @@ const notificacionesEventos = async (req, res) => {
 export {
   listarEventosUniversidad,
   crearEvento,
+  actualizarEvento,
   toggleAsistire,
+  eliminarEvento,
   notificacionesEventos,
 };

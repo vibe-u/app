@@ -34,11 +34,12 @@ h3 {
   gap: 18px;
   padding: 0 14px;
   background: linear-gradient(140deg, #fdf7fb 0%, #f8f4ff 45%, #f3f9ff 100%);
-  /* AÑADIR: */
   height: 100vh;
   overflow: hidden;
 }
-
+.shell__dash > * {
+  min-width: 0;
+}
 .sidebar__dash,
 .panel__dash,
 .topbar__dash {
@@ -771,6 +772,7 @@ h3 {
 }
 
 .event_card__dash {
+  position: relative;
   border: 1px solid #ebc5dc;
   border-radius: 14px;
   background: linear-gradient(180deg, #fff 0%, #fff5fb 100%);
@@ -794,6 +796,54 @@ h3 {
 
 .event_card_main_custom__dash {
   min-width: 0;
+  padding-right: 34px;
+}
+
+.event_menu_wrap__dash {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+}
+
+.event_menu_btn__dash {
+  background-color: white;
+  color: #000;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.event_menu_panel__dash {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  min-width: 120px;
+  background: #fff;
+  border: 1px solid #ebc5dc;
+  border-radius: 10px;
+  box-shadow: 0 10px 24px rgba(108, 0, 99, 0.16);
+  z-index: 20;
+  overflow: hidden;
+}
+
+.event_menu_panel__dash button {
+  width: 100%;
+  border: 0;
+  border-bottom: 1px solid #f2d9e8;
+  background: #fff;
+  color: #4a0142;
+  text-align: left;
+  padding: 8px 10px;
+  cursor: pointer;
+}
+
+.event_menu_panel__dash button:last-child {
+  border-bottom: 0;
+}
+
+.event_menu_panel__dash button:hover {
+  background: #fff6fb;
 }
 
 .event_cover_custom__dash {
@@ -838,6 +888,7 @@ h3 {
   gap: 10px;
   margin-top: 10px;
 }
+
 
 .events_actions__dash {
   display: flex;
@@ -1006,12 +1057,43 @@ h3 {
   border-color: #2f445c;
 }
 
+[data-theme="dark"] .event_menu_btn__dash {
+  border-color: #2f445c;
+  background: #0f1622;
+  color: #dbe8f8;
+}
+
+[data-theme="dark"] .event_menu_btn__dash:hover {
+  background: #1a2432;
+}
+
+[data-theme="dark"] .event_menu_panel__dash {
+  border-color: #2f445c;
+  background: #0f1622;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
+}
+
+[data-theme="dark"] .event_menu_panel__dash button {
+  background: #0f1622;
+  color: #dbe8f8;
+  border-bottom-color: #2f445c;
+}
+
+[data-theme="dark"] .event_menu_panel__dash button:hover {
+  background: #1a2432;
+}
+
 @media (max-width: 770px) {
   .shell__dash {
     grid-template-columns: 1fr;
     height: auto;
     padding: 8px;
     gap: 10px;
+    
+  }
+  .input__dash {
+    width: 100%;
+    box-sizing: border-box;   
   }
 
   .sidebar__dash {
@@ -1069,13 +1151,12 @@ h3 {
 
   .topbar__dash {
     flex-direction: inherit;
-    align-items: stretch;
+    flex-wrap: wrap;
   }
 
   .actions__dash {
     width: 100%;
     flex-wrap: wrap;
-    justify-content: flex-end;
   }
 
   .search_box__dash {
@@ -1105,7 +1186,7 @@ h3 {
   }
 
   .events_modal__dash {
-    width: 100%;
+    width: calc(100% - 16px);
     max-height: 96vh;
     border-radius: 12px;
   }
@@ -1122,5 +1203,8 @@ h3 {
   .event_cover_custom__dash {
     width: 100%;
     height: 150px;
+  }
+  .mobile_actions__dash {
+    justify-content: flex-end;
   }
 }

@@ -1,9 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   createUniversityEvent,
+  deleteUniversityEvent,
   getUniversityEvents,
   toggleAttendEvent,
+  updateUniversityEvent,
 } from "../../../Services/events";
+import { getTokenPayload } from "../../../utils/authToken";
 
 const formatDate = (value) => {
   if (!value) return "Fecha no disponible";
@@ -21,6 +24,15 @@ const emptyForm = {
   costo: "",
 };
 
+const toDateTimeLocalValue = (value) => {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  const offset = date.getTimezoneOffset();
+  const local = new Date(date.getTime() - offset * 60 * 1000);
+  return local.toISOString().slice(0, 16);
+};
+
 const EventsView = () => {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -28,8 +40,12 @@ const EventsView = () => {
   const [error, setError] = useState("");
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState(null);
+  const [openMenuEventId, setOpenMenuEventId] = useState(null);
+  const [editingEventId, setEditingEventId] = useState("");
   const [form, setForm] = useState(emptyForm);
   const [coverPreview, setCoverPreview] = useState("");
+  const token = localStorage.getItem("token");
+  const currentUserId = getTokenPayload(token)?.id || "";
 
   const sortedEvents = useMemo(
     () => [...events].sort((a, b) => new Date(a.fechaHora) - new Date(b.fechaHora)),
@@ -58,13 +74,18 @@ const EventsView = () => {
     try {
       setSubmitting(true);
       setError("");
-      await createUniversityEvent(form);
+      if (editingEventId) {
+        await updateUniversityEvent(editingEventId, form);
+      } else {
+        await createUniversityEvent(form);
+      }
       setForm(emptyForm);
       setCoverPreview("");
+      setEditingEventId("");
       setShowCreateModal(false);
       await loadEvents();
     } catch (err) {
-      setError(err?.response?.data?.msg || "No se pudo crear el evento.");
+      setError(err?.response?.data?.msg || (editingEventId ? "No se pudo actualizar el evento." : "No se pudo crear el evento."));
     } finally {
       setSubmitting(false);
     }
@@ -107,6 +128,36 @@ const EventsView = () => {
     }
   };
 
+  const handleDeleteEvent = async (eventId, e) => {
+    e.stopPropagation();
+    try {
+      setError("");
+      await deleteUniversityEvent(eventId);
+      setOpenMenuEventId(null);
+      setEvents((prev) => prev.filter((item) => item._id !== eventId));
+      setSelectedEvent((prev) => (prev?._id === eventId ? null : prev));
+    } catch (err) {
+      setError(err?.response?.data?.msg || "No se pudo eliminar el evento.");
+    }
+  };
+
+  const handleEditEvent = (event, e) => {
+    e.stopPropagation();
+    setOpenMenuEventId(null);
+    setSelectedEvent(null);
+    setEditingEventId(event._id);
+    setForm({
+      nombreEvento: event.nombreEvento || "",
+      portada: event.portada || "",
+      fechaHora: toDateTimeLocalValue(event.fechaHora),
+      lugar: event.lugar || "",
+      descripcionEvento: event.descripcionEvento || "",
+      costo: event.costo || "",
+    });
+    setCoverPreview(event.portada || "");
+    setShowCreateModal(true);
+  };
+
   return (
     <section className="panel__dash">
       <div className="events_head_custom__dash">
@@ -126,7 +177,10 @@ const EventsView = () => {
             <article
               key={event._id}
               className="event_card__dash event_card_clickable__dash"
-              onClick={() => setSelectedEvent(event)}
+              onClick={() => {
+                setOpenMenuEventId(null);
+                setSelectedEvent(event);
+              }}
               role="button"
               tabIndex={0}
               onKeyDown={(e) => {
@@ -135,6 +189,36 @@ const EventsView = () => {
             >
               <div className="event_card_body_custom__dash">
                 <div className="event_card_main_custom__dash">
+                  {event?.creador?._id === currentUserId ? (
+                    <div
+                      className="event_menu_wrap__dash"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <button
+                        className="event_menu_btn__dash"
+                        type="button"
+                        aria-label="Opciones del evento"
+                        title="Opciones"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setOpenMenuEventId((prev) => (prev === event._id ? null : event._id));
+                        }}
+                      >
+                        
+                        ⋮
+                      </button>
+                      {openMenuEventId === event._id ? (
+                        <div className="event_menu_panel__dash">
+                          <button type="button" onClick={(e) => handleEditEvent(event, e)}>
+                            Editar
+                          </button>
+                          <button type="button" onClick={(e) => handleDeleteEvent(event._id, e)}>
+                            Eliminar
+                          </button>
+                        </div>
+                      ) : null}
+                    </div>
+                  ) : null}
                   <h4>{event.nombreEvento}</h4>
                   <p>{formatDate(event.fechaHora)}</p>
                   <p>{event.lugar}</p>
@@ -163,7 +247,7 @@ const EventsView = () => {
       {showCreateModal ? (
         <div className="events_modal_overlay__dash" role="dialog" aria-modal="true">
           <div className="events_modal__dash">
-            <h4>Publicar evento</h4>
+            <h4>{editingEventId ? "Editar evento" : "Publicar evento"}</h4>
             <form className="events_form__dash" onSubmit={handleCreateEvent}>
               <input
                 className="input__dash"
@@ -206,11 +290,20 @@ const EventsView = () => {
                 onChange={(e) => setForm((prev) => ({ ...prev, costo: e.target.value }))}
               />
               <div className="events_actions__dash">
-                <button className="button__dash" type="button" onClick={() => setShowCreateModal(false)}>
+                <button
+                  className="button__dash"
+                  type="button"
+                  onClick={() => {
+                    setShowCreateModal(false);
+                    setEditingEventId("");
+                    setForm(emptyForm);
+                    setCoverPreview("");
+                  }}
+                >
                   Cancelar
                 </button>
                 <button className="button__dash" type="submit" disabled={submitting}>
-                  {submitting ? "Publicando..." : "Guardar evento"}
+                  {submitting ? (editingEventId ? "Guardando..." : "Publicando...") : (editingEventId ? "Guardar cambios" : "Guardar evento")}
                 </button>
               </div>
             </form>

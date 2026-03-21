@@ -126,7 +126,7 @@ const ActualizarInfo = () => {
       );
 
       toast.success("Información actualizada");
-      setTimeout(() => navigate("/ajustes"), 1200);
+      setTimeout(() => navigate("/dashboard/ajustes"), 1200);
     } catch (err) {
       console.error("Error al actualizar la información:", err.response?.data || err);
       toast.error("Error al guardar la información.");
@@ -283,7 +283,7 @@ const ActualizarInfo = () => {
         </div>
 
         <div className="btn-row">
-          <button className="cancel-btn" onClick={() => navigate("/ajustes")}>
+          <button className="cancel-btn" onClick={() => navigate("/dashboard/ajustes")}>
             Cancelar
           </button>
 

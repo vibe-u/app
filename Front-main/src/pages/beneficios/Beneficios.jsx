@@ -1,7 +1,6 @@
 import React from 'react';
 import './Beneficios.css';
 import { useNavigate } from 'react-router';
-import {AOS} from 'aos';
 
 const Beneficios = () => {
     const navigate = useNavigate();

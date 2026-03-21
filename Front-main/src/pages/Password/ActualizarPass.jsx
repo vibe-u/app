@@ -89,7 +89,7 @@ const ChangePasswordForm = () => {
       setConfirmNewPassword("");
 
       setTimeout(() => {
-        navigate("/ajustes");
+        navigate("/dashboard/ajustes");
       }, 1500);
 
     } catch (error) {
@@ -102,7 +102,7 @@ const ChangePasswordForm = () => {
     setOldPassword("");
     setNewPassword("");
     setConfirmNewPassword("");
-    navigate("/ajustes");
+    navigate("/dashboard/ajustes");
   };
 
   return (
@@ -110,7 +110,7 @@ const ChangePasswordForm = () => {
       <ToastContainer />
       <div className="password-change-card">
 
-        <div style={{ cursor: 'pointer', textAlign: 'left', marginBottom: '15px' }} onClick={() => navigate("/ajustes")}>
+        <div style={{ cursor: 'pointer', textAlign: 'left', marginBottom: '15px' }} onClick={() => navigate("/dashboard/ajustes")}>
           ← Volver a Ajustes
         </div>
 

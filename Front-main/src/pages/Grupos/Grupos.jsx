@@ -402,7 +402,7 @@ const Grupos = () => {
         <section className="grupos-page">
             <div className="grupos-header-top">
                 <div className="header-left-side">
-                    <button className="btn-back-main-page" onClick={() => navigate("/panel")}><FaArrowLeft /></button>
+                    <button className="btn-back-main-page" onClick={() => navigate("/dashboard/feed")}><FaArrowLeft /></button>
                     <h2 style={{color: '#000'}}>Comunidades</h2>
                 </div>
                 <button className="btn-crear-grupo" onClick={() => setIsModalOpen(true)}><FaPlus /> Crear Grupo</button>

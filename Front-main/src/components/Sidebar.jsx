@@ -5,6 +5,8 @@ import {
   FaPlusCircle,
   FaComments,
   FaCalendarAlt,
+  FaUsers,
+  FaHeart,
   FaUser,
   FaCog,
   FaBell,
@@ -92,6 +94,18 @@ const Sidebar = () => {
         </nav>
 
         <div className="quick_links__dash">
+          {isMobileUser && (
+            <>
+              <span className="menu_label__dash">Comunidad</span>
+              <NavLink className={navClass} to="/grupos" onClick={handleNavClick}>
+                <FaUsers /> Grupos
+              </NavLink>
+              <NavLink className={navClass} to="/matches" onClick={handleNavClick}>
+                <FaHeart /> Match
+              </NavLink>
+            </>
+          )}
+
           {isAdmin && (
             <>
               <span className="menu_label__dash">Administracion</span>

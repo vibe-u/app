@@ -6,7 +6,6 @@ import "aos/dist/aos.css";
 import Landing from "./pages/Landing";
 import Register from "./pages/register/Register";
 import Login from "./pages/login/Login";
-import Gracias from "./pages/gracias/Gracias";
 import Contacto from "./pages/contacto/Contacto";
 import Eventos from "./pages/eventos/Eventos";
 import Beneficios from "./pages/beneficios/Beneficios";
@@ -14,7 +13,6 @@ import ForgotPassword from "./pages/forgot-password/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import { Confirm } from "./pages/confirm";
 
-import Dashboard from "./pages/dashboard/Dashboard";
 import UserDashboard from "./pages/dashboard/UserDashboard";
 import FeedView from "./pages/dashboard/views/FeedView";
 import CreatePostView from "./pages/dashboard/views/CreatePostView";
@@ -27,7 +25,6 @@ import SettingsView from "./pages/dashboard/views/SettingsView";
 import Perfil from "./pages/perfil/Perfil";
 import Matches from "./pages/Matches/Matches";
 import MUsuario from "./pages/MUsuario/MUsuario";
-import Ajustes from "./pages/Ajustes/Ajustes.jsx";
 import ActualizarInfo from "./Actualizacion/ActualizarInfo.jsx";
 import ChangePasswordForm from "./pages/Password/ActualizarPass.jsx";
 import Grupos from "./pages/Grupos/Grupos.jsx";
@@ -73,14 +70,12 @@ function App() {
           <Route path="/" element={<Landing />} />
           <Route path="login" element={<Login />} />
           <Route path="register" element={<Register />} />
-          <Route path="gracias" element={<Gracias />} />
           <Route path="confirmar/:token" element={<Confirm />} />
           <Route path="forgot-password" element={<ForgotPassword />} />
           <Route path="recuperarpassword/:token" element={<ResetPassword />} />
         </Route>
 
         <Route element={<PrivateRoute />}>
-          <Route path="panel" element={<Dashboard />} />
           <Route path="dashboard" element={<UserDashboard />}>
             <Route index element={<Navigate to="feed" replace />} />
             <Route path="feed" element={<FeedView />} />
@@ -95,8 +90,6 @@ function App() {
           </Route>
           <Route path="perfil" element={<Perfil />} />
           <Route path="musuario" element={<Navigate to="/dashboard/micuenta" replace />} />
-          <Route path="user-profile" element={<Navigate to="/dashboard/micuenta" replace />} />
-          <Route path="ajustes" element={<Ajustes />} />
           <Route path="actualizar-info" element={<ActualizarInfo />} />
           <Route path="actualizar-pass" element={<ChangePasswordForm />} />
           <Route path="gusuarios" element={<Gusuario />} />

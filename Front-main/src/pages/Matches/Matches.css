@@ -45,7 +45,19 @@
     border-radius: 50%;
     width: 100px;
     height: 100px;
+    object-fit: cover;
+    border: 2px solid rgba(123, 75, 255, 0.35);
+    background: #ffffff;
     margin-bottom: 0.5rem;
+}
+
+.matches-state {
+    margin: 0.5rem 0 1rem;
+    color: #dddddd;
+}
+
+.matches-error {
+    color: #ff9fa5;
 }
 
 .connect-btn {

@@ -1,0 +1,26 @@
+{
+  "name": "Vibe-U",
+  "short_name": "Vibe-U",
+  "description": "Vibe-U: La app que pone a la U en modo social",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#fdf7fb",
+  "theme_color": "#6c0063",
+  "lang": "es-EC",
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

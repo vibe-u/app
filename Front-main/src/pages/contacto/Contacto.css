@@ -143,6 +143,6 @@
         grid-template-columns: 1fr; 
     }
     .contacto-info {
-        padding: 30px;
+        box-sizing: border-box;
     }
 }

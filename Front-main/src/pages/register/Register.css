@@ -118,3 +118,28 @@
 .register-btn:hover {
     background: #7c00c6;
 }
+
+@media (max-width: 768px) {
+    .register-page {
+        display: block;
+        min-height: 100vh;
+    }
+
+    .register-left {
+        display: none;
+    }
+
+    .register-right {
+        min-height: 100vh;
+        width: 100%;
+        padding: 20px;
+        box-sizing: border-box;
+    }
+
+    .register-card {
+        width: 100%;
+        max-width: 400px;
+        padding: 30px 20px;
+        box-sizing: border-box;
+    }
+}

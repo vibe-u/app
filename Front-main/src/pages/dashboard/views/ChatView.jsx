@@ -13,6 +13,25 @@ const formatTime = (isoDate) => {
   return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 };
 
+const areMessagesEqual = (prev = [], next = []) => {
+  if (prev.length !== next.length) return false;
+  for (let i = 0; i < prev.length; i += 1) {
+    const a = prev[i];
+    const b = next[i];
+    if (!a || !b) return false;
+    if (
+      a._id !== b._id ||
+      a.sender !== b.sender ||
+      a.receiver !== b.receiver ||
+      a.content !== b.content ||
+      a.createdAt !== b.createdAt
+    ) {
+      return false;
+    }
+  }
+  return true;
+};
+
 const ChatView = () => {
   const [users, setUsers] = useState([]);
   const [conversations, setConversations] = useState([]);
@@ -23,7 +42,9 @@ const ChatView = () => {
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
+  const messagesContainerRef = useRef(null);
   const messagesEndRef = useRef(null);
+  const shouldAutoScrollRef = useRef(true);
 
   const loadUsers = async (searchValue = "") => {
     const { data } = await getChatUsers(searchValue);
@@ -38,7 +59,10 @@ const ChatView = () => {
   const loadMessagesForUser = async (userId) => {
     if (!userId) return;
     const { data } = await getMessagesWithUser(userId);
-    setMessages(Array.isArray(data?.messages) ? data.messages : []);
+    const nextMessages = Array.isArray(data?.messages) ? data.messages : [];
+    setMessages((prevMessages) =>
+      areMessagesEqual(prevMessages, nextMessages) ? prevMessages : nextMessages
+    );
   };
 
   const loadInitialData = async () => {
@@ -112,8 +136,21 @@ const ChatView = () => {
   }, [activeUserId]);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+    if (!shouldAutoScrollRef.current) return;
+    messagesEndRef.current?.scrollIntoView({ behavior: "auto", block: "end" });
   }, [messages]);
+
+  useEffect(() => {
+    shouldAutoScrollRef.current = true;
+  }, [activeUserId]);
+
+  const handleMessagesScroll = () => {
+    const container = messagesContainerRef.current;
+    if (!container) return;
+
+    const distanceToBottom = container.scrollHeight - container.scrollTop - container.clientHeight;
+    shouldAutoScrollRef.current = distanceToBottom < 72;
+  };
 
   const handleSearch = async (value) => {
     setSearch(value);
@@ -174,7 +211,7 @@ const ChatView = () => {
 
       <div className="panel__dash chat_conversation_panel__dash">
         <h3>Conversacion con {activeUser?.nombre || "..."}</h3>
-        <div className="chat_messages__dash">
+        <div className="chat_messages__dash" ref={messagesContainerRef} onScroll={handleMessagesScroll}>
           {messages.map((msg) => (
             <p key={msg._id} className={msg.sender === activeUserId ? "" : "mine__dash"}>
               {msg.content}

@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import {
+  cancelFriendRequest,
   getPublicUserProfile,
+  removeFriend,
   respondFriendRequest,
   sendFriendRequest,
 } from "../../../Services/users";
@@ -14,6 +16,12 @@ const UserPublicProfileView = () => {
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
   const [error, setError] = useState("");
+  const [confirmModal, setConfirmModal] = useState({
+    open: false,
+    action: "",
+    title: "",
+    message: "",
+  });
 
   const loadProfile = async () => {
     try {
@@ -32,13 +40,30 @@ const UserPublicProfileView = () => {
     loadProfile();
   }, [id]);
 
-  const handleSendRequest = async () => {
+  const openConfirm = (action, title, message) => {
+    setConfirmModal({ open: true, action, title, message });
+  };
+
+  const closeConfirm = () => {
+    setConfirmModal({ open: false, action: "", title: "", message: "" });
+  };
+
+  const executeAction = async () => {
     try {
       setProcessing(true);
-      await sendFriendRequest(id);
+      if (confirmModal.action === "add") {
+        await sendFriendRequest(id);
+      }
+      if (confirmModal.action === "cancel") {
+        await cancelFriendRequest(id);
+      }
+      if (confirmModal.action === "remove") {
+        await removeFriend(id);
+      }
       await loadProfile();
+      closeConfirm();
     } catch (e) {
-      setError(e?.response?.data?.msg || "No se pudo enviar la solicitud");
+      setError(e?.response?.data?.msg || "No se pudo completar la accion");
     } finally {
       setProcessing(false);
     }
@@ -61,8 +86,48 @@ const UserPublicProfileView = () => {
     if (!status) return null;
 
     if (status === "self") return <p className="friend_status__dash">Este es tu perfil.</p>;
-    if (status === "friends") return <p className="friend_status__dash">Ya son amigos.</p>;
-    if (status === "pending_sent") return <p className="friend_status__dash">Solicitud enviada.</p>;
+    if (status === "friends") {
+      return (
+        <div className="friend_actions__dash">
+          <p className="friend_status__dash">Ya son amigos.</p>
+          <button
+            className="post_delete_btn__dash"
+            type="button"
+            onClick={() =>
+              openConfirm(
+                "remove",
+                "Eliminar amigo",
+                "¿Seguro que deseas eliminar a este usuario de tu lista de amigos?"
+              )
+            }
+            disabled={processing}
+          >
+            ❌ Eliminar amigo
+          </button>
+        </div>
+      );
+    }
+    if (status === "pending_sent") {
+      return (
+        <div className="friend_actions__dash">
+          <p className="friend_status__dash">Solicitud enviada.</p>
+          <button
+            className="post_comment_btn__dash"
+            type="button"
+            onClick={() =>
+              openConfirm(
+                "cancel",
+                "Cancelar solicitud",
+                "¿Deseas cancelar la solicitud de amistad enviada?"
+              )
+            }
+            disabled={processing}
+          >
+            🚫 Cancelar solicitud
+          </button>
+        </div>
+      );
+    }
     if (status === "pending_received") {
       return (
         <div className="friend_actions__dash">
@@ -77,8 +142,19 @@ const UserPublicProfileView = () => {
     }
 
     return (
-      <button className="button__dash" type="button" onClick={handleSendRequest} disabled={processing}>
-        Solicitar amistad
+      <button
+        className="button__dash"
+        type="button"
+        onClick={() =>
+          openConfirm(
+            "add",
+            "Agregar amigo",
+            "¿Deseas enviar una solicitud de amistad a este usuario?"
+          )
+        }
+        disabled={processing}
+      >
+        ➕ Agregar amigo
       </button>
     );
   };
@@ -141,6 +217,28 @@ const UserPublicProfileView = () => {
           {!data.groups?.length ? <li>No pertenece a grupos visibles.</li> : null}
         </ul>
       </section>
+
+      {confirmModal.open ? (
+        <div className="confirm_modal_overlay__dash" role="dialog" aria-modal="true">
+          <div className="confirm_modal__dash">
+            <h4>{confirmModal.title}</h4>
+            <p>{confirmModal.message}</p>
+            <div className="confirm_modal_actions__dash">
+              <button type="button" className="button__dash" onClick={closeConfirm} disabled={processing}>
+                Cancelar
+              </button>
+              <button
+                type="button"
+                className={confirmModal.action === "remove" ? "post_delete_btn__dash" : "button__dash"}
+                onClick={executeAction}
+                disabled={processing}
+              >
+                {processing ? "Procesando..." : "Confirmar"}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </section>
   );
 };

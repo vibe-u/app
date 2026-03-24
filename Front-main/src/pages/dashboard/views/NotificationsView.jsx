@@ -3,10 +3,32 @@ import { useNavigate } from "react-router-dom";
 import { getFriendNotifications, getModerationNotifications, respondFriendRequest } from "../../../Services/users";
 import { getEventNotifications } from "../../../Services/events";
 
+const HISTORY_KEY = "vibeu.notifications.history.v1";
+
+const readHistory = () => {
+  try {
+    const raw = localStorage.getItem(HISTORY_KEY);
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+};
+
+const writeHistory = (items) => {
+  try {
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(items.slice(0, 300)));
+  } catch {
+    // ignore localStorage errors
+  }
+};
+
 const NotificationsView = () => {
   const navigate = useNavigate();
   const [notifications, setNotifications] = useState([]);
+  const [historyNotifications, setHistoryNotifications] = useState(readHistory());
   const [error, setError] = useState("");
+  const [tab, setTab] = useState("recent");
 
   const loadNotifications = async () => {
     try {
@@ -23,6 +45,24 @@ const NotificationsView = () => {
         (a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0)
       );
       setNotifications(merged);
+
+      const previous = readHistory();
+      const map = new Map(previous.map((item) => [item._id, item]));
+      const now = new Date().toISOString();
+      merged.forEach((item) => {
+        const prev = map.get(item._id);
+        map.set(item._id, {
+          ...prev,
+          ...item,
+          firstSeenAt: prev?.firstSeenAt || item.createdAt || now,
+          lastSeenAt: now,
+        });
+      });
+      const history = [...map.values()].sort(
+        (a, b) => new Date(b.lastSeenAt || b.createdAt || 0) - new Date(a.lastSeenAt || a.createdAt || 0)
+      );
+      writeHistory(history);
+      setHistoryNotifications(history);
     } catch (e) {
       setError(e?.response?.data?.msg || "No se pudieron cargar notificaciones");
     }
@@ -41,21 +81,47 @@ const NotificationsView = () => {
     }
   };
 
+  const notificationsToRender = tab === "history" ? historyNotifications : notifications;
+
   return (
     <section className="panel__dash">
       <h3>Notificaciones</h3>
+      <div className="friend_actions__dash" style={{ marginTop: "8px" }}>
+        <button
+          className="button__dash"
+          type="button"
+          onClick={() => setTab("recent")}
+          style={{ opacity: tab === "recent" ? 1 : 0.75 }}
+        >
+          Recientes
+        </button>
+        <button
+          className="button__dash"
+          type="button"
+          onClick={() => setTab("history")}
+          style={{ opacity: tab === "history" ? 1 : 0.75 }}
+        >
+          Historial
+        </button>
+      </div>
       {error ? <p className="chat_error__dash">{error}</p> : null}
 
-      {!notifications.length ? (
+      {!notificationsToRender.length ? (
         <ul className="list__dash">
-          <li>No tienes notificaciones pendientes.</li>
+          <li>{tab === "history" ? "No hay historial de notificaciones." : "No tienes notificaciones pendientes."}</li>
         </ul>
       ) : (
         <div className="card_grid__dash">
-          {notifications.map((item) => (
+          {notificationsToRender.map((item) => (
             <article key={item._id} className="post_card__dash">
               <p>{item.message}</p>
-              {item.type === "friend_request" ? (
+              {tab === "history" ? (
+                <p style={{ margin: "6px 0 0", fontSize: "0.82rem", opacity: 0.85 }}>
+                  Visto: {new Date(item.lastSeenAt || item.createdAt || Date.now()).toLocaleString()}
+                </p>
+              ) : null}
+
+              {item.type === "friend_request" && tab !== "history" ? (
                 <div className="friend_actions__dash">
                   <button className="button__dash" type="button" onClick={() => navigate(`/dashboard/usuario/${item.fromUser._id}`)}>
                     Ver perfil

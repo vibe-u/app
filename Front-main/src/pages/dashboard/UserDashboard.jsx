@@ -84,11 +84,28 @@ const UserDashboard = () => {
         const users = Array.isArray(usersRes?.data) ? usersRes.data : [];
         const groupsData = await groupsRes.json();
         const groups = Array.isArray(groupsData) ? groupsData : [];
-        const startsWithTerm = (value = "") =>
-          value.toLowerCase().startsWith(term.toLowerCase());
+        const normalizedTerm = term.toLowerCase();
+        const similarityRank = (value = "") => {
+          const v = value.toLowerCase();
+          if (!v) return 99;
+          if (v === normalizedTerm) return 0;
+          if (v.startsWith(normalizedTerm)) return 1;
+          if (v.includes(normalizedTerm)) return 2;
+          return 99;
+        };
 
-        setSearchUsers(users.filter((u) => startsWithTerm(u.nombre)).slice(0, 5));
-        setSearchGroups(groups.filter((g) => startsWithTerm(g.nombre)).slice(0, 5));
+        const similarUsers = users
+          .map((u) => ({ ...u, __rank: similarityRank(u.nombre || "") }))
+          .filter((u) => u.__rank < 99)
+          .sort((a, b) => a.__rank - b.__rank || (a.nombre || "").localeCompare(b.nombre || ""));
+
+        const similarGroups = groups
+          .map((g) => ({ ...g, __rank: similarityRank(g.nombre || "") }))
+          .filter((g) => g.__rank < 99)
+          .sort((a, b) => a.__rank - b.__rank || (a.nombre || "").localeCompare(b.nombre || ""));
+
+        setSearchUsers(similarUsers.slice(0, 7));
+        setSearchGroups(similarGroups.slice(0, 5));
         setShowSuggestions(true);
       } catch {
         setSearchUsers([]);
@@ -133,8 +150,19 @@ const UserDashboard = () => {
                 navigate(`/dashboard/usuario/${user._id}`);
               }}
             >
-              <strong>{user.nombre}</strong>
-              <span>Persona registrada</span>
+              <div className="suggestion_profile_row__dash">
+                <img
+                  src={resolveUploadUrl(user.avatar, "avatars") || "https://via.placeholder.com/36"}
+                  alt={user.nombre}
+                  className="suggestion_avatar__dash"
+                />
+                <div className="suggestion_profile_meta__dash">
+                  <strong>{user.nombre}</strong>
+                  <span>
+                    {user.carrera || "Perfil"}{user.universidad ? ` • ${user.universidad}` : ""}
+                  </span>
+                </div>
+              </div>
             </button>
           ))}
           {searchGroups.map((group) => (

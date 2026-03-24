@@ -322,6 +322,35 @@ h3 {
   background: #fff6fb;
 }
 
+.suggestion_profile_row__dash {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.suggestion_avatar__dash {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid #ebc5dc;
+  flex-shrink: 0;
+}
+
+.suggestion_profile_meta__dash {
+  display: grid;
+  gap: 2px;
+}
+
+.suggestion_profile_meta__dash strong {
+  color: #2f1232;
+}
+
+.suggestion_profile_meta__dash span {
+  font-size: 0.8rem;
+  color: #7a2f73;
+}
+
 .profile_public__dash {
   display: grid;
   grid-template-columns: 120px 1fr;
@@ -1100,6 +1129,14 @@ h3 {
 [data-theme="dark"] .chat_item_row__dash span,
 [data-theme="dark"] .hub_card__dash p {
   color: #b8c7db;
+}
+
+[data-theme="dark"] .suggestion_avatar__dash {
+  border-color: #2f445c;
+}
+
+[data-theme="dark"] .suggestion_profile_meta__dash strong {
+  color: #e6edf7;
 }
 
 [data-theme="dark"] .panel__dash .textarea__dash,

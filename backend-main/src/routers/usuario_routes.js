@@ -12,6 +12,8 @@ import {
     getPublicProfile,
     sendFriendRequest,
     respondFriendRequest,
+    removeFriend,
+    cancelFriendRequest,
     getFriendRequestNotifications
 } from "../controllers/friend_controller.js";
 import fetch from "node-fetch";
@@ -353,6 +355,8 @@ router.get("/buscar", verificarTokenJWT, searchUsers);
 router.get("/publico/:id", verificarTokenJWT, getPublicProfile);
 router.post("/amistad/solicitar", verificarTokenJWT, sendFriendRequest);
 router.post("/amistad/responder", verificarTokenJWT, respondFriendRequest);
+router.post("/amistad/eliminar", verificarTokenJWT, removeFriend);
+router.post("/amistad/cancelar", verificarTokenJWT, cancelFriendRequest);
 router.get("/amistad/notificaciones", verificarTokenJWT, getFriendRequestNotifications);
 router.get("/moderacion/notificaciones", verificarTokenJWT, getModerationNotifications);
 

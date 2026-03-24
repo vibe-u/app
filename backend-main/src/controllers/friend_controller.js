@@ -164,6 +164,71 @@ const respondFriendRequest = async (req, res) => {
   }
 };
 
+const removeFriend = async (req, res) => {
+  try {
+    const { friendUserId } = req.body;
+    if (!mongoose.Types.ObjectId.isValid(friendUserId)) {
+      return res.status(400).json({ msg: "Usuario invalido" });
+    }
+
+    const [me, friendUser] = await Promise.all([
+      Usuario.findById(req.usuario._id),
+      Usuario.findById(friendUserId),
+    ]);
+
+    if (!friendUser) return res.status(404).json({ msg: "Usuario no encontrado" });
+
+    const areFriends = (me.amigos || []).some((id) => id.toString() === friendUserId);
+    if (!areFriends) {
+      return res.status(400).json({ msg: "No son amigos actualmente" });
+    }
+
+    me.amigos = removeId(me.amigos, friendUserId);
+    friendUser.amigos = removeId(friendUser.amigos, me._id);
+
+    me.solicitudesEnviadas = removeId(me.solicitudesEnviadas || [], friendUserId);
+    me.solicitudesRecibidas = removeId(me.solicitudesRecibidas || [], friendUserId);
+    friendUser.solicitudesEnviadas = removeId(friendUser.solicitudesEnviadas || [], me._id);
+    friendUser.solicitudesRecibidas = removeId(friendUser.solicitudesRecibidas || [], me._id);
+
+    await Promise.all([me.save(), friendUser.save()]);
+
+    res.json({ msg: "Amistad eliminada", friendStatus: "none" });
+  } catch {
+    res.status(500).json({ msg: "Error al eliminar amigo" });
+  }
+};
+
+const cancelFriendRequest = async (req, res) => {
+  try {
+    const { toUserId } = req.body;
+    if (!mongoose.Types.ObjectId.isValid(toUserId)) {
+      return res.status(400).json({ msg: "Usuario invalido" });
+    }
+
+    const [me, toUser] = await Promise.all([
+      Usuario.findById(req.usuario._id),
+      Usuario.findById(toUserId),
+    ]);
+
+    if (!toUser) return res.status(404).json({ msg: "Usuario no encontrado" });
+
+    const hadSentRequest = (me.solicitudesEnviadas || []).some((id) => id.toString() === toUserId);
+    if (!hadSentRequest) {
+      return res.status(400).json({ msg: "No tienes una solicitud enviada a este usuario" });
+    }
+
+    me.solicitudesEnviadas = removeId(me.solicitudesEnviadas, toUserId);
+    toUser.solicitudesRecibidas = removeId(toUser.solicitudesRecibidas, me._id);
+
+    await Promise.all([me.save(), toUser.save()]);
+
+    res.json({ msg: "Solicitud cancelada", friendStatus: "none" });
+  } catch {
+    res.status(500).json({ msg: "Error al cancelar solicitud" });
+  }
+};
+
 const getFriendRequestNotifications = async (req, res) => {
   try {
     const me = await Usuario.findById(req.usuario._id)
@@ -189,5 +254,7 @@ export {
   getPublicProfile,
   sendFriendRequest,
   respondFriendRequest,
+  removeFriend,
+  cancelFriendRequest,
   getFriendRequestNotifications,
 };

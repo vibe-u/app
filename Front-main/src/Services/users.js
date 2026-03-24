@@ -25,6 +25,12 @@ export const sendFriendRequest = (toUserId) =>
 export const respondFriendRequest = (fromUserId, action) =>
   axios.post("/usuarios/amistad/responder", { fromUserId, action }, getAuthConfig());
 
+export const removeFriend = (friendUserId) =>
+  axios.post("/usuarios/amistad/eliminar", { friendUserId }, getAuthConfig());
+
+export const cancelFriendRequest = (toUserId) =>
+  axios.post("/usuarios/amistad/cancelar", { toUserId }, getAuthConfig());
+
 export const getFriendNotifications = () =>
   axios.get("/usuarios/amistad/notificaciones", getAuthConfig());
 

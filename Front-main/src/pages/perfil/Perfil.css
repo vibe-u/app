@@ -187,3 +187,210 @@ textarea {
         width: 100%;
     }
 }
+
+.perfil-public-main {
+    align-items: stretch;
+    gap: 18px;
+}
+
+.perfil-public-header,
+.perfil-public-section {
+    background: #ffffff;
+    border-radius: 14px;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.08);
+    padding: 16px;
+    width: 100%;
+    max-width: 1100px;
+}
+
+.perfil-public-header {
+    display: grid;
+    grid-template-columns: 120px 1fr;
+    gap: 14px;
+    align-items: center;
+}
+
+.perfil-public-avatar {
+    width: 120px;
+    height: 120px;
+    border-radius: 20px;
+    object-fit: cover;
+    border: 1px solid #e5e7eb;
+}
+
+.perfil-public-stats {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    color: #6b7280;
+    margin: 8px 0;
+}
+
+.perfil-public-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.perfil-public-status {
+    margin: 0;
+    color: #374151;
+    font-weight: 600;
+}
+
+.perfil-public-btn {
+    border: 0;
+    border-radius: 10px;
+    padding: 9px 14px;
+    background: #4f46e5;
+    color: #fff;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.perfil-public-btn-secondary {
+    background: #64748b;
+}
+
+.perfil-public-btn-danger {
+    background: #dc2626;
+}
+
+.perfil-public-error {
+    margin-top: 8px;
+    color: #b91c1c;
+}
+
+@media (max-width: 768px) {
+    .perfil-public-header {
+        grid-template-columns: 1fr;
+        text-align: center;
+        justify-items: center;
+    }
+
+    .perfil-public-actions {
+        justify-content: center;
+    }
+}
+
+.perfil-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.48);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1600;
+    padding: 12px;
+}
+
+.perfil-modal-card {
+    width: min(92vw, 420px);
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 14px;
+    box-shadow: 0 18px 28px rgba(0, 0, 0, 0.22);
+    padding: 16px;
+}
+
+.perfil-modal-card h3 {
+    margin: 0 0 8px;
+    color: #111827;
+}
+
+.perfil-modal-card p {
+    margin: 0;
+    color: #4b5563;
+}
+
+.perfil-modal-actions {
+    margin-top: 12px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+[data-theme="light"] .perfil-public-main {
+    background-color: #f0f0f0;
+}
+
+[data-theme="light"] .perfil-public-header,
+[data-theme="light"] .perfil-public-section {
+    background: #ffffff;
+    border-color: #e5e7eb;
+}
+
+[data-theme="light"] .perfil-public-header h2,
+[data-theme="light"] .perfil-public-section h3 {
+    color: #111827;
+}
+
+[data-theme="light"] .perfil-public-header p,
+[data-theme="light"] .perfil-public-status,
+[data-theme="light"] .perfil-public-stats {
+    color: #4b5563;
+}
+
+[data-theme="dark"] .perfil-main,
+[data-theme="dark"] .perfil-public-main {
+    background: linear-gradient(140deg, #0b1016 0%, #0f141d 55%, #121823 100%);
+}
+
+[data-theme="dark"] .main-title {
+    color: #e6edf7;
+}
+
+[data-theme="dark"] .perfil-public-header,
+[data-theme="dark"] .perfil-public-section {
+    background: #161e2b;
+    border-color: #2c3f55;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.28);
+}
+
+[data-theme="dark"] .perfil-public-avatar {
+    border-color: #2f445c;
+}
+
+[data-theme="dark"] .perfil-public-header h2,
+[data-theme="dark"] .perfil-public-section h3 {
+    color: #e6edf7;
+}
+
+[data-theme="dark"] .perfil-public-header p,
+[data-theme="dark"] .perfil-public-status,
+[data-theme="dark"] .perfil-public-stats,
+[data-theme="dark"] .list__dash {
+    color: #b8c7db;
+}
+
+[data-theme="dark"] .perfil-public-btn {
+    background: #36506e;
+}
+
+[data-theme="dark"] .perfil-public-btn-secondary {
+    background: #334155;
+}
+
+[data-theme="dark"] .perfil-public-btn-danger {
+    background: #b91c1c;
+}
+
+[data-theme="dark"] .perfil-public-error {
+    color: #fca5a5;
+}
+
+[data-theme="dark"] .perfil-modal-card {
+    background: #161e2b;
+    border-color: #2c3f55;
+}
+
+[data-theme="dark"] .perfil-modal-card h3 {
+    color: #e6edf7;
+}
+
+[data-theme="dark"] .perfil-modal-card p {
+    color: #b8c7db;
+}

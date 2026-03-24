@@ -13,6 +13,7 @@ import {
   FaIdBadge,
   FaUserShield,
   FaChartBar,
+  FaRobot,
   FaBars,
   FaTimes,
 } from "react-icons/fa";
@@ -21,6 +22,8 @@ import { isMobileAccess } from "../utils/mobileAccess";
 const Sidebar = () => {
   const navClass = ({ isActive }) =>
     `menu_btn__dash ${isActive ? "menu_btn_active__dash" : ""}`;
+  const adminNavClass = ({ isActive }) =>
+    `admin_menu_btn__dash ${isActive ? "admin_menu_btn_active__dash" : ""}`;
 
   const rol = localStorage.getItem("rol");
   const isAdmin = rol === "administrador";
@@ -42,6 +45,51 @@ const Sidebar = () => {
   const handleNavClick = () => {
     if (isMobileUser) setIsOpen(false);
   };
+
+  if (isAdmin) {
+    return (
+      <aside className={`admin_sidebar__dash ${isOpen ? "is-open" : ""}`}>
+        <div className="admin_sidebar_header__dash">
+          <div className="admin_sidebar_brand__dash">
+            <h1>Vibe-U</h1>
+            <p>Vista de administracion</p>
+          </div>
+
+          <button
+            className="admin_sidebar_toggle__dash"
+            onClick={() => setIsOpen((prev) => !prev)}
+            aria-label={isOpen ? "Cerrar menu" : "Abrir menu"}
+          >
+            {isOpen ? <FaTimes /> : <FaBars />}
+          </button>
+        </div>
+
+        <div className="admin_sidebar_body__dash">
+          <nav className="admin_menu__dash">
+            <span className="admin_menu_label__dash">Panel Admin</span>
+            <NavLink className={adminNavClass} to="/gusuarios" onClick={handleNavClick}>
+              <FaUserShield /> Gestion usuarios
+            </NavLink>
+            <NavLink className={adminNavClass} to="/gautomatizacion" onClick={handleNavClick}>
+              <FaChartBar /> Automatizacion
+            </NavLink>
+            <NavLink className={adminNavClass} to="/gmoderacion" onClick={handleNavClick}>
+              <FaRobot /> Moderacion IA
+            </NavLink>
+            <NavLink className={adminNavClass} to="/dashboard/notificaciones" onClick={handleNavClick}>
+              <FaBell /> Notificaciones
+            </NavLink>
+            <NavLink className={adminNavClass} to="/dashboard/micuenta" onClick={handleNavClick}>
+              <FaIdBadge /> Mi cuenta
+            </NavLink>
+            <NavLink className={adminNavClass} to="/dashboard/ajustes" onClick={handleNavClick}>
+              <FaCog /> Ajustes
+            </NavLink>
+          </nav>
+        </div>
+      </aside>
+    );
+  }
 
   return (
     <aside className={`sidebar__dash ${isOpen ? "is-open" : ""}`}>

@@ -4,6 +4,7 @@ import jwt from "jsonwebtoken";
 import { sendMailToRegister, sendMailToRecoveryPassword } from "../config/nodemailer.js";
 import bcrypt from "bcryptjs";
 import { verificarTokenJWT } from "../middlewares/JWT.js";
+import { getModerationNotifications } from "../controllers/posts.controller.js";
 import { perfil, actualizarUsuario, actualizarPassword } 
 from "../controllers/usuario_controller.js";
 import {
@@ -353,5 +354,6 @@ router.get("/publico/:id", verificarTokenJWT, getPublicProfile);
 router.post("/amistad/solicitar", verificarTokenJWT, sendFriendRequest);
 router.post("/amistad/responder", verificarTokenJWT, respondFriendRequest);
 router.get("/amistad/notificaciones", verificarTokenJWT, getFriendRequestNotifications);
+router.get("/moderacion/notificaciones", verificarTokenJWT, getModerationNotifications);
 
 export default router;

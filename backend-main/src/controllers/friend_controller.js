@@ -55,7 +55,7 @@ const getPublicProfile = async (req, res) => {
     if (!user) return res.status(404).json({ msg: "Usuario no encontrado" });
 
     const [posts, groups] = await Promise.all([
-      Post.find({ usuario: id })
+      Post.find({ usuario: id, "moderation.status": { $ne: "disabled" } })
         .populate("usuario", "nombre avatar")
         .sort({ createdAt: -1 })
         .limit(20)

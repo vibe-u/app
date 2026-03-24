@@ -30,10 +30,12 @@ import ChangePasswordForm from "./pages/Password/ActualizarPass.jsx";
 import Grupos from "./pages/Grupos/Grupos.jsx";
 import Gusuario from "./pages/gusuarios/Gusuarios.jsx";
 import Gautomatizacion from "./pages/Gautomatizacion/Gautomatizacion.jsx";
+import Gmoderacion from "./pages/Gmoderacion/Gmoderacion.jsx";
 
 import PublicRoute from "./routes/PublicRouter.jsx";
 import PrivateRoute from "./routes/PrivateRouter.jsx";
 import MobileOnlyRoute from "./routes/MobileOnlyRoute.jsx";
+import AdminRoute from "./routes/AdminRoute.jsx";
 
 import storeProfile from "./context/storeProfile";
 import storeAuth from "./context/storeAuth";
@@ -92,8 +94,11 @@ function App() {
           <Route path="musuario" element={<Navigate to="/dashboard/micuenta" replace />} />
           <Route path="actualizar-info" element={<ActualizarInfo />} />
           <Route path="actualizar-pass" element={<ChangePasswordForm />} />
-          <Route path="gusuarios" element={<Gusuario />} />
-          <Route path="gautomatizacion" element={<Gautomatizacion />} />
+          <Route element={<AdminRoute />}>
+            <Route path="gusuarios" element={<Gusuario />} />
+            <Route path="gautomatizacion" element={<Gautomatizacion />} />
+            <Route path="gmoderacion" element={<Gmoderacion />} />
+          </Route>
 
           <Route element={<MobileOnlyRoute />}>
             <Route path="grupos" element={<Grupos />} />

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
-import { FaHeart, FaPlus, FaSearch, FaUsers } from "react-icons/fa";
+import { FaChartBar, FaHeart, FaPlus, FaRobot, FaSearch, FaUserShield, FaUsers } from "react-icons/fa";
 import Sidebar from "../../components/Sidebar";
 import CreatePostView from "./views/CreatePostView";
 import {
@@ -43,6 +43,8 @@ const UserDashboard = () => {
   const subtitle = currentPath.startsWith("/dashboard/usuario/")
     ? "Revisa su perfil y gestiona amistad"
     : (subtitleMap[currentPath] || "Panel principal");
+  const role = localStorage.getItem("rol");
+  const isAdmin = role === "administrador";
   const [search, setSearch] = useState("");
   const [searchUsers, setSearchUsers] = useState([]);
   const [searchGroups, setSearchGroups] = useState([]);
@@ -179,40 +181,82 @@ const UserDashboard = () => {
                   >
                     <FaSearch />
                   </button>
-                  <button
-                    type="button"
-                    className="mobile_action_btn__dash"
-                    onClick={() => navigate("/grupos")}
-                    aria-label="Ir a grupos"
-                    title="Grupos"
-                  >
-                    <FaUsers />
-                  </button>
-                  <button
-                    type="button"
-                    className="mobile_action_btn__dash"
-                    onClick={() => navigate("/matches")}
-                    aria-label="Ir a match"
-                    title="Match"
-                  >
-                    <FaHeart />
-                  </button>
-                  <button
-                    type="button"
-                    className="mobile_action_btn__dash"
-                    onClick={() => setShowCreateModal(true)}
-                    aria-label="Nueva publicacion"
-                    title="Nueva publicacion"
-                  >
-                    <FaPlus />
-                  </button>
+                  {isAdmin ? (
+                    <>
+                      <button
+                        type="button"
+                        className="mobile_action_btn__dash"
+                        onClick={() => navigate("/gusuarios")}
+                        aria-label="Gestion usuarios"
+                        title="Gestion usuarios"
+                      >
+                        <FaUserShield />
+                      </button>
+                      <button
+                        type="button"
+                        className="mobile_action_btn__dash"
+                        onClick={() => navigate("/gautomatizacion")}
+                        aria-label="Automatizacion"
+                        title="Automatizacion"
+                      >
+                        <FaChartBar />
+                      </button>
+                      <button
+                        type="button"
+                        className="mobile_action_btn__dash"
+                        onClick={() => navigate("/gmoderacion")}
+                        aria-label="Moderacion IA"
+                        title="Moderacion IA"
+                      >
+                        <FaRobot />
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <button
+                        type="button"
+                        className="mobile_action_btn__dash"
+                        onClick={() => navigate("/grupos")}
+                        aria-label="Ir a grupos"
+                        title="Grupos"
+                      >
+                        <FaUsers />
+                      </button>
+                      <button
+                        type="button"
+                        className="mobile_action_btn__dash"
+                        onClick={() => navigate("/matches")}
+                        aria-label="Ir a match"
+                        title="Match"
+                      >
+                        <FaHeart />
+                      </button>
+                      <button
+                        type="button"
+                        className="mobile_action_btn__dash"
+                        onClick={() => setShowCreateModal(true)}
+                        aria-label="Nueva publicacion"
+                        title="Nueva publicacion"
+                      >
+                        <FaPlus />
+                      </button>
+                    </>
+                  )}
                 </div>
                 {showMobileSearch ? renderSearchBox(true) : null}
               </>
             ) : (
               <>
                 {renderSearchBox()}
-                <button className="button__dash" onClick={() => setShowCreateModal(true)}>Nueva publicacion</button>
+                {isAdmin ? (
+                  <>
+                    <button className="button__dash" onClick={() => navigate("/gusuarios")}>Gestion usuarios</button>
+                    <button className="button__dash" onClick={() => navigate("/gautomatizacion")}>Automatizacion</button>
+                    <button className="button__dash" onClick={() => navigate("/gmoderacion")}>Moderacion IA</button>
+                  </>
+                ) : (
+                  <button className="button__dash" onClick={() => setShowCreateModal(true)}>Nueva publicacion</button>
+                )}
               </>
             )}
           </div>
@@ -221,7 +265,7 @@ const UserDashboard = () => {
         <Outlet />
       </main>
 
-      {showCreateModal ? (
+      {!isAdmin && showCreateModal ? (
         <div className="create_modal_overlay__dash" role="dialog" aria-modal="true">
           <div className="create_modal__dash">
             <button

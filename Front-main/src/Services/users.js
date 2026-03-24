@@ -27,3 +27,6 @@ export const respondFriendRequest = (fromUserId, action) =>
 
 export const getFriendNotifications = () =>
   axios.get("/usuarios/amistad/notificaciones", getAuthConfig());
+
+export const getModerationNotifications = () =>
+  axios.get("/usuarios/moderacion/notificaciones", getAuthConfig());

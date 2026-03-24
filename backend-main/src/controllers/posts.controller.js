@@ -11,7 +11,7 @@ const POSTS_UPLOAD_DIR = path.join(__dirname, "..", "..", "uploads", "posts");
 
 export const obtenerPosts = async (req, res) => {
   try {
-    const posts = await Post.find()
+    const posts = await Post.find({ "moderation.status": { $ne: "disabled" } })
       .populate("usuario", "nombre avatar correoInstitucional")
       .sort({ createdAt: -1 });
 
@@ -31,6 +31,12 @@ export const crearPost = async (req, res) => {
       texto,
       imagen: toStoredUploadRef(imagen, "posts"),
       video: toStoredUploadRef(video, "posts"),
+      moderation: {
+        status: "active",
+        aiVerdict: "apto",
+        aiScore: 0,
+        aiReasons: [],
+      },
     });
 
     await post.save();
@@ -155,5 +161,38 @@ export const eliminarComentarioPost = async (req, res) => {
     res.json(mapPostMediaToPublicUrl(req, post.toObject()));
   } catch (error) {
     res.status(500).json({ message: error.message });
+  }
+};
+
+export const getModerationNotifications = async (req, res) => {
+  try {
+    const posts = await Post.find({
+      usuario: req.usuario._id,
+      "moderation.notificationCreatedAt": { $ne: null },
+    })
+      .select("texto createdAt moderation")
+      .sort({ "moderation.notificationCreatedAt": -1 })
+      .limit(30)
+      .lean();
+
+    const notifications = posts.map((post) => {
+      const status = post?.moderation?.status;
+      const defaultMessage =
+        status === "disabled"
+          ? "Tu publicacion fue desactivada por moderacion."
+          : "Tu publicacion fue revisada por moderacion.";
+      return {
+        _id: `moder-${post._id}-${post?.moderation?.notificationCreatedAt || post.createdAt}`,
+        type: "moderation_alert",
+        message: post?.moderation?.notificationMessage || defaultMessage,
+        postId: post._id,
+        status,
+        createdAt: post?.moderation?.notificationCreatedAt || post.createdAt,
+      };
+    });
+
+    res.json(notifications);
+  } catch (error) {
+    res.status(500).json({ msg: "Error al obtener notificaciones de moderacion" });
   }
 };

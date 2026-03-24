@@ -151,3 +151,115 @@
   from { transform: translateY(40px); opacity: 0; }
   to { transform: translateY(0); opacity: 1; }
 }
+
+[data-theme="light"] .gestion-usuarios-seccion {
+  background-color: #e1bee7 !important;
+  color: #1f2937;
+}
+
+[data-theme="light"] .gestion-tabla-wrapper,
+[data-theme="light"] .modal-card {
+  background: #fff;
+  border-color: #e5e7eb;
+}
+
+[data-theme="light"] .gestion-table th {
+  background-color: #f9fafb;
+  color: #6b7280;
+}
+
+[data-theme="light"] .gestion-table td {
+  color: #111827;
+}
+
+[data-theme="dark"] .gestion-usuarios-seccion {
+  background: linear-gradient(140deg, #0b1016 0%, #0f141d 55%, #121823 100%) !important;
+  color: #e6edf7;
+}
+
+[data-theme="dark"] .gestion-header h2 {
+  color: #e6edf7;
+}
+
+[data-theme="dark"] .gestion-input-search {
+  background: #0f1622 !important;
+  color: #e6edf7;
+  border-color: #2f445c;
+  box-shadow: none;
+}
+
+[data-theme="dark"] .gestion-input-search::placeholder {
+  color: #9fb3cd;
+}
+
+[data-theme="dark"] .gestion-tabla-wrapper {
+  background: #161e2b;
+  border-color: #2c3f55;
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .gestion-table th {
+  background-color: #1f2a3b;
+  color: #b8c7db;
+  border-bottom-color: #2f445c;
+}
+
+[data-theme="dark"] .gestion-table td {
+  color: #e6edf7;
+  border-bottom-color: #2f445c;
+}
+
+[data-theme="dark"] .gestion-badge.admin {
+  background-color: #32214a;
+  color: #d8b4fe;
+}
+
+[data-theme="dark"] .gestion-badge.usuario {
+  background-color: #153246;
+  color: #7dd3fc;
+}
+
+[data-theme="dark"] .btn-promote {
+  background: #123728;
+  color: #86efac;
+  border-color: #166534;
+}
+
+[data-theme="dark"] .btn-downgrade {
+  background: #3f2a10;
+  color: #fdba74;
+  border-color: #7c2d12;
+}
+
+[data-theme="dark"] .btn-delete {
+  background: #3f1d1d;
+  color: #fca5a5;
+  border-color: #7f1d1d;
+}
+
+[data-theme="dark"] .modal-card {
+  background: #161e2b;
+  border: 1px solid #2c3f55;
+  color: #e6edf7;
+}
+
+[data-theme="dark"] .modal-title {
+  color: #e6edf7;
+}
+
+[data-theme="dark"] .modal-text {
+  color: #b8c7db;
+}
+
+[data-theme="dark"] .btn-modal-cancel {
+  background: #1f2a3b;
+  color: #dbe8f8;
+}
+
+[data-theme="dark"] .btn-modal-confirm-rol {
+  background: #36506e;
+}
+
+[data-theme="dark"] .btn-modal-confirm-del {
+  background: #b91c1c;
+}

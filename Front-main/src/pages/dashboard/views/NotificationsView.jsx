@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { getFriendNotifications, respondFriendRequest } from "../../../Services/users";
+import { getFriendNotifications, getModerationNotifications, respondFriendRequest } from "../../../Services/users";
 import { getEventNotifications } from "../../../Services/events";
 
 const NotificationsView = () => {
@@ -11,13 +11,15 @@ const NotificationsView = () => {
   const loadNotifications = async () => {
     try {
       setError("");
-      const [friendsRes, eventsRes] = await Promise.all([
+      const [friendsRes, eventsRes, moderationRes] = await Promise.all([
         getFriendNotifications(),
         getEventNotifications(),
+        getModerationNotifications(),
       ]);
       const friendItems = Array.isArray(friendsRes?.data) ? friendsRes.data : [];
       const eventItems = Array.isArray(eventsRes?.data) ? eventsRes.data : [];
-      const merged = [...friendItems, ...eventItems].sort(
+      const moderationItems = Array.isArray(moderationRes?.data) ? moderationRes.data : [];
+      const merged = [...friendItems, ...eventItems, ...moderationItems].sort(
         (a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0)
       );
       setNotifications(merged);
@@ -71,6 +73,14 @@ const NotificationsView = () => {
                 <div className="friend_actions__dash">
                   <button className="button__dash" type="button" onClick={() => navigate("/dashboard/eventos")}>
                     Ver evento
+                  </button>
+                </div>
+              ) : null}
+
+              {item.type === "moderation_alert" ? (
+                <div className="friend_actions__dash">
+                  <button className="button__dash" type="button" onClick={() => navigate("/dashboard/feed")}>
+                    Ir al feed
                   </button>
                 </div>
               ) : null}

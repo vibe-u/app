@@ -84,6 +84,94 @@ h3 {
   cursor: pointer;
 }
 
+.admin_sidebar__dash {
+  padding: 20px;
+  position: sticky;
+  height: calc(100vh - 36px);
+  background: linear-gradient(180deg, #1d3557 0%, #1b2b45 70%, #13243b 100%);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 18px;
+  box-shadow: 0 10px 24px rgba(15, 24, 40, 0.2);
+}
+
+.admin_sidebar__dash h1,
+.admin_sidebar__dash p {
+  color: #fff;
+}
+
+.admin_sidebar__dash p {
+  margin: 6px 0 18px;
+  color: #d6e6fb;
+}
+
+.admin_sidebar_header__dash {
+  display: block;
+}
+
+.admin_sidebar_body__dash {
+  display: block;
+}
+
+.admin_sidebar_toggle__dash {
+  display: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.34);
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.admin_menu__dash {
+  display: grid;
+  gap: 8px;
+}
+
+.admin_menu_label__dash {
+  color: #d6e6fb;
+  font-size: 0.74rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-top: 8px;
+  margin-bottom: 2px;
+  font-weight: 700;
+}
+
+.admin_menu_btn__dash {
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.12);
+  text-align: left;
+  padding: 12px 14px;
+  font-family: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #fff;
+  text-decoration: none;
+}
+
+.admin_menu_btn__dash:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+}
+
+.admin_menu_btn_active__dash {
+  background: linear-gradient(135deg, #7dd3fc 0%, #38bdf8 100%);
+  color: #082f49;
+  border-color: transparent;
+}
+
+.admin_menu_btn_active__dash:hover {
+  background: linear-gradient(135deg, #7dd3fc 0%, #38bdf8 100%);
+  color: #082f49;
+}
+
 .menu__dash {
   display: grid;
   gap: 8px;
@@ -980,6 +1068,11 @@ h3 {
   border-color: rgba(147, 197, 253, 0.22);
 }
 
+[data-theme="dark"] .admin_sidebar__dash {
+  background: linear-gradient(180deg, #0f1b2d 0%, #0d1626 70%, #0a1220 100%);
+  border-color: rgba(147, 197, 253, 0.22);
+}
+
 [data-theme="dark"] .topbar__dash,
 [data-theme="dark"] .panel__dash,
 [data-theme="dark"] .post_card__dash,
@@ -1118,6 +1211,41 @@ h3 {
   .sidebar_toggle__dash {
     display: inline-flex;
     flex-shrink: 0;
+  }
+
+  .admin_sidebar__dash {
+    height: auto;
+    position: relative;
+  }
+
+  .admin_sidebar_header__dash {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  .admin_sidebar_brand__dash p {
+    margin: 6px 0 0;
+    font-size: 0.85rem;
+  }
+
+  .admin_sidebar_toggle__dash {
+    display: inline-flex;
+    flex-shrink: 0;
+  }
+
+  .admin_sidebar_body__dash {
+    display: none;
+    margin-top: 12px;
+  }
+
+  .admin_sidebar__dash.is-open .admin_sidebar_body__dash {
+    display: block;
+  }
+
+  .admin_menu__dash {
+    gap: 6px;
   }
 
   .sidebar_body__dash {

@@ -12,7 +12,7 @@ import {
 } from "../../Services/posts";
 import { searchRegisteredUsers } from "../../Services/users";
 import { getTokenPayload } from "../../utils/authToken";
-import { resolveUploadUrl } from "../../utils/mediaUrl";
+import { resolveAvatarUrl, resolveUploadUrl } from "../../utils/mediaUrl";
 import "./Dashboard.css";
 
 const titleMap = {
@@ -152,7 +152,7 @@ const UserDashboard = () => {
             >
               <div className="suggestion_profile_row__dash">
                 <img
-                  src={resolveUploadUrl(user.avatar, "avatars") || "https://via.placeholder.com/36"}
+                  src={resolveAvatarUrl(user.avatar)}
                   alt={user.nombre}
                   className="suggestion_avatar__dash"
                 />
@@ -320,7 +320,7 @@ export const PostCard = ({ post, onLike, onComment, onDeletePost, onDeleteCommen
   const usuario = post?.usuario || {};
   const postOwnerId = usuario?._id?.toString?.() || "";
   const nombre = usuario.nombre || "Usuario";
-  const avatar = resolveUploadUrl(usuario.avatar, "avatars") || "https://via.placeholder.com/36";
+  const avatar = resolveAvatarUrl(usuario.avatar);
   const postImage = resolveUploadUrl(post.imagen, "posts");
   const postVideo = resolveUploadUrl(post.video, "posts");
   const comentarios = Array.isArray(post.comentarios) ? post.comentarios.length : 0;

@@ -1,6 +1,7 @@
 const hasHttp = (value = "") => /^https?:\/\//i.test(value);
 const isLocalHost = (hostname = "") => /^(localhost|127\.0\.0\.1)$/i.test(hostname);
 const INVALID_STRING_VALUES = new Set(["null", "undefined", "nan", "false"]);
+const DEFAULT_AVATAR = "/default-avatar.svg";
 
 const normalizeBase = () => (import.meta.env.VITE_BACKEND_URL || "").replace(/\/+$/, "");
 
@@ -37,4 +38,4 @@ export const resolveUploadUrl = (value, folder) => {
   return `${base}/uploads/${folder}/${filename}`;
 };
 
-export const resolveAvatarUrl = (value) => resolveUploadUrl(value, "avatars");
+export const resolveAvatarUrl = (value) => resolveUploadUrl(value, "avatars") || DEFAULT_AVATAR;

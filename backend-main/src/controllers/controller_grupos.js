@@ -170,3 +170,64 @@ export const comentarPost = async (req, res) => {
         res.status(400).json({ message: "Error al agregar comentario" });
     }
 };
+
+// Eliminar un post
+export const eliminarPost = async (req, res) => {
+    try {
+        const { id, postId } = req.params;
+        const grupo = await Grupo.findById(id);
+        if (!grupo) return res.status(404).json({ message: "Grupo no encontrado" });
+
+        const post = grupo.posts.id(postId);
+        if (!post) return res.status(404).json({ message: "Post no encontrado" });
+
+        const correo = req.usuario?.correoInstitucional || "";
+        const rol = req.usuario?.rol || "";
+        const esAdminGlobal = rol === "administrador";
+        const puedeEliminar = post.autorEmail === correo || grupo.creadorEmail === correo || esAdminGlobal;
+
+        if (!puedeEliminar) {
+            return res.status(403).json({ message: "No tienes permisos para eliminar este post" });
+        }
+
+        post.deleteOne();
+        await grupo.save();
+        res.json({ message: "Post eliminado", postId });
+    } catch (error) {
+        res.status(400).json({ message: "Error al eliminar post" });
+    }
+};
+
+// Eliminar un comentario
+export const eliminarComentario = async (req, res) => {
+    try {
+        const { id, postId, comentarioId } = req.params;
+        const grupo = await Grupo.findById(id);
+        if (!grupo) return res.status(404).json({ message: "Grupo no encontrado" });
+
+        const post = grupo.posts.id(postId);
+        if (!post) return res.status(404).json({ message: "Post no encontrado" });
+
+        const comentario = post.comentarios.id(comentarioId);
+        if (!comentario) return res.status(404).json({ message: "Comentario no encontrado" });
+
+        const correo = req.usuario?.correoInstitucional || "";
+        const rol = req.usuario?.rol || "";
+        const esAdminGlobal = rol === "administrador";
+        const puedeEliminar =
+            comentario.autorEmail === correo ||
+            post.autorEmail === correo ||
+            grupo.creadorEmail === correo ||
+            esAdminGlobal;
+
+        if (!puedeEliminar) {
+            return res.status(403).json({ message: "No tienes permisos para eliminar este comentario" });
+        }
+
+        comentario.deleteOne();
+        await grupo.save();
+        res.json({ message: "Comentario eliminado", comentarioId });
+    } catch (error) {
+        res.status(400).json({ message: "Error al eliminar comentario" });
+    }
+};

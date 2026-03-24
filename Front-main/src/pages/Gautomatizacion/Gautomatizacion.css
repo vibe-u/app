@@ -7,10 +7,16 @@
     margin-bottom: 1.5rem;
 }
 
+.gauto-table-wrap {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin-bottom: 1.5rem;
+}
+
 .gauto-table {
     width: 100%;
     border-collapse: collapse;
-    margin-bottom: 1.5rem;
 }
 
 .gauto-table th,
@@ -18,6 +24,7 @@
     border: 1px solid #444;
     padding: 0.75rem;
     text-align: center;
+    word-break: break-word;
 }
 
 .gauto-table th {
@@ -47,4 +54,75 @@
 .gauto-btn:disabled {
     background-color: #555;
     cursor: not-allowed;
+}
+
+@media (max-width: 768px) {
+    .gauto-container {
+        padding: 1rem;
+    }
+
+    .gauto-container h2 {
+        font-size: 1.2rem;
+        line-height: 1.3;
+        margin-bottom: 1rem;
+    }
+
+    .gauto-table {
+        border: 0;
+        min-width: 100%;
+    }
+
+    .gauto-table thead {
+        border: 0;
+        clip: rect(0 0 0 0);
+        height: 1px;
+        margin: -1px;
+        overflow: hidden;
+        padding: 0;
+        position: absolute;
+        width: 1px;
+    }
+
+    .gauto-table tr {
+        display: block;
+        margin-bottom: 0.85rem;
+        border: 1px solid #333;
+        border-radius: 10px;
+        background-color: #161616;
+    }
+
+    .gauto-table td {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        text-align: right;
+        border: 0;
+        border-bottom: 1px solid #2f2f2f;
+        padding: 0.75rem 0.85rem;
+        font-size: 0.92rem;
+        gap: 0.75rem;
+    }
+
+    .gauto-table td:last-child {
+        border-bottom: 0;
+    }
+
+    .gauto-table td::before {
+        content: attr(data-label);
+        font-weight: 700;
+        color: #d1d5db;
+        text-align: left;
+        min-width: 44%;
+    }
+
+    .gauto-empty {
+        display: block;
+        text-align: center;
+        padding: 1rem;
+    }
+
+    .gauto-btn {
+        width: 100%;
+        min-height: 44px;
+    }
 }

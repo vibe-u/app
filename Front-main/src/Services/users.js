@@ -36,3 +36,15 @@ export const getFriendNotifications = () =>
 
 export const getModerationNotifications = () =>
   axios.get("/usuarios/moderacion/notificaciones", getAuthConfig());
+
+export const getMatchCandidates = () =>
+  axios.get("/usuarios/match/candidatos", getAuthConfig());
+
+export const sendMatchLike = (toUserId) =>
+  axios.post("/usuarios/match/like", { toUserId }, getAuthConfig());
+
+export const rejectMatchCandidate = (toUserId) =>
+  axios.post("/usuarios/match/reject", { toUserId }, getAuthConfig());
+
+export const getMatchNotifications = () =>
+  axios.get("/usuarios/match/notificaciones", getAuthConfig());

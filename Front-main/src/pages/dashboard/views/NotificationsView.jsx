@@ -1,6 +1,11 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { getFriendNotifications, getModerationNotifications, respondFriendRequest } from "../../../Services/users";
+import {
+  getFriendNotifications,
+  getMatchNotifications,
+  getModerationNotifications,
+  respondFriendRequest,
+} from "../../../Services/users";
 import { getEventNotifications } from "../../../Services/events";
 
 const HISTORY_KEY = "vibeu.notifications.history.v1";
@@ -33,15 +38,17 @@ const NotificationsView = () => {
   const loadNotifications = async () => {
     try {
       setError("");
-      const [friendsRes, eventsRes, moderationRes] = await Promise.all([
+      const [friendsRes, eventsRes, moderationRes, matchRes] = await Promise.all([
         getFriendNotifications(),
         getEventNotifications(),
         getModerationNotifications(),
+        getMatchNotifications(),
       ]);
       const friendItems = Array.isArray(friendsRes?.data) ? friendsRes.data : [];
       const eventItems = Array.isArray(eventsRes?.data) ? eventsRes.data : [];
       const moderationItems = Array.isArray(moderationRes?.data) ? moderationRes.data : [];
-      const merged = [...friendItems, ...eventItems, ...moderationItems].sort(
+      const matchItems = Array.isArray(matchRes?.data) ? matchRes.data : [];
+      const merged = [...friendItems, ...eventItems, ...moderationItems, ...matchItems].sort(
         (a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0)
       );
       setNotifications(merged);
@@ -148,6 +155,44 @@ const NotificationsView = () => {
                   <button className="button__dash" type="button" onClick={() => navigate("/dashboard/feed")}>
                     Ir al feed
                   </button>
+                </div>
+              ) : null}
+
+              {item.type === "match_like" ? (
+                <div className="friend_actions__dash">
+                  {item.fromUser?._id ? (
+                    <button
+                      className="button__dash"
+                      type="button"
+                      onClick={() => navigate(`/dashboard/usuario/${item.fromUser._id}`)}
+                    >
+                      Ver perfil
+                    </button>
+                  ) : null}
+                  <button className="button__dash" type="button" onClick={() => navigate("/matches")}>
+                    Ir a matches
+                  </button>
+                </div>
+              ) : null}
+
+              {item.type === "match_success" ? (
+                <div className="friend_actions__dash">
+                  {item.withUser?._id ? (
+                    <button
+                      className="button__dash"
+                      type="button"
+                      onClick={() =>
+                        navigate("/dashboard/chat", {
+                          state: {
+                            openUserId: item.withUser._id,
+                            fromMatch: true,
+                          },
+                        })
+                      }
+                    >
+                      Abrir chat
+                    </button>
+                  ) : null}
                 </div>
               ) : null}
             </article>

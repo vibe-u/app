@@ -7,6 +7,9 @@ import { mapAvatarToPublicUrl, mapPostMediaToPublicUrl } from "../utils/mediaUrl
 const PUBLIC_USER_FIELDS = "nombre avatar descripcion universidad carrera rol correoInstitucional";
 
 const removeId = (arr = [], id) => arr.filter((item) => item.toString() !== id.toString());
+const hasId = (arr = [], id) => (arr || []).some((item) => item.toString() === id.toString());
+const pushUniqueId = (arr = [], id) => (hasId(arr, id) ? arr : [...arr, id]);
+const trimNotifications = (arr = []) => arr.slice(0, 120);
 
 const getFriendStatus = (viewer, targetId) => {
   const meId = viewer._id.toString();
@@ -35,6 +38,58 @@ const searchUsers = async (req, res) => {
     res.json(users.map((user) => mapAvatarToPublicUrl(req, user)));
   } catch {
     res.status(500).json({ msg: "Error al buscar usuarios" });
+  }
+};
+
+const listMatchCandidates = async (req, res) => {
+  try {
+    const me = await Usuario.findById(req.usuario._id)
+      .select("amigos matchLikesEnviados matchRechazados matchLikesRecibidos")
+      .lean();
+
+    const meId = req.usuario._id.toString();
+    const incomingIds = (me?.matchLikesRecibidos || []).map((id) => id.toString());
+
+    const excluded = new Set([
+      meId,
+      ...(me?.amigos || []).map((id) => id.toString()),
+      ...(me?.matchLikesEnviados || []).map((id) => id.toString()),
+      ...(me?.matchRechazados || []).map((id) => id.toString()),
+    ]);
+
+    const incomingUsers = incomingIds.length
+      ? await Usuario.find({
+          _id: { $in: incomingIds },
+          confirmEmail: true,
+        })
+          .select("_id nombre avatar universidad carrera")
+          .lean()
+      : [];
+
+    const restUsers = await Usuario.find({
+      _id: { $nin: [...excluded] },
+      confirmEmail: true,
+    })
+      .select("_id nombre avatar universidad carrera")
+      .sort({ nombre: 1 })
+      .limit(100)
+      .lean();
+
+    const incomingSet = new Set(incomingIds);
+    const mappedIncoming = incomingUsers.map((user) => ({
+      ...mapAvatarToPublicUrl(req, user),
+      incomingLike: true,
+    }));
+    const mappedRest = restUsers
+      .filter((user) => !incomingSet.has(user._id.toString()))
+      .map((user) => ({
+        ...mapAvatarToPublicUrl(req, user),
+        incomingLike: false,
+      }));
+
+    res.json([...mappedIncoming, ...mappedRest]);
+  } catch {
+    res.status(500).json({ msg: "Error al listar candidatos de match" });
   }
 };
 
@@ -229,6 +284,166 @@ const cancelFriendRequest = async (req, res) => {
   }
 };
 
+const sendMatchLike = async (req, res) => {
+  try {
+    const { toUserId } = req.body;
+    if (!mongoose.Types.ObjectId.isValid(toUserId)) {
+      return res.status(400).json({ msg: "Usuario invalido" });
+    }
+    if (toUserId === req.usuario._id.toString()) {
+      return res.status(400).json({ msg: "No puedes darte like a ti mismo" });
+    }
+
+    const [me, toUser] = await Promise.all([Usuario.findById(req.usuario._id), Usuario.findById(toUserId)]);
+    if (!me || !toUser || !toUser.confirmEmail) {
+      return res.status(404).json({ msg: "Usuario no encontrado" });
+    }
+
+    const meId = me._id.toString();
+    const targetId = toUser._id.toString();
+    const alreadyFriends = hasId(me.amigos || [], targetId);
+
+    if (alreadyFriends) {
+      return res.json({
+        msg: "Ya son amigos",
+        matched: true,
+        withUser: mapAvatarToPublicUrl(req, {
+          _id: toUser._id,
+          nombre: toUser.nombre,
+          avatar: toUser.avatar,
+          universidad: toUser.universidad,
+          carrera: toUser.carrera,
+        }),
+      });
+    }
+
+    const isMutualLike = hasId(toUser.matchLikesEnviados || [], meId);
+
+    if (isMutualLike) {
+      me.matchLikesEnviados = removeId(me.matchLikesEnviados || [], targetId);
+      me.matchLikesRecibidos = removeId(me.matchLikesRecibidos || [], targetId);
+      toUser.matchLikesEnviados = removeId(toUser.matchLikesEnviados || [], meId);
+      toUser.matchLikesRecibidos = removeId(toUser.matchLikesRecibidos || [], meId);
+
+      me.matchRechazados = removeId(me.matchRechazados || [], targetId);
+      toUser.matchRechazados = removeId(toUser.matchRechazados || [], meId);
+
+      me.matchNotificaciones = (me.matchNotificaciones || []).filter((item) => {
+        if (item.type !== "match_like") return true;
+        const from = item.fromUser?.toString();
+        return from !== targetId;
+      });
+      toUser.matchNotificaciones = (toUser.matchNotificaciones || []).filter((item) => {
+        if (item.type !== "match_like") return true;
+        const from = item.fromUser?.toString();
+        return from !== meId;
+      });
+
+      me.amigos = pushUniqueId(me.amigos || [], toUser._id);
+      toUser.amigos = pushUniqueId(toUser.amigos || [], me._id);
+
+      me.matchNotificaciones = trimNotifications([
+        {
+          type: "match_success",
+          withUser: toUser._id,
+          message: `Tienes match con ${toUser.nombre}. Ya pueden chatear.`,
+          createdAt: new Date(),
+        },
+        ...(me.matchNotificaciones || []),
+      ]);
+      toUser.matchNotificaciones = trimNotifications([
+        {
+          type: "match_success",
+          withUser: me._id,
+          message: `Tienes match con ${me.nombre}. Ya pueden chatear.`,
+          createdAt: new Date(),
+        },
+        ...(toUser.matchNotificaciones || []),
+      ]);
+
+      await Promise.all([me.save(), toUser.save()]);
+
+      return res.json({
+        msg: "Match exitoso",
+        matched: true,
+        withUser: mapAvatarToPublicUrl(req, {
+          _id: toUser._id,
+          nombre: toUser.nombre,
+          avatar: toUser.avatar,
+          universidad: toUser.universidad,
+          carrera: toUser.carrera,
+        }),
+      });
+    }
+
+    if (!hasId(me.matchLikesEnviados || [], targetId)) {
+      me.matchLikesEnviados = [...(me.matchLikesEnviados || []), toUser._id];
+    }
+    if (!hasId(toUser.matchLikesRecibidos || [], meId)) {
+      toUser.matchLikesRecibidos = [...(toUser.matchLikesRecibidos || []), me._id];
+    }
+    me.matchRechazados = removeId(me.matchRechazados || [], targetId);
+
+    const alreadyHasLikeNotification = (toUser.matchNotificaciones || []).some(
+      (item) => item.type === "match_like" && item.fromUser?.toString() === meId
+    );
+    if (!alreadyHasLikeNotification) {
+      toUser.matchNotificaciones = trimNotifications([
+        {
+          type: "match_like",
+          fromUser: me._id,
+          message: `${me.nombre} te dio like en Matches`,
+          createdAt: new Date(),
+        },
+        ...(toUser.matchNotificaciones || []),
+      ]);
+    }
+
+    await Promise.all([me.save(), toUser.save()]);
+
+    res.json({
+      msg: "Like enviado",
+      matched: false,
+    });
+  } catch {
+    res.status(500).json({ msg: "Error al enviar like de match" });
+  }
+};
+
+const rejectMatchCandidate = async (req, res) => {
+  try {
+    const { toUserId } = req.body;
+    if (!mongoose.Types.ObjectId.isValid(toUserId)) {
+      return res.status(400).json({ msg: "Usuario invalido" });
+    }
+    if (toUserId === req.usuario._id.toString()) {
+      return res.status(400).json({ msg: "No puedes rechazarte a ti mismo" });
+    }
+
+    const [me, otherUser] = await Promise.all([Usuario.findById(req.usuario._id), Usuario.findById(toUserId)]);
+    if (!me || !otherUser) {
+      return res.status(404).json({ msg: "Usuario no encontrado" });
+    }
+
+    me.matchRechazados = pushUniqueId(me.matchRechazados || [], otherUser._id);
+    me.matchLikesRecibidos = removeId(me.matchLikesRecibidos || [], otherUser._id);
+    me.matchLikesEnviados = removeId(me.matchLikesEnviados || [], otherUser._id);
+
+    otherUser.matchLikesEnviados = removeId(otherUser.matchLikesEnviados || [], me._id);
+    otherUser.matchLikesRecibidos = removeId(otherUser.matchLikesRecibidos || [], me._id);
+
+    me.matchNotificaciones = (me.matchNotificaciones || []).filter((item) => {
+      if (item.type !== "match_like") return true;
+      return item.fromUser?.toString() !== otherUser._id.toString();
+    });
+
+    await Promise.all([me.save(), otherUser.save()]);
+    res.json({ msg: "Perfil rechazado" });
+  } catch {
+    res.status(500).json({ msg: "Error al rechazar perfil" });
+  }
+};
+
 const getFriendRequestNotifications = async (req, res) => {
   try {
     const me = await Usuario.findById(req.usuario._id)
@@ -249,7 +464,36 @@ const getFriendRequestNotifications = async (req, res) => {
   }
 };
 
+const getMatchNotifications = async (req, res) => {
+  try {
+    const me = await Usuario.findById(req.usuario._id)
+      .populate("matchNotificaciones.fromUser", "_id nombre avatar universidad carrera")
+      .populate("matchNotificaciones.withUser", "_id nombre avatar universidad carrera")
+      .lean();
+
+    const notifications = (me?.matchNotificaciones || [])
+      .map((item, index) => {
+        const fromUser = item.fromUser ? mapAvatarToPublicUrl(req, item.fromUser) : null;
+        const withUser = item.withUser ? mapAvatarToPublicUrl(req, item.withUser) : null;
+        return {
+          _id: `match-${index}-${item.createdAt || Date.now()}`,
+          type: item.type,
+          fromUser,
+          withUser,
+          message: item.message,
+          createdAt: item.createdAt || new Date().toISOString(),
+        };
+      })
+      .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+
+    res.json(notifications);
+  } catch {
+    res.status(500).json({ msg: "Error al obtener notificaciones de match" });
+  }
+};
+
 export {
+  listMatchCandidates,
   searchUsers,
   getPublicProfile,
   sendFriendRequest,
@@ -257,4 +501,7 @@ export {
   removeFriend,
   cancelFriendRequest,
   getFriendRequestNotifications,
+  sendMatchLike,
+  rejectMatchCandidate,
+  getMatchNotifications,
 };

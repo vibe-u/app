@@ -8,13 +8,17 @@ import { getModerationNotifications } from "../controllers/posts.controller.js";
 import { perfil, actualizarUsuario, actualizarPassword } 
 from "../controllers/usuario_controller.js";
 import {
+    listMatchCandidates,
     searchUsers,
     getPublicProfile,
     sendFriendRequest,
     respondFriendRequest,
     removeFriend,
     cancelFriendRequest,
-    getFriendRequestNotifications
+    getFriendRequestNotifications,
+    sendMatchLike,
+    rejectMatchCandidate,
+    getMatchNotifications
 } from "../controllers/friend_controller.js";
 import fetch from "node-fetch";
 import { toPublicUploadUrl } from "../utils/mediaUrl.js";
@@ -352,6 +356,10 @@ router.get("/perfil", verificarTokenJWT, perfil);
 router.put("/actualizar-perfil", verificarTokenJWT, actualizarUsuario);
 router.put("/actualizar-password", verificarTokenJWT, actualizarPassword);
 router.get("/buscar", verificarTokenJWT, searchUsers);
+router.get("/match/candidatos", verificarTokenJWT, listMatchCandidates);
+router.post("/match/like", verificarTokenJWT, sendMatchLike);
+router.post("/match/reject", verificarTokenJWT, rejectMatchCandidate);
+router.get("/match/notificaciones", verificarTokenJWT, getMatchNotifications);
 router.get("/publico/:id", verificarTokenJWT, getPublicProfile);
 router.post("/amistad/solicitar", verificarTokenJWT, sendFriendRequest);
 router.post("/amistad/responder", verificarTokenJWT, respondFriendRequest);

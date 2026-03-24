@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useLocation } from "react-router-dom";
 import {
   getChatConversations,
   getChatUsers,
@@ -33,6 +34,7 @@ const areMessagesEqual = (prev = [], next = []) => {
 };
 
 const ChatView = () => {
+  const location = useLocation();
   const [users, setUsers] = useState([]);
   const [conversations, setConversations] = useState([]);
   const [activeUserId, setActiveUserId] = useState("");
@@ -81,6 +83,12 @@ const ChatView = () => {
   useEffect(() => {
     loadInitialData();
   }, []);
+
+  useEffect(() => {
+    const userIdFromState = location.state?.openUserId;
+    if (!userIdFromState) return;
+    setActiveUserId(userIdFromState);
+  }, [location.state]);
 
   const recents = useMemo(() => {
     const convoByUserId = new Map(

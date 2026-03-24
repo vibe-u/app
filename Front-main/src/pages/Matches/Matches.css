@@ -1,6 +1,6 @@
 .matches-section {
     text-align: center;
-    color: white;
+    color: #f5f5f5;
     padding: 2rem;
 }
 
@@ -19,7 +19,7 @@
 }
 
 .matches-subtitle {
-    color: #ccc;
+    color: #c7c7d1;
     margin-bottom: 1.5rem;
 }
 
@@ -72,4 +72,151 @@
 
 .connect-btn:hover {
     background: #5b32d6;
+}
+
+.match-card-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.connect-btn.reject {
+    background: #e11d48;
+}
+
+.connect-btn.reject:hover {
+    background: #be123c;
+}
+
+.match-pill-like {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 0.76rem;
+    font-weight: 700;
+    margin: 4px 0 8px;
+    color: #fdf2f8;
+    background: linear-gradient(135deg, #db2777, #7c3aed);
+}
+
+.matches-swipe-wrapper {
+    display: grid;
+    gap: 12px;
+    justify-items: center;
+}
+
+.match-card-swipe {
+    width: min(92vw, 360px);
+    min-height: 320px;
+    touch-action: pan-y;
+    user-select: none;
+    position: relative;
+    border: 1px solid rgba(123, 75, 255, 0.35);
+}
+
+.swipe-hint {
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(15, 23, 42, 0.82);
+    color: #fff;
+    border-radius: 999px;
+    padding: 6px 10px;
+    font-size: 0.82rem;
+    font-weight: 700;
+}
+
+.swipe-mobile-actions {
+    display: flex;
+    width: min(92vw, 360px);
+    gap: 10px;
+}
+
+.swipe-reject-btn,
+.swipe-like-btn {
+    flex: 1;
+    border: 0;
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.swipe-reject-btn {
+    background: #ef4444;
+    color: #fff;
+}
+
+.swipe-like-btn {
+    background: #7b4bff;
+    color: #fff;
+}
+
+.swipe-reject-btn:hover {
+    background: #dc2626;
+}
+
+.swipe-like-btn:hover {
+    background: #5b32d6;
+}
+
+.swipe-reject-btn:disabled,
+.swipe-like-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+[data-theme="light"] .matches-section {
+    color: #1f2937;
+}
+
+[data-theme="light"] .matches-subtitle {
+    color: #4b5563;
+}
+
+[data-theme="light"] .match-card {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 2px 10px rgba(15, 23, 42, 0.08);
+}
+
+[data-theme="light"] .matches-state {
+    color: #374151;
+}
+
+[data-theme="light"] .swipe-hint {
+    background: rgba(255, 255, 255, 0.94);
+    color: #1f2937;
+    border: 1px solid #d1d5db;
+}
+
+[data-theme="dark"] .matches-section {
+    color: #f5f5f5;
+}
+
+[data-theme="dark"] .match-card {
+    background: #1f1f2e;
+}
+
+@media (max-width: 768px) {
+    .matches-section {
+        padding: 1rem;
+    }
+
+    .matches-title {
+        font-size: 1.4rem;
+    }
+
+    .matches-subtitle {
+        font-size: 0.92rem;
+    }
+
+    .matches-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .match-card-actions {
+        justify-content: center;
+    }
 }

@@ -23,7 +23,23 @@ const usuarioSchema = new mongoose.Schema({
   carrera: { type: String, default: "" },
   amigos: [{ type: mongoose.Schema.Types.ObjectId, ref: "Usuario" }],
   solicitudesEnviadas: [{ type: mongoose.Schema.Types.ObjectId, ref: "Usuario" }],
-  solicitudesRecibidas: [{ type: mongoose.Schema.Types.ObjectId, ref: "Usuario" }]
+  solicitudesRecibidas: [{ type: mongoose.Schema.Types.ObjectId, ref: "Usuario" }],
+  matchLikesEnviados: [{ type: mongoose.Schema.Types.ObjectId, ref: "Usuario" }],
+  matchLikesRecibidos: [{ type: mongoose.Schema.Types.ObjectId, ref: "Usuario" }],
+  matchRechazados: [{ type: mongoose.Schema.Types.ObjectId, ref: "Usuario" }],
+  matchNotificaciones: [
+    {
+      type: {
+        type: String,
+        enum: ["match_like", "match_success"],
+        required: true,
+      },
+      fromUser: { type: mongoose.Schema.Types.ObjectId, ref: "Usuario", default: null },
+      withUser: { type: mongoose.Schema.Types.ObjectId, ref: "Usuario", default: null },
+      message: { type: String, required: true },
+      createdAt: { type: Date, default: Date.now },
+    },
+  ],
 }, { timestamps: true });
 
 // 🔐 Encriptar contraseña

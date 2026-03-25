@@ -1,8 +1,12 @@
 import dotenv from 'dotenv';
+import dns from 'node:dns';
 dotenv.config();
 
 import app from './server.js';
 import connection from './database.js';
+
+// Evita fallos SRV de DNS local con MongoDB Atlas (mongodb+srv).
+dns.setServers(['8.8.8.8', '1.1.1.1']);
 
 const startServer = async () => {
   try {

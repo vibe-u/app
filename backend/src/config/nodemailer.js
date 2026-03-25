@@ -1,9 +1,9 @@
 import nodemailer from "nodemailer";
 import dotenv from "dotenv";
-
 dotenv.config();
 
 const { USER_EMAIL, USER_PASS, URL_FRONTEND } = process.env;
+
 const smtpEnabled = Boolean(USER_EMAIL && USER_PASS && URL_FRONTEND);
 
 let transporter = null;
@@ -12,13 +12,18 @@ if (smtpEnabled) {
     host: "smtp.gmail.com",
     port: 587,
     secure: false,
-    connectionTimeout: 10000,
-    greetingTimeout: 10000,
-    socketTimeout: 15000,
     auth: {
       user: USER_EMAIL,
       pass: USER_PASS,
     },
+  });
+
+  transporter.verify((error) => {
+    if (error) {
+      console.error("ERROR SMTP:", error);
+    } else {
+      console.log("✅ SMTP listo para enviar correos");
+    }
   });
 } else {
   console.warn("SMTP deshabilitado: faltan variables USER_EMAIL, USER_PASS o URL_FRONTEND");

@@ -116,12 +116,7 @@ router.post("/register", domainCheck, async (req, res) => {
         nuevoUsuario.token = token;
         await nuevoUsuario.save();
 
-        const infoMail = await sendMailToRegister(correoInstitucional, token);
-        if (!infoMail) {
-            return res.status(500).json({
-                msg: "Usuario creado, pero no se pudo enviar el correo de confirmacion."
-            });
-        }
+        void sendMailToRegister(correoInstitucional, token);
 
         res.status(201).json({
             msg: "Usuario registrado correctamente. Revisa tu correo para confirmar tu cuenta."
@@ -186,10 +181,7 @@ router.post("/reenviar-confirmacion", async (req, res) => {
         usuario.token = token;
         await usuario.save();
 
-        const infoMail = await sendMailToRegister(correoInstitucional, token);
-        if (!infoMail) {
-            return res.status(500).json({ msg: "No se pudo reenviar el correo de confirmacion" });
-        }
+        void sendMailToRegister(correoInstitucional, token);
 
         res.json({ msg: "Correo de confirmacion reenviado correctamente" });
     } catch (error) {
@@ -268,7 +260,7 @@ router.post("/olvide-password", async (req, res) => {
         usuario.resetTokenExpire = Date.now() + 15 * 60 * 1000;
         await usuario.save();
 
-        await sendMailToRecoveryPassword(correoInstitucional, resetToken);
+        void sendMailToRecoveryPassword(correoInstitucional, resetToken);
 
         res.json({ msg: "Hemos enviado un enlace para restablecer tu contraseña." });
 

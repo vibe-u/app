@@ -58,7 +58,7 @@ const registro = async (req, res) => {
         nuevoUsuario.token = token;
 
         await nuevoUsuario.save();
-        await sendMailToRegister(correoInstitucional, token);
+        void sendMailToRegister(correoInstitucional, token);
 
         res.status(200).json({ msg: "Revisa tu correo institucional para confirmar tu cuenta." });
     } catch (error) {
@@ -98,7 +98,7 @@ const recuperarPassword = async (req, res) => {
         usuarioBDD.token = token;
         await usuarioBDD.save();
 
-        await sendMailToRecoveryPassword(correoInstitucional, token);
+        void sendMailToRecoveryPassword(correoInstitucional, token);
         res.status(200).json({ msg: "Revisa tu correo para restablecer tu contraseña" });
     } catch (error) {
         res.status(500).json({ msg: `❌ Error - ${error.message}` });

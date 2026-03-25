@@ -16,6 +16,7 @@ const startServer = async () => {
     });
   } catch (error) {
     console.error('No se pudo iniciar el servidor por error de base de datos.');
+    console.error(error);
     process.exit(1);
   }
 };

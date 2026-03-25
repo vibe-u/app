@@ -1,52 +1,89 @@
-import nodemailer from "nodemailer";
 import dotenv from "dotenv";
+import { google } from "googleapis";
+
 dotenv.config();
 
-const { USER_EMAIL, USER_PASS, URL_FRONTEND } = process.env;
+const {
+  URL_FRONTEND,
+  USER_EMAIL,
+  GMAIL_SENDER_EMAIL,
+  GMAIL_CLIENT_ID,
+  GMAIL_CLIENT_SECRET,
+  GMAIL_REFRESH_TOKEN,
+  GMAIL_REDIRECT_URI = "https://developers.google.com/oauthplayground",
+  SMTP_FROM_NAME = "Vibe-U",
+} = process.env;
 
-const smtpEnabled = Boolean(USER_EMAIL && USER_PASS && URL_FRONTEND);
+const senderEmail = GMAIL_SENDER_EMAIL || USER_EMAIL;
 
-let transporter = null;
-if (smtpEnabled) {
-  transporter = nodemailer.createTransport({
-    host: "smtp.gmail.com",
-    port: 587,
-    secure: false,
-    auth: {
-      user: USER_EMAIL,
-      pass: USER_PASS,
-    },
+const gmailEnabled = Boolean(
+  URL_FRONTEND &&
+    senderEmail &&
+    GMAIL_CLIENT_ID &&
+    GMAIL_CLIENT_SECRET &&
+    GMAIL_REFRESH_TOKEN
+);
+
+let gmailClient = null;
+if (gmailEnabled) {
+  const oauth2Client = new google.auth.OAuth2(
+    GMAIL_CLIENT_ID,
+    GMAIL_CLIENT_SECRET,
+    GMAIL_REDIRECT_URI
+  );
+
+  oauth2Client.setCredentials({
+    refresh_token: GMAIL_REFRESH_TOKEN,
   });
 
-  transporter.verify((error) => {
-    if (error) {
-      console.error("ERROR SMTP:", error);
-    } else {
-      console.log("✅ SMTP listo para enviar correos");
-    }
-  });
+  gmailClient = google.gmail({ version: "v1", auth: oauth2Client });
+  console.log("Gmail API lista para enviar correos");
 } else {
-  console.warn("SMTP deshabilitado: faltan variables USER_EMAIL, USER_PASS o URL_FRONTEND");
+  console.warn(
+    "Gmail API deshabilitada: faltan URL_FRONTEND, GMAIL_CLIENT_ID, GMAIL_CLIENT_SECRET, GMAIL_REFRESH_TOKEN o sender email"
+  );
 }
 
+const toBase64Url = (value) =>
+  Buffer.from(value, "utf8")
+    .toString("base64")
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=+$/g, "");
+
+const buildRawMessage = (to, subject, html) => {
+  const lines = [
+    `From: \"${SMTP_FROM_NAME}\" <${senderEmail}>`,
+    `To: ${to}`,
+    `Subject: ${subject}`,
+    "MIME-Version: 1.0",
+    "Content-Type: text/html; charset=UTF-8",
+    "",
+    html,
+  ];
+
+  return toBase64Url(lines.join("\r\n"));
+};
+
 const sendMail = async (to, subject, html) => {
-  if (!transporter) {
-    console.warn(`SMTP deshabilitado, no se envio correo a ${to}`);
+  if (!gmailClient) {
+    console.warn(`Gmail API deshabilitada, no se envio correo a ${to}`);
     return null;
   }
 
   try {
-    const info = await transporter.sendMail({
-      from: USER_EMAIL,
-      to,
-      subject,
-      html,
+    const raw = buildRawMessage(to, subject, html);
+    const response = await gmailClient.users.messages.send({
+      userId: "me",
+      requestBody: { raw },
     });
 
-    console.log("Email enviado:", info.messageId);
-    return info;
+    const messageId = response?.data?.id || "sin-id";
+    console.log("Email enviado:", messageId);
+    return response.data;
   } catch (error) {
-    console.error("Error enviando email:", error.message);
+    const message = error?.response?.data?.error?.message || error.message;
+    console.error("Error enviando email:", message);
     return null;
   }
 };

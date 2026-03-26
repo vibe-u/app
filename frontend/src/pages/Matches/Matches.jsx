@@ -9,9 +9,40 @@ import { resolveAvatarUrl } from "../../utils/mediaUrl";
 import "./Matches.css";
 
 const DEFAULT_AVATAR = "/default-avatar.svg";
+const TEMP_REJECT_STORAGE_KEY = "matches_temp_reject_until_by_user";
+const SWIPE_RESHOW_DELAY_MS = 15 * 60 * 1000;
+
+const cleanExpiredRejects = (rejects = {}) => {
+  const now = Date.now();
+  return Object.entries(rejects).reduce((acc, [userId, expiresAt]) => {
+    const parsed = Number(expiresAt);
+    if (parsed > now) acc[userId] = parsed;
+    return acc;
+  }, {});
+};
+
+const loadTempRejects = () => {
+  if (typeof window === "undefined") return {};
+  try {
+    const raw = localStorage.getItem(TEMP_REJECT_STORAGE_KEY);
+    if (!raw) return {};
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== "object") return {};
+    return cleanExpiredRejects(parsed);
+  } catch {
+    return {};
+  }
+};
+
+const filterAvailableCandidates = (candidates = [], tempRejects = {}) => {
+  const activeRejects = cleanExpiredRejects(tempRejects);
+  return candidates.filter((user) => !activeRejects[user?._id]);
+};
 
 const Matches = () => {
+  const [allCandidates, setAllCandidates] = useState([]);
   const [suggestedUsers, setSuggestedUsers] = useState([]);
+  const [tempRejects, setTempRejects] = useState(() => loadTempRejects());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [isMobile, setIsMobile] = useState(
@@ -22,6 +53,8 @@ const Matches = () => {
   const [touchStartX, setTouchStartX] = useState(null);
   const [swipeHint, setSwipeHint] = useState("");
   const [processing, setProcessing] = useState(false);
+  const [matchModalOpen, setMatchModalOpen] = useState(false);
+  const [matchedUserId, setMatchedUserId] = useState("");
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -35,7 +68,9 @@ const Matches = () => {
       setLoading(true);
       setError("");
       const { data } = await getMatchCandidates();
-      setSuggestedUsers(Array.isArray(data) ? data : []);
+      const candidates = Array.isArray(data) ? data : [];
+      setAllCandidates(candidates);
+      setSuggestedUsers(filterAvailableCandidates(candidates, tempRejects));
     } catch (requestError) {
       console.error("Error al cargar matches:", requestError);
       setError("No se pudieron cargar los usuarios registrados.");
@@ -49,13 +84,46 @@ const Matches = () => {
   }, []);
 
   useEffect(() => {
+    if (typeof window === "undefined") return;
+    const cleaned = cleanExpiredRejects(tempRejects);
+    localStorage.setItem(TEMP_REJECT_STORAGE_KEY, JSON.stringify(cleaned));
+    setSuggestedUsers(filterAvailableCandidates(allCandidates, cleaned));
+  }, [tempRejects, allCandidates]);
+
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      setTempRejects((prev) => {
+        const cleaned = cleanExpiredRejects(prev);
+        return JSON.stringify(cleaned) === JSON.stringify(prev) ? prev : cleaned;
+      });
+    }, 15000);
+
+    return () => clearInterval(intervalId);
+  }, []);
+
+  useEffect(() => {
     if (currentIndex > suggestedUsers.length - 1) {
       setCurrentIndex(Math.max(0, suggestedUsers.length - 1));
     }
   }, [suggestedUsers, currentIndex]);
 
-  const handleReject = async (userId) => {
+  const handleReject = async (userId, options = {}) => {
+    const { temporary = false } = options;
     if (processing || !userId) return;
+
+    if (temporary) {
+      const expiresAt = Date.now() + SWIPE_RESHOW_DELAY_MS;
+      setTempRejects((prev) => ({
+        ...cleanExpiredRejects(prev),
+        [userId]: expiresAt,
+      }));
+      setSwipeHint("Te lo mostramos luego");
+      setTimeout(() => {
+        setSwipeHint("");
+      }, 220);
+      return;
+    }
+
     try {
       setProcessing(true);
       await rejectMatchCandidate(userId);
@@ -63,12 +131,34 @@ const Matches = () => {
       setTimeout(() => {
         setSwipeHint("");
       }, 120);
-      setSuggestedUsers((prev) => prev.filter((item) => item._id !== userId));
+      setTempRejects((prev) => {
+        const next = { ...prev };
+        delete next[userId];
+        return next;
+      });
+      setAllCandidates((prev) => prev.filter((item) => item._id !== userId));
     } catch (requestError) {
       setError(requestError?.response?.data?.msg || "No se pudo rechazar el perfil.");
     } finally {
       setProcessing(false);
     }
+  };
+
+  const closeMatchModal = () => {
+    setMatchModalOpen(false);
+    setMatchedUserId("");
+  };
+
+  const openMatchedChat = () => {
+    const userId = matchedUserId;
+    closeMatchModal();
+    if (!userId) return;
+    navigate("/dashboard/chat", {
+      state: {
+        openUserId: userId,
+        fromMatch: true,
+      },
+    });
   };
 
   const handleLike = async (userId) => {
@@ -77,22 +167,21 @@ const Matches = () => {
       setProcessing(true);
       const { data } = await sendMatchLike(userId);
       if (data?.matched) {
-        setSwipeHint("Match! 💘");
-        setTimeout(() => {
-          navigate("/dashboard/chat", {
-            state: {
-              openUserId: userId,
-              fromMatch: true,
-            },
-          });
-        }, 200);
+        setSwipeHint("Match!");
+        setMatchedUserId(userId);
+        setMatchModalOpen(true);
       } else {
-        setSwipeHint("Like enviado 💜");
+        setSwipeHint("Like enviado");
         setTimeout(() => {
           setSwipeHint("");
         }, 120);
-        setSuggestedUsers((prev) => prev.filter((item) => item._id !== userId));
       }
+      setTempRejects((prev) => {
+        const next = { ...prev };
+        delete next[userId];
+        return next;
+      });
+      setAllCandidates((prev) => prev.filter((item) => item._id !== userId));
     } catch (requestError) {
       setError(requestError?.response?.data?.msg || "No se pudo enviar like.");
     } finally {
@@ -111,8 +200,8 @@ const Matches = () => {
     const currentX = event.touches[0].clientX;
     const delta = currentX - touchStartX;
     setDragX(delta);
-    if (delta > 35) setSwipeHint("👉 Like");
-    else if (delta < -35) setSwipeHint("👈 Rechazar");
+    if (delta > 35) setSwipeHint("Like");
+    else if (delta < -35) setSwipeHint("Rechazar");
     else setSwipeHint("");
   };
 
@@ -122,7 +211,7 @@ const Matches = () => {
     if (dragX >= threshold) {
       handleLike(userId);
     } else if (dragX <= -threshold) {
-      handleReject(userId);
+      handleReject(userId, { temporary: true });
     }
     setDragX(0);
     setTouchStartX(null);
@@ -185,10 +274,10 @@ const Matches = () => {
               <button
                 className="swipe-reject-btn"
                 type="button"
-                onClick={() => handleReject(currentUser._id)}
+                onClick={() => handleReject(currentUser._id, { temporary: true })}
                 disabled={processing}
               >
-                👈 No
+                No
               </button>
               <button
                 className="swipe-like-btn"
@@ -196,7 +285,7 @@ const Matches = () => {
                 onClick={() => handleLike(currentUser._id)}
                 disabled={processing}
               >
-                👉 Like
+                Like
               </button>
             </div>
           ) : null}
@@ -228,6 +317,23 @@ const Matches = () => {
           ))}
         </div>
       )}
+
+      {matchModalOpen ? (
+        <div className="match-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="match-modal-title">
+          <div className="match-modal-card">
+            <h3 id="match-modal-title">Compartaan gustos e intereses!!</h3>
+            <p>Haz match para conversar y conocerse mejor.</p>
+            <div className="match-modal-actions">
+              <button type="button" className="connect-btn reject" onClick={closeMatchModal}>
+                Luego
+              </button>
+              <button type="button" className="connect-btn" onClick={openMatchedChat}>
+                Ir al chat
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </section>
   );
 };

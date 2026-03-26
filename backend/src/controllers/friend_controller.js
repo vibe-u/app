@@ -384,20 +384,6 @@ const sendMatchLike = async (req, res) => {
     }
     me.matchRechazados = removeId(me.matchRechazados || [], targetId);
 
-    const alreadyHasLikeNotification = (toUser.matchNotificaciones || []).some(
-      (item) => item.type === "match_like" && item.fromUser?.toString() === meId
-    );
-    if (!alreadyHasLikeNotification) {
-      toUser.matchNotificaciones = trimNotifications([
-        {
-          type: "match_like",
-          fromUser: me._id,
-          message: `${me.nombre} te dio like en Matches`,
-          createdAt: new Date(),
-        },
-        ...(toUser.matchNotificaciones || []),
-      ]);
-    }
 
     await Promise.all([me.save(), toUser.save()]);
 
@@ -505,3 +491,4 @@ export {
   rejectMatchCandidate,
   getMatchNotifications,
 };
+

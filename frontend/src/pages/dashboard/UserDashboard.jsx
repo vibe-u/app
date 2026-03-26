@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { FaChartBar, FaHeart, FaPlus, FaRobot, FaSearch, FaUserShield, FaUsers } from "react-icons/fa";
 import Sidebar from "../../components/Sidebar";
@@ -10,8 +10,22 @@ import {
   obtenerPosts,
   toggleLikePost,
 } from "../../Services/posts";
-import { searchRegisteredUsers } from "../../Services/users";
+import {
+  getFriendNotifications,
+  getMatchNotifications,
+  getModerationNotifications,
+  searchRegisteredUsers,
+} from "../../Services/users";
+import { getEventNotifications } from "../../Services/events";
+import { getChatConversations } from "../../Services/chat";
 import { getTokenPayload } from "../../utils/authToken";
+import {
+  playAlertSound,
+  readAlertSettings,
+  requestDesktopNotificationPermission,
+  saveAlertSettings,
+  showDesktopNotification,
+} from "../../utils/desktopAlerts";
 import { resolveAvatarUrl, resolveUploadUrl } from "../../utils/mediaUrl";
 import "./Dashboard.css";
 
@@ -54,6 +68,13 @@ const UserDashboard = () => {
     typeof window !== "undefined" ? window.innerWidth <= 770 : false
   );
   const [showMobileSearch, setShowMobileSearch] = useState(false);
+  const [alertSettings, setAlertSettings] = useState(() => readAlertSettings());
+  const [showAlertConsentModal, setShowAlertConsentModal] = useState(() => !readAlertSettings().consentAsked);
+  const alertsBaselineRef = useRef({
+    initialized: false,
+    conversationStampById: {},
+    notificationIds: new Set(),
+  });
 
   useEffect(() => {
     const onResize = () => {
@@ -121,6 +142,140 @@ const UserDashboard = () => {
     () => searchUsers.length > 0 || searchGroups.length > 0,
     [searchUsers, searchGroups]
   );
+
+  const applyAlertSettings = (nextSettings) => {
+    setAlertSettings(nextSettings);
+    saveAlertSettings(nextSettings);
+  };
+
+  const enableSoundOnly = async () => {
+    const nextSettings = {
+      ...alertSettings,
+      consentAsked: true,
+      enabled: true,
+      soundEnabled: true,
+      desktopEnabled: false,
+    };
+    applyAlertSettings(nextSettings);
+    setShowAlertConsentModal(false);
+    await playAlertSound();
+  };
+
+  const enableDesktopAndSound = async () => {
+    const permission = await requestDesktopNotificationPermission();
+    const nextSettings = {
+      ...alertSettings,
+      consentAsked: true,
+      enabled: true,
+      soundEnabled: true,
+      desktopEnabled: permission === "granted",
+    };
+    applyAlertSettings(nextSettings);
+    setShowAlertConsentModal(false);
+    await playAlertSound();
+  };
+
+  const dismissAlertConsent = () => {
+    const nextSettings = {
+      ...alertSettings,
+      consentAsked: true,
+      enabled: false,
+      soundEnabled: false,
+      desktopEnabled: false,
+    };
+    applyAlertSettings(nextSettings);
+    setShowAlertConsentModal(false);
+  };
+
+  useEffect(() => {
+    if (!alertSettings.enabled) {
+      alertsBaselineRef.current = {
+        initialized: false,
+        conversationStampById: {},
+        notificationIds: new Set(),
+      };
+      return;
+    }
+
+    const toArray = (value) => (Array.isArray(value) ? value : []);
+
+    const buildConversationStampMap = (conversations) =>
+      toArray(conversations).reduce((acc, conversation) => {
+        const convoId = conversation?._id;
+        if (!convoId) return acc;
+        acc[convoId] = `${conversation?.lastMessageAt || ""}|${conversation?.lastMessage || ""}`;
+        return acc;
+      }, {});
+
+    const fetchAlertsData = async () => {
+      try {
+        const [conversationsRes, friendRes, eventRes, moderationRes, matchRes] = await Promise.all([
+          getChatConversations(),
+          getFriendNotifications(),
+          getEventNotifications(),
+          getModerationNotifications(),
+          getMatchNotifications(),
+        ]);
+
+        const conversations = toArray(conversationsRes?.data);
+        const notifications = [
+          ...toArray(friendRes?.data),
+          ...toArray(eventRes?.data),
+          ...toArray(moderationRes?.data),
+          ...toArray(matchRes?.data),
+        ];
+
+        const previous = alertsBaselineRef.current;
+        const conversationStampById = buildConversationStampMap(conversations);
+        const notificationIds = new Set(notifications.map((item) => item?._id).filter(Boolean));
+
+        if (!previous.initialized) {
+          alertsBaselineRef.current = {
+            initialized: true,
+            conversationStampById,
+            notificationIds,
+          };
+          return;
+        }
+
+        const hasNewMessage = Object.entries(conversationStampById).some(([conversationId, stamp]) => {
+          const prevStamp = previous.conversationStampById[conversationId];
+          return Boolean(prevStamp && prevStamp !== stamp);
+        });
+
+        const newNotificationsCount = notifications.filter(
+          (item) => item?._id && !previous.notificationIds.has(item._id)
+        ).length;
+
+        if (alertSettings.soundEnabled && (hasNewMessage || newNotificationsCount > 0)) {
+          await playAlertSound();
+        }
+
+        if (alertSettings.desktopEnabled && newNotificationsCount > 0) {
+          showDesktopNotification(
+            "VibeU",
+            `Tienes ${newNotificationsCount} notificacion${newNotificationsCount > 1 ? "es" : ""} nueva${newNotificationsCount > 1 ? "s" : ""}.`
+          );
+        }
+
+        if (alertSettings.desktopEnabled && hasNewMessage) {
+          showDesktopNotification("VibeU", "Tienes mensajes nuevos en tu chat.");
+        }
+
+        alertsBaselineRef.current = {
+          initialized: true,
+          conversationStampById,
+          notificationIds,
+        };
+      } catch {
+        // no-op: evita romper la UI por fallas de red temporales
+      }
+    };
+
+    fetchAlertsData();
+    const intervalId = setInterval(fetchAlertsData, 5000);
+    return () => clearInterval(intervalId);
+  }, [alertSettings.enabled, alertSettings.soundEnabled, alertSettings.desktopEnabled]);
 
   const renderSearchBox = (isMobile = false) => (
     <div className={`search_box__dash ${isMobile ? "mobile_search_panel__dash" : ""}`}>
@@ -292,6 +447,28 @@ const UserDashboard = () => {
 
         <Outlet />
       </main>
+
+      {showAlertConsentModal ? (
+        <div className="alerts_modal_overlay__dash" role="dialog" aria-modal="true" aria-labelledby="alerts-modal-title">
+          <div className="alerts_modal__dash">
+            <h4 id="alerts-modal-title">Permisos de alertas</h4>
+            <p>
+              Quieres activar sonido y notificaciones de escritorio para mensajes y novedades nuevas?
+            </p>
+            <div className="alerts_modal_actions__dash">
+              <button type="button" className="button__dash1" onClick={dismissAlertConsent}>
+                No ahora
+              </button>
+              <button type="button" className="button__dash1" onClick={enableSoundOnly}>
+                Solo sonido
+              </button>
+              <button type="button" className="button__dash" onClick={enableDesktopAndSound}>
+                Activar desktop
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       {!isAdmin && showCreateModal ? (
         <div className="create_modal_overlay__dash" role="dialog" aria-modal="true">

@@ -167,6 +167,43 @@
     cursor: not-allowed;
 }
 
+.match-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.65);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2500;
+    padding: 16px;
+}
+
+.match-modal-card {
+    width: min(92vw, 420px);
+    border-radius: 16px;
+    background: #1f1f2e;
+    border: 1px solid rgba(123, 75, 255, 0.35);
+    padding: 20px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+}
+
+.match-modal-card h3 {
+    margin: 0 0 8px;
+    font-size: 1.3rem;
+}
+
+.match-modal-card p {
+    margin: 0;
+    color: #d1d5db;
+}
+
+.match-modal-actions {
+    margin-top: 16px;
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+}
+
 [data-theme="light"] .matches-section {
     color: #1f2937;
 }
@@ -189,6 +226,15 @@
     background: rgba(255, 255, 255, 0.94);
     color: #1f2937;
     border: 1px solid #d1d5db;
+}
+
+[data-theme="light"] .match-modal-card {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+}
+
+[data-theme="light"] .match-modal-card p {
+    color: #374151;
 }
 
 [data-theme="dark"] .matches-section {
@@ -218,5 +264,13 @@
 
     .match-card-actions {
         justify-content: center;
+    }
+
+    .match-modal-card {
+        padding: 16px;
+    }
+
+    .match-modal-actions {
+        flex-direction: column;
     }
 }

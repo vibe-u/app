@@ -23,7 +23,7 @@ const Header = () => {
         <header className="header">
         <div className="logo-container">
             <Link to="/">
-            <img src={logo} alt="Vibe-U Logo" className="logo" loading="lazy" />
+            <img src={logo} alt="Vibe-U Logo" className="logo" loading="lazy" />hola
             </Link>
             <div className="boton-descarga1">
             <a href="https://play.google.com/store/games?hl=es_EC" className="btn btn-primary descarga-chica" target="_blank" rel="noopener noreferrer">

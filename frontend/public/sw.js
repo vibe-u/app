@@ -4,9 +4,7 @@ const APP_SHELL = [
   "/index.html",
   "/manifest.webmanifest",
   "/offline.html",
-  "/logo-vibe-u.png",
-  "/icons/icon-192.png",
-  "/icons/icon-512.png",
+  "/logo-vibe-u.png"
 ];
 
 self.addEventListener("install", (event) => {

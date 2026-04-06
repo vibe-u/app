@@ -22,8 +22,6 @@ import { getTokenPayload } from "../../utils/authToken";
 import {
   playAlertSound,
   readAlertSettings,
-  requestDesktopNotificationPermission,
-  saveAlertSettings,
   showDesktopNotification,
 } from "../../utils/desktopAlerts";
 import { resolveAvatarUrl, resolveUploadUrl } from "../../utils/mediaUrl";
@@ -69,7 +67,6 @@ const UserDashboard = () => {
   );
   const [showMobileSearch, setShowMobileSearch] = useState(false);
   const [alertSettings, setAlertSettings] = useState(() => readAlertSettings());
-  const [showAlertConsentModal, setShowAlertConsentModal] = useState(() => !readAlertSettings().consentAsked);
   const alertsBaselineRef = useRef({
     initialized: false,
     conversationStampById: {},
@@ -142,50 +139,6 @@ const UserDashboard = () => {
     () => searchUsers.length > 0 || searchGroups.length > 0,
     [searchUsers, searchGroups]
   );
-
-  const applyAlertSettings = (nextSettings) => {
-    setAlertSettings(nextSettings);
-    saveAlertSettings(nextSettings);
-  };
-
-  const enableSoundOnly = async () => {
-    const nextSettings = {
-      ...alertSettings,
-      consentAsked: true,
-      enabled: true,
-      soundEnabled: true,
-      desktopEnabled: false,
-    };
-    applyAlertSettings(nextSettings);
-    setShowAlertConsentModal(false);
-    await playAlertSound();
-  };
-
-  const enableDesktopAndSound = async () => {
-    const permission = await requestDesktopNotificationPermission();
-    const nextSettings = {
-      ...alertSettings,
-      consentAsked: true,
-      enabled: true,
-      soundEnabled: true,
-      desktopEnabled: permission === "granted",
-    };
-    applyAlertSettings(nextSettings);
-    setShowAlertConsentModal(false);
-    await playAlertSound();
-  };
-
-  const dismissAlertConsent = () => {
-    const nextSettings = {
-      ...alertSettings,
-      consentAsked: true,
-      enabled: false,
-      soundEnabled: false,
-      desktopEnabled: false,
-    };
-    applyAlertSettings(nextSettings);
-    setShowAlertConsentModal(false);
-  };
 
   useEffect(() => {
     if (!alertSettings.enabled) {
@@ -447,28 +400,6 @@ const UserDashboard = () => {
 
         <Outlet />
       </main>
-
-      {showAlertConsentModal ? (
-        <div className="alerts_modal_overlay__dash" role="dialog" aria-modal="true" aria-labelledby="alerts-modal-title">
-          <div className="alerts_modal__dash">
-            <h4 id="alerts-modal-title">Permisos de alertas</h4>
-            <p>
-              Quieres activar sonido y notificaciones de escritorio para mensajes y novedades nuevas?
-            </p>
-            <div className="alerts_modal_actions__dash">
-              <button type="button" className="button__dash1" onClick={dismissAlertConsent}>
-                No ahora
-              </button>
-              <button type="button" className="button__dash1" onClick={enableSoundOnly}>
-                Solo sonido
-              </button>
-              <button type="button" className="button__dash" onClick={enableDesktopAndSound}>
-                Activar desktop
-              </button>
-            </div>
-          </div>
-        </div>
-      ) : null}
 
       {!isAdmin && showCreateModal ? (
         <div className="create_modal_overlay__dash" role="dialog" aria-modal="true">

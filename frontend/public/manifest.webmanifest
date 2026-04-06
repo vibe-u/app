@@ -2,7 +2,7 @@
   "name": "Vibe-U",
   "short_name": "Vibe-U",
   "description": "Vibe-U: La app que pone a la U en modo social",
-  "start_url": "/",
+  "start_url": "/login",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
@@ -24,3 +24,4 @@
     }
   ]
 }
+

@@ -1101,16 +1101,6 @@ h3 {
   color: black;
 }
 
-.settings_toggle__dash {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  border: 1px solid #ebc5dc;
-  border-radius: 12px;
-  padding: 10px 12px;
-  background: #fff;
-}
-
 .hub_grid__dash {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
@@ -1261,8 +1251,7 @@ h3 {
   background: #1a2432;
 }
 
-[data-theme="dark"] .alerts_modal__dash,
-[data-theme="dark"] .settings_toggle__dash {
+[data-theme="dark"] .alerts_modal__dash {
   background: #161e2b;
   border-color: #2c3f55;
   color: #e6edf7;

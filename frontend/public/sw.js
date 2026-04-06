@@ -1,10 +1,12 @@
-const CACHE_NAME = "vibe-u-cache-v1";
+const CACHE_NAME = "vibe-u-cache-v2";
 const APP_SHELL = [
   "/",
   "/index.html",
   "/manifest.webmanifest",
   "/offline.html",
-  "/logo-vibe-u.png"
+  "/logo-vibe-u.png",
+  "/icons/icon-192.png",
+  "/icons/icon-512.png"
 ];
 
 self.addEventListener("install", (event) => {
@@ -65,3 +67,4 @@ self.addEventListener("fetch", (event) => {
     })
   );
 });
+

@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   getMatchCandidates,
-  rejectMatchCandidate,
   sendMatchLike,
 } from "../../Services/users";
 import { resolveAvatarUrl } from "../../utils/mediaUrl";
@@ -10,7 +9,7 @@ import "./Matches.css";
 
 const DEFAULT_AVATAR = "/default-avatar.svg";
 const TEMP_REJECT_STORAGE_KEY = "matches_temp_reject_until_by_user";
-const SWIPE_RESHOW_DELAY_MS = 15 * 60 * 1000;
+const SWIPE_RESHOW_DELAY_MS = 10 * 60 * 1000;
 
 const cleanExpiredRejects = (rejects = {}) => {
   const now = Date.now();
@@ -108,40 +107,19 @@ const Matches = () => {
   }, [suggestedUsers, currentIndex]);
 
   const handleReject = async (userId, options = {}) => {
-    const { temporary = false } = options;
+    const { temporary = true } = options;
     if (processing || !userId) return;
 
-    if (temporary) {
-      const expiresAt = Date.now() + SWIPE_RESHOW_DELAY_MS;
-      setTempRejects((prev) => ({
-        ...cleanExpiredRejects(prev),
-        [userId]: expiresAt,
-      }));
-      setSwipeHint("Te lo mostramos luego");
-      setTimeout(() => {
-        setSwipeHint("");
-      }, 220);
-      return;
-    }
-
-    try {
-      setProcessing(true);
-      await rejectMatchCandidate(userId);
-      setSwipeHint("Descartado");
-      setTimeout(() => {
-        setSwipeHint("");
-      }, 120);
-      setTempRejects((prev) => {
-        const next = { ...prev };
-        delete next[userId];
-        return next;
-      });
-      setAllCandidates((prev) => prev.filter((item) => item._id !== userId));
-    } catch (requestError) {
-      setError(requestError?.response?.data?.msg || "No se pudo rechazar el perfil.");
-    } finally {
-      setProcessing(false);
-    }
+    if (!temporary) return;
+    const expiresAt = Date.now() + SWIPE_RESHOW_DELAY_MS;
+    setTempRejects((prev) => ({
+      ...cleanExpiredRejects(prev),
+      [userId]: expiresAt,
+    }));
+    setSwipeHint("Te lo mostramos luego");
+    setTimeout(() => {
+      setSwipeHint("");
+    }, 220);
   };
 
   const closeMatchModal = () => {
@@ -271,13 +249,13 @@ const Matches = () => {
 
           {currentUser ? (
             <div className="swipe-mobile-actions">
-              <button
-                className="swipe-reject-btn"
-                type="button"
-                onClick={() => handleReject(currentUser._id, { temporary: true })}
-                disabled={processing}
-              >
-                No
+                <button
+                  className="swipe-reject-btn"
+                  type="button"
+                  onClick={() => handleReject(currentUser._id)}
+                  disabled={processing}
+                >
+                  No
               </button>
               <button
                 className="swipe-like-btn"

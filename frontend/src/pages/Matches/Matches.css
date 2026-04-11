@@ -106,7 +106,7 @@
 }
 
 .match-card-swipe {
-    width: min(92vw, 360px);
+    width: min(80vw);
     min-height: 320px;
     touch-action: pan-y;
     user-select: none;
@@ -272,5 +272,8 @@
 
     .match-modal-actions {
         flex-direction: column;
+    }
+    .match-card-swipe {
+    width: min(80vw);
     }
 }

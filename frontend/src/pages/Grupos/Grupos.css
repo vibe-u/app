@@ -1339,6 +1339,7 @@ body-grupos,
 [data-theme="dark"] .modal-overlay .vibe-input-field {
     background: var(--grp-input-bg);
     border-color: var(--grp-border);
+    color: white;
 }
 
 [data-theme="dark"] .grupos-page .search-bar-pure-white input::placeholder,

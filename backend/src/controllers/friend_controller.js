@@ -54,7 +54,6 @@ const listMatchCandidates = async (req, res) => {
       meId,
       ...(me?.amigos || []).map((id) => id.toString()),
       ...(me?.matchLikesEnviados || []).map((id) => id.toString()),
-      ...(me?.matchRechazados || []).map((id) => id.toString()),
     ]);
 
     const incomingUsers = incomingIds.length

@@ -48,3 +48,18 @@
     }
 }
 
+[data-theme="dark"] .explora-conecta {
+    background: linear-gradient(90deg, #0F1115, #441952b7);
+    color: #f0f0f0;
+}
+[data-theme="dark"] .paso {
+    background: #7d369527;
+    color: #f0f0f0;
+    box-shadow: 0 4px 6px rgba(255, 255, 255, 0.1);
+}
+[data-theme="dark"] .paso h3 {
+    color: #a74ec5;
+}
+[data-theme="dark"] .paso p {
+    color: #f0f0f0;
+}

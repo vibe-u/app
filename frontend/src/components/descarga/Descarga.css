@@ -45,3 +45,7 @@
 .btn.btn-googleplay, .btn.btn-appstore {
     background-color: #000000;
 }
+[data-theme="dark"] .download-cta-section {
+    background: linear-gradient(90deg, #0F1115, #441952b7);
+    color: #f0f0f0;
+}

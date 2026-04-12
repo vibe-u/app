@@ -1,3 +1,11 @@
+.how-it-works-container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+.how-it-works-section {
+    background-color: #2b0036;
+    padding: 10px 0;
+}
 .how-it-works__title {
     text-align: center;
     font-size: 3rem;
@@ -46,7 +54,20 @@
         gap: 20px;
     }
     .step-box {
-        width: 100%;
+        width: 80%;
     }
 }
+[data-theme="dark"] .how-it-works-section, [data-theme="dark"] .steps {
+    background-color: linear-gradient(90deg, #0F1115, #441952b7);
+}
+[data-theme="dark"] .step-box {
+    background: linear-gradient(90deg, #0F1115, #441952b7);
+    color: #f0f0f0;
+    box-shadow: 0 4px 10px rgba(255, 255, 255, 0.2);
+}
+
+
+
+
+
 

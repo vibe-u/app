@@ -81,3 +81,6 @@
   }
 }
 
+[data-theme="dark"] .contact {
+    background: linear-gradient(90deg, #0F1115, #441952b7);
+}

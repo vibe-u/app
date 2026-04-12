@@ -40,3 +40,9 @@
     font-size: 2.5rem;
     margin-bottom: 1.5rem;
 }
+
+[data-theme="dark"] .funcionalidad__item {
+    background: linear-gradient(90deg, #0F1115, #441952b7);
+    color: #f0f0f0;
+    box-shadow: 0 4px 10px rgba(255, 255, 255, 0.2);
+}

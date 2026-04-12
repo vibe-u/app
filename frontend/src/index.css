@@ -14,7 +14,7 @@
 
 [data-theme="dark"] {
   color-scheme: dark;
-  --app-bg: linear-gradient(180deg, #0f1118 0%, #131a22 50%, #0d1218 100%);
+  --app-bg: linear-gradient(90deg, #0F1115, #441952b7);
   --app-text: #e6edf7;
 }
 
@@ -81,8 +81,7 @@
 [data-theme="dark"] .register-page,
 [data-theme="dark"] .forgot-page,
 [data-theme="dark"] .beneficios-container,
-[data-theme="dark"] .contacto-container,
-[data-theme="dark"] .eventos-container {
+[data-theme="dark"] .contacto-container{
   filter: brightness(0.92);
 }
 a {

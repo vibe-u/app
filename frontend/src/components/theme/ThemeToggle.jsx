@@ -1,3 +1,4 @@
+// Archivo del boton claro/oscuro
 import { useEffect, useState } from "react";
 import {
   applyTheme,

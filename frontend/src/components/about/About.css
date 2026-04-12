@@ -14,3 +14,8 @@
     margin: 0 auto;
     font-size: 1.5rem;
 }
+
+[data-theme="dark"] #que-es-vibe-u {
+    background: linear-gradient(90deg, #0F1115, #441952b7);
+    color: #f0f0f0;
+}

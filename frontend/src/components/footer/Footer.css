@@ -5,3 +5,7 @@ footer {
     text-align: center;
     font-size: 0.9rem;
 }
+[data-theme="dark"] footer {
+    background: linear-gradient(90deg, #0F1115, #441952b7);
+    color: #f0f0f0;
+}

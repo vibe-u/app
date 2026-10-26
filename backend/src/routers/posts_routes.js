@@ -8,6 +8,7 @@ import {
   eliminarPost,
   eliminarComentarioPost,
 } from "../controllers/posts.controller.js";
+import { crearReportePublicacion } from "../controllers/content_report_controller.js";
 import { verificarTokenJWT } from "../middlewares/JWT.js";
 import upload from "../middlewares/upload.js";
 
@@ -30,6 +31,7 @@ router.post("/posts/upload-media", verificarTokenJWT, (req, res, next) => {
 }, uploadPostMedia);
 router.post("/posts/:id/like", verificarTokenJWT, toggleLikePost);
 router.post("/posts/:id/comentar", verificarTokenJWT, comentarPost);
+router.post("/posts/:id/reportar", verificarTokenJWT, crearReportePublicacion);
 router.delete("/posts/:id", verificarTokenJWT, eliminarPost);
 router.delete("/posts/:id/comentarios/:commentId", verificarTokenJWT, eliminarComentarioPost);
 

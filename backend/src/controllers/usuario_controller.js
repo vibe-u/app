@@ -6,6 +6,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { mapAvatarToPublicUrl, extractStoredFilename, toPublicUploadUrl } from "../utils/mediaUrl.js";
 import { sanitizeInterests } from "../utils/interests.js";
+import { registerAdminAction } from "../utils/adminAudit.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -78,7 +79,7 @@ const confirmarMail = async (req, res) => {
 
         usuarioBDD.token = null;
         usuarioBDD.confirmEmail = true;
-        await usuarioBDD.save();
+        await usuarioBDD.save({ validateModifiedOnly: true });
 
         return res.redirect(`${process.env.URL_FRONTEND}/confirmar/exito`);
     } catch {
@@ -97,7 +98,7 @@ const recuperarPassword = async (req, res) => {
 
         const token = usuarioBDD.createToken();
         usuarioBDD.token = token;
-        await usuarioBDD.save();
+        await usuarioBDD.save({ validateModifiedOnly: true });
 
         void sendMailToRecoveryPassword(correoInstitucional, token);
         res.status(200).json({ msg: "Revisa tu correo para restablecer tu contraseña" });
@@ -129,7 +130,7 @@ const crearNuevoPassword = async (req, res) => {
 
         usuarioBDD.password = await usuarioBDD.encryptPassword(password);
         usuarioBDD.token = null;
-        await usuarioBDD.save();
+        await usuarioBDD.save({ validateModifiedOnly: true });
 
         res.status(200).json({ msg: "Contraseña actualizada" });
     } catch (error) {
@@ -191,6 +192,10 @@ const actualizarUsuario = async (req, res) => {
         const idAActualizar = id || req.usuario._id;
         const usuarioBDD = await Usuario.findById(idAActualizar);
         if (!usuarioBDD) return res.status(404).json({ msg: "Usuario no encontrado" });
+        const rolAnterior = usuarioBDD.rol;
+        if (rol && String(usuarioBDD._id) === String(req.usuario?._id)) {
+            return res.status(400).json({ msg: "No puedes cambiar el rol de tu propia cuenta de administrador." });
+        }
 
         usuarioBDD.nombre = nombre || usuarioBDD.nombre;
         usuarioBDD.telefono = telefono || usuarioBDD.telefono;
@@ -211,7 +216,15 @@ const actualizarUsuario = async (req, res) => {
             usuarioBDD.rol = rol;
         }
 
-        await usuarioBDD.save();
+        await usuarioBDD.save({ validateModifiedOnly: true });
+        if (rol && rol !== rolAnterior && req.usuario?.rol === "administrador") {
+            await registerAdminAction(req, {
+                action: `Cambiar rol de ${rolAnterior} a ${rol}`,
+                targetType: "usuario",
+                targetId: String(usuarioBDD._id),
+                targetName: `${usuarioBDD.nombre} (${usuarioBDD.correoInstitucional})`,
+            });
+        }
 
         res.status(200).json({
             msg: "Usuario actualizado",
@@ -219,7 +232,15 @@ const actualizarUsuario = async (req, res) => {
             fotoPerfil: toPublicUploadUrl(req, "avatars", usuarioBDD.avatar)
         });
     } catch (error) {
-        res.status(500).json({ msg: "Error al actualizar usuario" });
+        console.error("Error al actualizar usuario:", error);
+        const validationFields = error?.name === "ValidationError"
+            ? Object.keys(error.errors || {}).join(", ")
+            : "";
+        res.status(500).json({
+            msg: validationFields
+                ? `No se pudo actualizar el usuario por datos inválidos: ${validationFields}.`
+                : "No se pudo actualizar el usuario. Verifica los datos e inténtalo de nuevo."
+        });
     }
 };
 
@@ -235,7 +256,7 @@ const actualizarPassword = async (req, res) => {
         if (!isMatch) return res.status(400).json({ msg: "Contraseña actual incorrecta" });
 
         usuarioBDD.password = await usuarioBDD.encryptPassword(newPassword);
-        await usuarioBDD.save();
+        await usuarioBDD.save({ validateModifiedOnly: true });
 
         res.status(200).json({ msg: "Contraseña actualizada" });
     } catch (error) {
@@ -249,12 +270,22 @@ const actualizarPassword = async (req, res) => {
 const deleteUser = async (req, res) => {
     try {
         const { id } = req.params;
+        if (String(id) === String(req.usuario?._id)) {
+            return res.status(400).json({ msg: "No puedes eliminar la cuenta de administrador que estás usando." });
+        }
         const usuarioBDD = await Usuario.findById(id);
         if (!usuarioBDD) return res.status(404).json({ msg: "Usuario no encontrado" });
 
         await usuarioBDD.deleteOne();
+        await registerAdminAction(req, {
+            action: "Eliminar usuario",
+            targetType: "usuario",
+            targetId: String(usuarioBDD._id),
+            targetName: `${usuarioBDD.nombre} (${usuarioBDD.correoInstitucional})`,
+        });
         res.status(200).json({ msg: "Usuario eliminado correctamente 🗑️" });
     } catch (error) {
+        console.error("Error al eliminar usuario:", error);
         res.status(500).json({ msg: "Error al eliminar usuario" });
     }
 };

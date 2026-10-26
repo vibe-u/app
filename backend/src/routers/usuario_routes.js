@@ -8,6 +8,14 @@ import { getModerationNotifications } from "../controllers/posts.controller.js";
 import { perfil, actualizarUsuario, actualizarPassword } 
 from "../controllers/usuario_controller.js";
 import {
+    obtenerEstadoSolicitudEliminacion,
+    solicitarEliminacionCuenta,
+} from "../controllers/account_deletion_controller.js";
+import {
+    listarPublicacionesGuardadas,
+    togglePublicacionGuardada,
+} from "../controllers/saved_posts_controller.js";
+import {
     listMatchCandidates,
     searchUsers,
     getPublicProfile,
@@ -78,21 +86,12 @@ const translateToSpanish = async (text) => {
     return clean;
 };
 
-const BLACKLISTED_DOMAINS = [
-    "hotmail.com", "outlook.com", "yahoo.com",
-    "aol.com", "live.com", "icloud.com", "mail.com", "gmail.com"
-];
-
 const domainCheck = (req, res, next) => {
-    const { correoInstitucional } = req.body;
-    if (correoInstitucional) {
-        const dominio = correoInstitucional.split("@")[1];
-        if (BLACKLISTED_DOMAINS.includes(dominio)) {
-            console.log(`❌ Correo rechazado por restricción: ${correoInstitucional}`);
-            return res.status(400).json({
-                msg: "Solo se permiten correos institucionales o académicos."
-            });
-        }
+    const correoInstitucional = String(req.body?.correoInstitucional || "").trim();
+    if (!/^[^\s@]+@epn\.edu\.ec$/i.test(correoInstitucional)) {
+        return res.status(400).json({
+            msg: "Correo inválido, debes usar un correo institucional @epn.edu.ec."
+        });
     }
     next();
 };
@@ -102,10 +101,16 @@ const domainCheck = (req, res, next) => {
 ---------------------------------------------------- */
 router.post("/register", domainCheck, async (req, res) => {
     try {
-        const { nombre, correoInstitucional, password } = req.body;
+        const { nombre, password } = req.body;
+        const correoInstitucional = String(req.body?.correoInstitucional || "").trim().toLowerCase();
 
         if (!nombre || !correoInstitucional || !password) {
             return res.status(400).json({ msg: "Todos los campos son obligatorios" });
+        }
+        if (!/^[^\s@]+@epn\.edu\.ec$/i.test(correoInstitucional)) {
+            return res.status(400).json({
+                msg: "Correo inválido, debes usar un correo institucional @epn.edu.ec."
+            });
         }
 
         const usuarioExistente = await Usuario.findOne({ correoInstitucional });
@@ -136,7 +141,7 @@ router.post("/register", domainCheck, async (req, res) => {
             msg: "Usuario registrado correctamente. Revisa tu correo para confirmar tu cuenta."
         });
     } catch (error) {
-        console.error("ERROR EN REGISTER:", error);
+        console.error("ERROR EN REGISTRO:", error);
         res.status(500).json({ msg: "Error del servidor", error: error.message });
     }
 });
@@ -156,7 +161,7 @@ router.get("/confirmar/:token", async (req, res) => {
 
     usuario.token = null;
     usuario.confirmEmail = true;
-    await usuario.save();
+    await usuario.save({ validateModifiedOnly: true });
 
     res.json({ msg: "Cuenta confirmada correctamente" });
 
@@ -193,13 +198,13 @@ router.post("/reenviar-confirmacion", async (req, res) => {
         );
 
         usuario.token = token;
-        await usuario.save();
+        await usuario.save({ validateModifiedOnly: true });
 
         void sendMailToRegister(correoInstitucional, token);
 
         res.json({ msg: "Correo de confirmacion reenviado correctamente" });
     } catch (error) {
-        console.error("ERROR REENVIAR CONFIRMACION:", error);
+        console.error("ERROR EN REENVIAR CONFIRMACION:", error);
         res.status(500).json({ msg: "Error del servidor" });
     }
 });
@@ -222,6 +227,12 @@ router.post("/login", async (req, res) => {
         const isMatch = await bcrypt.compare(password, usuario.password);
         if (!isMatch)
             return res.status(400).json({ msg: "Contraseña incorrecta" });
+
+        if (usuario.suspendido) {
+            return res.status(403).json({
+                msg: "Tu cuenta está suspendida. Contacta con un administrador."
+            });
+        }
 
         if (!usuario.confirmEmail) {
             return res.status(400).json({
@@ -272,14 +283,14 @@ router.post("/olvide-password", async (req, res) => {
 
         usuario.resetToken = resetToken;
         usuario.resetTokenExpire = Date.now() + 15 * 60 * 1000;
-        await usuario.save();
+        await usuario.save({ validateModifiedOnly: true });
 
         void sendMailToRecoveryPassword(correoInstitucional, resetToken);
 
         res.json({ msg: "Hemos enviado un enlace para restablecer tu contraseña." });
 
     } catch (error) {
-        console.error("ERROR EN FORGOT PASSWORD:", error);
+        console.error(error);
         res.status(500).json({ msg: "Error del servidor" });
     }
 });
@@ -311,7 +322,7 @@ router.post("/reset-password/:token", async (req, res) => {
         usuario.resetToken = null;
         usuario.resetTokenExpire = null;
 
-        await usuario.save();
+        await usuario.save({ validateModifiedOnly: true });
 
         res.json({ msg: "Contraseña restablecida correctamente." });
 
@@ -366,6 +377,10 @@ router.get("/frase", async (req, res) => {
 });
 
 router.get("/perfil", verificarTokenJWT, perfil);
+router.get("/guardadas", verificarTokenJWT, listarPublicacionesGuardadas);
+router.post("/guardadas", verificarTokenJWT, togglePublicacionGuardada);
+router.post("/solicitar-eliminacion", verificarTokenJWT, solicitarEliminacionCuenta);
+router.get("/solicitar-eliminacion", verificarTokenJWT, obtenerEstadoSolicitudEliminacion);
 router.put("/actualizar-perfil", verificarTokenJWT, actualizarUsuario);
 router.put("/actualizar-password", verificarTokenJWT, actualizarPassword);
 router.get("/buscar", verificarTokenJWT, searchUsers);

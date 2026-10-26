@@ -2,6 +2,7 @@ import Grupo from '../models/Grupos.js';
 import Usuario from '../models/Usuario.js';
 import { extractStoredFilename, toPublicUploadUrl } from "../utils/mediaUrl.js";
 import { mergeTags } from "../utils/interests.js";
+import { registerAdminAction } from "../utils/adminAudit.js";
 
 const mapCommentMedia = (req, comment = {}) => ({
     ...comment,
@@ -22,10 +23,64 @@ const mapGroupMedia = (req, grupo = {}) => ({
 // Listar grupos
 export const listarGrupos = async (req, res) => {
     try {
-        const grupos = await Grupo.find().sort({ createdAt: -1 });
+        const grupos = await Grupo.find({ archivado: { $ne: true } }).sort({ createdAt: -1 });
         res.json(grupos.map((grupo) => mapGroupMedia(req, grupo.toObject())));
     } catch (error) {
+        console.error("Error al listar grupos:", error);
         res.status(500).json({ message: "Error al listar grupos" });
+    }
+};
+
+export const listarGruposArchivados = async (req, res) => {
+    try {
+        const filter = { archivado: true };
+        if (req.usuario?.rol !== "administrador") {
+            filter.creadorEmail = req.usuario?.correoInstitucional;
+        }
+        const grupos = await Grupo.find(filter).sort({ archivadoAt: -1 });
+        res.json(grupos.map((grupo) => mapGroupMedia(req, grupo.toObject())));
+    } catch (error) {
+        console.error("Error al listar comunidades archivadas:", error);
+        res.status(500).json({ message: "No se pudieron listar comunidades archivadas" });
+    }
+};
+
+export const cambiarEstadoArchivoGrupo = async (req, res) => {
+    try {
+        const { archivado } = req.body || {};
+        if (typeof archivado !== "boolean") {
+            return res.status(400).json({ message: "Indica si deseas archivar o activar la comunidad." });
+        }
+        const grupo = await Grupo.findById(req.params.id);
+        if (!grupo) return res.status(404).json({ message: "Comunidad no encontrada." });
+
+        const correo = req.usuario?.correoInstitucional;
+        const esAdmin = req.usuario?.rol === "administrador";
+        if (!esAdmin && grupo.creadorEmail !== correo) {
+            return res.status(403).json({ message: "Solo el creador o un administrador puede cambiar el estado." });
+        }
+        if (grupo.archivado === archivado) {
+            return res.status(400).json({
+                message: archivado ? "La comunidad ya está archivada." : "La comunidad ya está activa.",
+            });
+        }
+
+        grupo.archivado = archivado;
+        grupo.archivadoAt = archivado ? new Date() : null;
+        grupo.archivadoPor = archivado ? correo : "";
+        await grupo.save();
+        if (esAdmin) {
+            await registerAdminAction(req, {
+                action: archivado ? "Archivar comunidad" : "Reactivar comunidad",
+                targetType: "sistema",
+                targetId: String(grupo._id),
+                targetName: grupo.nombre,
+            });
+        }
+        res.json({ message: archivado ? "Comunidad archivada." : "Comunidad activada.", grupo: grupo.toObject() });
+    } catch (error) {
+        console.error("Error al cambiar estado de archivo de comunidad:", error);
+        res.status(500).json({ message: "No se pudo cambiar el estado de la comunidad." });
     }
 };
 
@@ -69,6 +124,7 @@ export const unirseGrupo = async (req, res) => {
 
         const grupo = await Grupo.findById(req.params.id);
         if (!grupo) return res.status(404).json({ message: "Grupo no encontrado" });
+        if (grupo.archivado) return res.status(409).json({ message: "Esta comunidad está archivada." });
 
         if (!grupo.miembrosArray.includes(correo)) {
             grupo.miembrosArray.push(correo);
@@ -106,6 +162,9 @@ export const listarMiembros = async (req, res) => {
     try {
         const grupo = await Grupo.findById(req.params.id);
         if (!grupo) return res.status(404).json({ message: "Grupo no encontrado" });
+        if (grupo.archivado && req.usuario?.rol !== "administrador" && grupo.creadorEmail !== req.usuario?.correoInstitucional) {
+            return res.status(404).json({ message: "Comunidad no encontrada" });
+        }
 
         const usuarios = await Usuario.find({
             correoInstitucional: { $in: grupo.miembrosArray || [] },
@@ -152,6 +211,7 @@ export const invitarMiembro = async (req, res) => {
         if (!esMiembroDelGrupo(grupo, correoInvitador, req.usuario?.rol)) {
             return res.status(403).json({ message: "Solo los miembros pueden invitar." });
         }
+        if (grupo.archivado) return res.status(409).json({ message: "No se pueden enviar invitaciones a una comunidad archivada." });
 
         const { userId, correo } = req.body || {};
         let email = typeof correo === "string" ? correo.trim().toLowerCase() : "";
@@ -178,7 +238,7 @@ export const invitarMiembro = async (req, res) => {
                 ...(usuario.grupoInvitaciones || []),
                 { grupo: grupo._id, fromUser: req.usuario._id, createdAt: new Date() },
             ];
-            await usuario.save();
+            await usuario.save({ validateModifiedOnly: true });
             return res.json({ message: `Invitación enviada a ${usuario.nombre}.` });
         }
 
@@ -204,7 +264,7 @@ export const invitarMiembro = async (req, res) => {
             ...(usuarioPorCorreo.grupoInvitaciones || []),
             { grupo: grupo._id, fromUser: req.usuario._id, createdAt: new Date() },
         ];
-        await usuarioPorCorreo.save();
+        await usuarioPorCorreo.save({ validateModifiedOnly: true });
         res.json({ message: `Invitación enviada a ${usuarioPorCorreo.nombre}.` });
     } catch (error) {
         res.status(400).json({ message: "Error al invitar" });
@@ -272,8 +332,11 @@ export const responderInvitacionGrupo = async (req, res) => {
                 me.grupoInvitaciones = (me.grupoInvitaciones || []).filter(
                     (item) => item.grupo?.toString() !== String(grupoId)
                 );
-                await me.save();
+                await me.save({ validateModifiedOnly: true });
                 return res.status(404).json({ message: "El grupo ya no existe." });
+            }
+            if (grupo.archivado) {
+                return res.status(409).json({ message: "No puedes unirte a una comunidad archivada." });
             }
             if (!grupo.miembrosArray.includes(correo)) {
                 grupo.miembrosArray.push(correo);
@@ -284,7 +347,7 @@ export const responderInvitacionGrupo = async (req, res) => {
         me.grupoInvitaciones = (me.grupoInvitaciones || []).filter(
             (item) => item.grupo?.toString() !== String(grupoId)
         );
-        await me.save();
+        await me.save({ validateModifiedOnly: true });
         res.json({
             message: action === "accept" ? "Te uniste al grupo." : "Invitación rechazada.",
         });
@@ -320,6 +383,7 @@ export const crearPost = async (req, res) => {
         const { contenido, foto } = req.body;
         const grupo = await Grupo.findById(req.params.id);
         if (!grupo) return res.status(404).json({ message: "Grupo no encontrado" });
+        if (grupo.archivado) return res.status(409).json({ message: "Esta comunidad está archivada." });
 
         const autor = req.usuario?.nombre || "Usuario";
         const autorFoto = extractStoredFilename(req.usuario?.avatar || "");
@@ -354,6 +418,7 @@ export const comentarPost = async (req, res) => {
 
         const grupo = await Grupo.findById(id);
         if (!grupo) return res.status(404).json({ message: "Grupo no encontrado" });
+        if (grupo.archivado) return res.status(409).json({ message: "Esta comunidad está archivada." });
 
         const post = grupo.posts.id(postId);
         if (!post) return res.status(404).json({ message: "Post no encontrado" });
@@ -382,6 +447,7 @@ export const eliminarPost = async (req, res) => {
         const { id, postId } = req.params;
         const grupo = await Grupo.findById(id);
         if (!grupo) return res.status(404).json({ message: "Grupo no encontrado" });
+        if (grupo.archivado) return res.status(409).json({ message: "Esta comunidad está archivada." });
 
         const post = grupo.posts.id(postId);
         if (!post) return res.status(404).json({ message: "Post no encontrado" });

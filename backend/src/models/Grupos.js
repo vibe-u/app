@@ -26,6 +26,9 @@ const GrupoSchema = new mongoose.Schema({
     imagen: { type: String },
     descripcion: { type: String, default: "" },
     creadorEmail: { type: String, required: true },
+    archivado: { type: Boolean, default: false, index: true },
+    archivadoAt: { type: Date, default: null },
+    archivadoPor: { type: String, default: "" },
     miembrosArray: { type: [String], default: [] },
     tags: { type: [String], default: [] },
     posts: [PostSchema]

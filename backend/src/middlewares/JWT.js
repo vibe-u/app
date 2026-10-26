@@ -21,6 +21,9 @@ const verificarTokenJWT = async (req, res, next) => {
         if (!usuarioBDD) {
             return res.status(401).json({ msg: "Usuario no encontrado" });
         }
+        if (usuarioBDD.suspendido) {
+            return res.status(403).json({ msg: "Tu cuenta está suspendida. Contacta con un administrador." });
+        }
 
         req.usuario = usuarioBDD;
         next();

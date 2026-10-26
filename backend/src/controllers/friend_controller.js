@@ -241,7 +241,10 @@ const sendFriendRequest = async (req, res) => {
     fromUser.solicitudesEnviadas = [...(fromUser.solicitudesEnviadas || []), toUser._id];
     toUser.solicitudesRecibidas = [...(toUser.solicitudesRecibidas || []), fromUser._id];
 
-    await Promise.all([fromUser.save(), toUser.save()]);
+    await Promise.all([
+      fromUser.save({ validateModifiedOnly: true }),
+      toUser.save({ validateModifiedOnly: true }),
+    ]);
     res.json({ msg: "Solicitud enviada", friendStatus: "pending_sent" });
   } catch {
     res.status(500).json({ msg: "Error al enviar solicitud" });
@@ -279,7 +282,10 @@ const respondFriendRequest = async (req, res) => {
       }
     }
 
-    await Promise.all([me.save(), fromUser.save()]);
+    await Promise.all([
+      me.save({ validateModifiedOnly: true }),
+      fromUser.save({ validateModifiedOnly: true }),
+    ]);
     res.json({
       msg: action === "accept" ? "Solicitud aceptada" : "Solicitud rechazada",
       friendStatus: action === "accept" ? "friends" : "none",
@@ -316,7 +322,10 @@ const removeFriend = async (req, res) => {
     friendUser.solicitudesEnviadas = removeId(friendUser.solicitudesEnviadas || [], me._id);
     friendUser.solicitudesRecibidas = removeId(friendUser.solicitudesRecibidas || [], me._id);
 
-    await Promise.all([me.save(), friendUser.save()]);
+    await Promise.all([
+      me.save({ validateModifiedOnly: true }),
+      friendUser.save({ validateModifiedOnly: true }),
+    ]);
 
     res.json({ msg: "Amistad eliminada", friendStatus: "none" });
   } catch {
@@ -346,7 +355,10 @@ const cancelFriendRequest = async (req, res) => {
     me.solicitudesEnviadas = removeId(me.solicitudesEnviadas, toUserId);
     toUser.solicitudesRecibidas = removeId(toUser.solicitudesRecibidas, me._id);
 
-    await Promise.all([me.save(), toUser.save()]);
+    await Promise.all([
+      me.save({ validateModifiedOnly: true }),
+      toUser.save({ validateModifiedOnly: true }),
+    ]);
 
     res.json({ msg: "Solicitud cancelada", friendStatus: "none" });
   } catch {
@@ -431,7 +443,10 @@ const sendMatchLike = async (req, res) => {
         ...(toUser.matchNotificaciones || []),
       ]);
 
-      await Promise.all([me.save(), toUser.save()]);
+      await Promise.all([
+        me.save({ validateModifiedOnly: true }),
+        toUser.save({ validateModifiedOnly: true }),
+      ]);
 
       return res.json({
         msg: "Match exitoso",
@@ -455,7 +470,10 @@ const sendMatchLike = async (req, res) => {
     me.matchRechazados = removeReject(me.matchRechazados || [], targetId);
 
 
-    await Promise.all([me.save(), toUser.save()]);
+    await Promise.all([
+      me.save({ validateModifiedOnly: true }),
+      toUser.save({ validateModifiedOnly: true }),
+    ]);
 
     res.json({
       msg: "Like enviado",
@@ -493,7 +511,10 @@ const rejectMatchCandidate = async (req, res) => {
       return item.fromUser?.toString() !== otherUser._id.toString();
     });
 
-    await Promise.all([me.save(), otherUser.save()]);
+    await Promise.all([
+      me.save({ validateModifiedOnly: true }),
+      otherUser.save({ validateModifiedOnly: true }),
+    ]);
     res.json({ msg: "Perfil rechazado" });
   } catch {
     res.status(500).json({ msg: "Error al rechazar perfil" });
@@ -591,4 +612,3 @@ export {
   getMatchNotifications,
   listInvitePeople,
 };
-

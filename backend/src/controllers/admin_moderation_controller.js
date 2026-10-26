@@ -1,4 +1,5 @@
 import Post from "../models/Post.js";
+import { registerAdminAction } from "../utils/adminAudit.js";
 
 const RISK_KEYWORDS = {
   severe: [
@@ -103,6 +104,7 @@ export const listarPostsModeracion = async (req, res) => {
 
     res.json(posts.map(mapModerationPayload));
   } catch (error) {
+    console.error("Error al listar publicaciones para moderacion:", error);
     res.status(500).json({ msg: "Error al listar publicaciones para moderacion" });
   }
 };
@@ -131,6 +133,13 @@ export const analizarPostsConIa = async (req, res) => {
       await post.save();
     }
 
+    await registerAdminAction(req, {
+      action: "Analizar publicaciones con IA",
+      targetType: "sistema",
+      targetName: "Publicaciones",
+      details: `Total analizadas: ${posts.length}; aptas: ${aptos}; observadas: ${flagged}.`,
+    });
+
     res.json({
       msg: "Analisis IA ejecutado correctamente",
       total: posts.length,
@@ -138,6 +147,7 @@ export const analizarPostsConIa = async (req, res) => {
       flagged,
     });
   } catch (error) {
+    console.error("Error al analizar publicaciones con IA:", error);
     res.status(500).json({ msg: "Error al analizar publicaciones con IA" });
   }
 };
@@ -160,6 +170,13 @@ export const analizarPostConIa = async (req, res) => {
       aiEvaluatedAt: new Date(),
     };
     await post.save();
+    await registerAdminAction(req, {
+      action: "Analizar publicacion con IA",
+      targetType: "publicacion",
+      targetId: String(post._id),
+      targetName: post.texto?.slice(0, 120) || "Publicacion sin texto",
+      details: `Resultado: ${analysis.verdict}; puntuacion: ${analysis.score}.`,
+    });
 
     res.json({
       msg: "Publicacion analizada",
@@ -167,6 +184,7 @@ export const analizarPostConIa = async (req, res) => {
       moderation: post.moderation,
     });
   } catch (error) {
+    console.error("Error al analizar publicacion:", error);
     res.status(500).json({ msg: "Error al analizar publicacion" });
   }
 };
@@ -188,9 +206,17 @@ export const desactivarPostModeracion = async (req, res) => {
       notificationCreatedAt: new Date(),
     };
     await post.save();
+    await registerAdminAction(req, {
+      action: "Desactivar publicacion",
+      targetType: "publicacion",
+      targetId: String(post._id),
+      targetName: post.texto?.slice(0, 120) || "Publicacion sin texto",
+      details: reason,
+    });
 
     res.json({ msg: "Publicacion desactivada y autor notificado", postId: post._id });
   } catch (error) {
+    console.error("Error al desactivar publicacion:", error);
     res.status(500).json({ msg: "Error al desactivar publicacion" });
   }
 };
@@ -211,9 +237,16 @@ export const reactivarPostModeracion = async (req, res) => {
       notificationCreatedAt: new Date(),
     };
     await post.save();
+    await registerAdminAction(req, {
+      action: "Reactivar publicacion",
+      targetType: "publicacion",
+      targetId: String(post._id),
+      targetName: post.texto?.slice(0, 120) || "Publicacion sin texto",
+    });
 
     res.json({ msg: "Publicacion reactivada y autor notificado", postId: post._id });
   } catch (error) {
+    console.error("Error al reactivar publicacion:", error);
     res.status(500).json({ msg: "Error al reactivar publicacion" });
   }
 };

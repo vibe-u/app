@@ -1,14 +1,11 @@
 import Evento from "../models/Evento.js";
 import Grupo from "../models/Grupos.js";
+import Post from "../models/Post.js";
 import { toPublicUploadUrl } from "../utils/mediaUrl.js";
 import {
-  carreraToken,
-  collectUserTags,
-  labelsForTags,
-  mergeTags,
-  normalizeText,
   sanitizeInterests,
 } from "../utils/interests.js";
+import { scoreSemanticAffinity } from "../utils/semanticSimilarity.js";
 
 const toId = (value) => value?.toString?.() || "";
 
@@ -22,32 +19,38 @@ const uniqueById = (items = []) => {
   });
 };
 
-const scoreItem = ({ userTags, itemTags, text = "", carrera = "", popularity = 0, soonBoost = 0 }) => {
-  const matched = itemTags.filter((tag) => userTags.includes(tag));
-  let score = matched.length * 5;
-  const token = carreraToken(carrera);
-  const carreraHit = Boolean(token && text.includes(token));
-  if (carreraHit) score += 2;
-  score += Math.min(Number(popularity) || 0, 12) * 0.2;
-  score += soonBoost;
-  return { score, matched, carreraHit };
-};
+const scoreRecommendation = (interests, profileText, activityText, itemText) => {
+  const candidates = [
+    {
+      source: "Interés elegido",
+      match: scoreSemanticAffinity(interests, "", itemText),
+    },
+    {
+      source: "Tu perfil",
+      match: scoreSemanticAffinity([], profileText, itemText),
+    },
+  ];
 
-const soonBoostFor = (fechaHora) => {
-  const date = fechaHora ? new Date(fechaHora) : null;
-  if (!date || Number.isNaN(date.getTime())) return 0;
-  const days = (date.getTime() - Date.now()) / 86400000;
-  if (days < 0) return 0;
-  if (days <= 7) return 2.5;
-  if (days <= 21) return 1.5;
-  if (days <= 45) return 0.8;
-  return 0.2;
-};
+  if (activityText) {
+    candidates.push({
+      source: "Tus publicaciones o comentarios",
+      match: scoreSemanticAffinity([], activityText, itemText),
+    });
+  }
 
-const pickTop = (scored, limit = 6) => {
-  const matched = scored.filter((item) => item.matched.length);
-  const rest = scored.filter((item) => !item.matched.length);
-  return uniqueById([...matched, ...rest]).slice(0, limit);
+  const bestMatch = candidates.reduce((best, candidate) =>
+    candidate.match.affinity > best.match.affinity ? candidate : best
+  );
+  const concepts = bestMatch.match.reasons.map((reason) =>
+    reason.replace(/^Afinidad con tus intereses:\s*/i, "")
+  );
+  const reasons = bestMatch.match.affinity > 0
+    ? concepts.length
+      ? concepts.slice(0, 1).map((concept) => `${bestMatch.source}: ${concept}`)
+      : [`Coincidencia de términos con ${bestMatch.source.toLowerCase()}`]
+    : [];
+
+  return { affinity: bestMatch.match.affinity, reasons };
 };
 
 export const obtenerRecomendaciones = async (req, res) => {
@@ -57,74 +60,89 @@ export const obtenerRecomendaciones = async (req, res) => {
     const email = user.correoInstitucional || "";
     const universidad = String(user.universidad || "").trim();
     const explicit = sanitizeInterests(user.intereses);
-    const userTags = collectUserTags(user);
-    const inferredFromProfile = userTags.filter((tag) => !explicit.includes(tag));
-
-    const [grupos, eventos] = await Promise.all([
-      Grupo.find().select("nombre imagen miembrosArray creadorEmail tags createdAt").sort({ createdAt: -1 }).lean(),
+    const profileText = `${user.carrera || ""} ${user.descripcion || ""}`;
+    const [grupos, eventos, publicaciones, actividad] = await Promise.all([
+      Grupo.find({ archivado: { $ne: true } })
+        .select("nombre imagen descripcion miembrosArray creadorEmail tags createdAt")
+        .sort({ createdAt: -1 })
+        .lean(),
       universidad
         ? Evento.find({ universidad, fechaHora: { $gte: new Date() } })
             .populate("creador", "_id nombre avatar")
             .sort({ fechaHora: 1 })
             .lean()
         : [],
+      Post.find({ "moderation.status": { $ne: "disabled" } })
+        .populate("usuario", "_id nombre avatar")
+        .sort({ createdAt: -1 })
+        .limit(200)
+        .lean(),
+      Post.find({
+        $or: [
+          { usuario: user._id },
+          { "comentarios.usuarioId": user._id },
+        ],
+      })
+        .select("texto comentarios")
+        .sort({ createdAt: -1 })
+        .limit(100)
+        .lean(),
     ]);
+
+    const activityText = actividad
+      .flatMap((post) => [
+        post.usuario?.toString?.() === meId ? post.texto : "",
+        ...(post.comentarios || [])
+          .filter((comment) => toId(comment.usuarioId) === meId)
+          .map((comment) => comment.texto),
+      ])
+      .filter(Boolean)
+      .join(" ")
+      .slice(0, 6000);
+    const hasSemanticProfile =
+      explicit.length > 0 || Boolean(profileText.trim()) || Boolean(activityText);
 
     const scoredGrupos = grupos
       .filter((grupo) => !(grupo.miembrosArray || []).includes(email))
       .map((grupo) => {
-        const itemTags = mergeTags(grupo.tags, grupo.nombre);
-        const { score, matched, carreraHit } = scoreItem({
-          userTags,
-          itemTags,
-          text: normalizeText(grupo.nombre),
-          carrera: user.carrera,
-          popularity: (grupo.miembrosArray || []).length,
-        });
-        const reasons = matched.length
-          ? labelsForTags(matched)
-          : carreraHit
-            ? ["Relacionado con tu carrera"]
-            : ["Comunidad activa"];
+        const semantic = scoreRecommendation(
+          explicit,
+          profileText,
+          activityText,
+          `${grupo.nombre || ""} ${grupo.descripcion || ""} ${(grupo.tags || []).join(" ")}`
+        );
+        const score = semantic.affinity * 100;
         return {
           _id: grupo._id,
           nombre: grupo.nombre,
+          descripcion: grupo.descripcion || "",
           imagen: grupo.imagen || "",
           miembrosCount: (grupo.miembrosArray || []).length,
           miembrosArray: grupo.miembrosArray || [],
           creadorEmail: grupo.creadorEmail,
-          tags: itemTags,
-          reasons,
-          score,
-          matched,
+          reasons: semantic.reasons.length
+            ? semantic.reasons
+            : ["Comunidad activa"],
+          affinity: Math.round(score),
         };
       })
-      .sort((a, b) => b.score - a.score || b.miembrosCount - a.miembrosCount);
+      .filter((grupo) => !hasSemanticProfile || grupo.affinity > 0)
+      .sort((a, b) => b.affinity - a.affinity || b.miembrosCount - a.miembrosCount);
 
     const scoredEventos = eventos
       .filter((evento) => !(evento.asistentes || []).some((id) => toId(id) === meId))
       .map((evento) => {
-        const itemTags = mergeTags(
-          evento.tags,
-          evento.nombreEvento,
-          evento.descripcionEvento,
-          evento.lugar
+        const semantic = scoreRecommendation(
+          explicit,
+          profileText,
+          activityText,
+          `${evento.nombreEvento || ""} ${evento.descripcionEvento || ""} ${evento.lugar || ""} ${(evento.tags || []).join(" ")}`
         );
-        const { score, matched, carreraHit } = scoreItem({
-          userTags,
-          itemTags,
-          text: normalizeText(`${evento.nombreEvento || ""} ${evento.descripcionEvento || ""} ${evento.lugar || ""}`),
-          carrera: user.carrera,
-          popularity: (evento.asistentes || []).length,
-          soonBoost: soonBoostFor(evento.fechaHora),
-        });
-        const reasons = matched.length
-          ? labelsForTags(matched)
-          : carreraHit
-            ? ["Relacionado con tu carrera"]
-            : universidad
-              ? ["Popular en tu universidad"]
-              : ["Te puede interesar"];
+        const reasons = semantic.reasons.length
+          ? semantic.reasons
+          : universidad
+              ? ["Actividad próxima en tu universidad"]
+              : ["Evento recomendado para descubrir"];
         return {
           _id: evento._id,
           nombreEvento: evento.nombreEvento,
@@ -135,23 +153,52 @@ export const obtenerRecomendaciones = async (req, res) => {
           costo: evento.costo,
           universidad: evento.universidad,
           asistentesCount: (evento.asistentes || []).length,
-          tags: itemTags,
           reasons,
-          score,
-          matched,
+          affinity: Math.round(semantic.affinity * 100),
         };
       })
-      .sort((a, b) => b.score - a.score || new Date(a.fechaHora) - new Date(b.fechaHora));
+      .filter((evento) => !hasSemanticProfile || evento.affinity > 0)
+      .sort((a, b) => b.affinity - a.affinity || new Date(a.fechaHora) - new Date(b.fechaHora));
+
+    const scoredPosts = publicaciones
+      .filter((post) => toId(post.usuario?._id) !== meId)
+      .map((post) => {
+        const commentText = (post.comentarios || []).map((comment) => comment.texto || "").join(" ");
+        const semantic = scoreRecommendation(
+          explicit,
+          profileText,
+          activityText,
+          `${post.texto || ""} ${commentText}`
+        );
+        return {
+          _id: post._id,
+          texto: post.texto || "",
+          imagen: toPublicUploadUrl(req, "posts", post.imagen),
+          video: toPublicUploadUrl(req, "posts", post.video),
+          autor: post.usuario?.nombre || "Usuario",
+          avatar: toPublicUploadUrl(req, "avatars", post.usuario?.avatar),
+          comentariosCount: (post.comentarios || []).length,
+          createdAt: post.createdAt,
+          reasons: semantic.reasons.length
+            ? semantic.reasons
+            : ["Publicación reciente para descubrir"],
+          affinity: Math.round(semantic.affinity * 100),
+        };
+      })
+      .filter((post) => !hasSemanticProfile || post.affinity > 0)
+      .sort((a, b) => b.affinity - a.affinity || new Date(b.createdAt) - new Date(a.createdAt));
 
     res.json({
       intereses: explicit,
-      inferredFromProfile,
       hasInterests: explicit.length > 0,
+      hasActivity: Boolean(activityText),
       needsUniversity: !universidad,
-      grupos: pickTop(scoredGrupos, 6),
-      eventos: pickTop(scoredEventos, 6),
+      grupos: uniqueById(scoredGrupos).slice(0, 6),
+      eventos: uniqueById(scoredEventos).slice(0, 6),
+      publicaciones: uniqueById(scoredPosts).slice(0, 5),
     });
-  } catch {
+  } catch (error) {
+    console.error("Error al obtener recomendaciones semánticas:", error);
     res.status(500).json({ msg: "Error al obtener recomendaciones" });
   }
 };

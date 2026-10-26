@@ -2,9 +2,12 @@
 const router = express.Router();
 
 import * as grupoController from '../controllers/controller_grupos.js';
+import { crearReportePublicacionGrupo } from "../controllers/content_report_controller.js";
 import { verificarTokenJWT } from "../middlewares/JWT.js";
 
 router.get('/listar', grupoController.listarGrupos);
+router.get('/archivados', verificarTokenJWT, grupoController.listarGruposArchivados);
+router.patch('/:id/archivar', verificarTokenJWT, grupoController.cambiarEstadoArchivoGrupo);
 router.get('/invitaciones', verificarTokenJWT, grupoController.listarInvitacionesGrupo);
 router.post('/invitaciones/:grupoId/responder', verificarTokenJWT, grupoController.responderInvitacionGrupo);
 router.post('/crear', verificarTokenJWT, grupoController.crearGrupo);
@@ -16,6 +19,7 @@ router.post('/:id/invitar', verificarTokenJWT, grupoController.invitarMiembro);
 router.post('/:id/post', verificarTokenJWT, grupoController.crearPost);
 router.delete('/:id/post/:postId', verificarTokenJWT, grupoController.eliminarPost);
 router.post('/:id/post/:postId/comentar', verificarTokenJWT, grupoController.comentarPost);
+router.post('/:id/post/:postId/reportar', verificarTokenJWT, crearReportePublicacionGrupo);
 router.delete('/:id/post/:postId/comentario/:comentarioId', verificarTokenJWT, grupoController.eliminarComentario);
 
 export default router;

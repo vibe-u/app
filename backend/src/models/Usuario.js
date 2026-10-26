@@ -2,12 +2,29 @@ import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
+const savedPostSchema = new mongoose.Schema(
+  {
+    postKey: { type: String, required: true },
+    groupId: { type: mongoose.Schema.Types.ObjectId, ref: "Grupo", required: true },
+    groupName: { type: String, default: "" },
+    postId: { type: mongoose.Schema.Types.ObjectId, required: true },
+    autor: { type: String, default: "" },
+    contenido: { type: String, default: "" },
+    foto: { type: String, default: "" },
+    savedAt: { type: Date, default: Date.now },
+  },
+  { _id: false }
+);
+
 const usuarioSchema = new mongoose.Schema({
   nombre: { type: String, required: true },
   apellido: { type: String },
   correoInstitucional: { type: String, required: true, unique: true, lowercase: true,trim: true, match: /@epn\.edu\.ec$/i },
   password: { type: String, required: true },
   rol: { type: String, default: "estudiante" },
+  suspendido: { type: Boolean, default: false },
+  motivoSuspension: { type: String, default: "" },
+  suspendidoAt: { type: Date, default: null },
   token: { type: String, default: null },
   confirmEmail: { type: Boolean, default: false },
   resetToken: { type: String, default: null },
@@ -23,6 +40,7 @@ const usuarioSchema = new mongoose.Schema({
   carrera: { type: String, default: "" },
   intereses: { type: [String], default: [] },
   perfilPublico: { type: Boolean, default: true },
+  savedPosts: { type: [savedPostSchema], default: [] },
   grupoInvitaciones: [
     {
       grupo: { type: mongoose.Schema.Types.ObjectId, ref: "Grupo" },

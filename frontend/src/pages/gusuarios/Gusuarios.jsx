@@ -1,17 +1,29 @@
 import { useEffect, useState } from "react";
 import storeAuth from "../../context/storeAuth";
+import { setUserSuspension } from "../../Services/admin";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import "./Gusuarios.css";
 
 const API_URL = `${import.meta.env.VITE_BACKEND_URL}/api/admins/usuarios`;
+
+const parseResponse = async (response, fallback) => {
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(data?.msg || data?.message || fallback);
+  }
+  return data;
+};
 
 export default function Gusuario() {
   const [usuarios, setUsuarios] = useState([]);
   const [busqueda, setBusqueda] = useState("");
   const [loading, setLoading] = useState(true);
+  const [pageError, setPageError] = useState("");
   const [currentUser, setCurrentUser] = useState(null);
   
   // Estado para el Modal de confirmación
-  const [modal, setModal] = useState({ show: false, user: null, type: "" });
+  const [modal, setModal] = useState({ show: false, user: null, type: "", reason: "" });
 
   const token = storeAuth.getState().token;
 
@@ -24,10 +36,11 @@ export default function Gusuario() {
           Authorization: `Bearer ${token}`,
         },
       });
-      const data = await res.json();
+      const data = await parseResponse(res, "No se pudo cargar la lista de usuarios.");
       setUsuarios(Array.isArray(data) ? data : data.users || []);
     } catch (err) {
       console.error("Error al obtener usuarios:", err);
+      setPageError(err.message || "No se pudo cargar la lista de usuarios.");
     } finally {
       setLoading(false);
     }
@@ -44,10 +57,11 @@ export default function Gusuario() {
         const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/usuarios/perfil`, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        const data = await res.json();
+        const data = await parseResponse(res, "No se pudo verificar tu cuenta.");
         setCurrentUser(data);
       } catch (err) {
         console.error("Error al obtener perfil actual:", err);
+        setPageError(err.message || "No se pudo confirmar la identidad del administrador.");
       }
     };
 
@@ -62,8 +76,8 @@ export default function Gusuario() {
     // --- GUARDIA DE SEGURIDAD CRÍTICA ---
     // Incluso si por un error de render apareces, esta función bloquea la petición
     if (String(user._id) === String(currentUser?._id)) {
-      alert("Acción denegada: No puedes modificar tu propio perfil de administrador.");
-      setModal({ show: false, user: null, type: "" });
+      toast.error("Acción rechazada: no puedes modificar tu propio perfil de administrador.");
+      setModal({ show: false, user: null, type: "", reason: "" });
       return;
     }
 
@@ -80,11 +94,9 @@ export default function Gusuario() {
           body: JSON.stringify({ rol: nuevoRol }),
         });
 
-        if (res.ok) {
-          setUsuarios(prev => prev.map(u => u._id === user._id ? { ...u, rol: nuevoRol } : u));
-        } else {
-          alert("No se pudo actualizar el rol en el servidor");
-        }
+        await parseResponse(res, "No se pudo cambiar el rol. Revisa los datos e inténtalo de nuevo.");
+        setUsuarios(prev => prev.map(u => u._id === user._id ? { ...u, rol: nuevoRol } : u));
+        toast.success(`Rol actualizado a ${nuevoRol}.`);
 
       } else if (type === "DELETE") {
         const res = await fetch(`${API_URL}/${user._id}`, {
@@ -92,17 +104,30 @@ export default function Gusuario() {
           headers: { Authorization: `Bearer ${token}` },
         });
 
-        if (res.ok) {
-          setUsuarios(prev => prev.filter(u => u._id !== user._id));
-        } else {
-          alert("Error al eliminar el usuario");
-        }
+        const result = await parseResponse(res, "No se pudo eliminar la cuenta. Inténtalo de nuevo.");
+        setUsuarios(prev => prev.filter(u => u._id !== user._id));
+        toast.success(result.msg || "Cuenta eliminada.");
+      } else if (type === "SUSPEND" || type === "UNSUSPEND") {
+        const suspendido = type === "SUSPEND";
+        const res = await setUserSuspension(user._id, suspendido, modal.reason);
+        setUsuarios((prev) =>
+          prev.map((u) =>
+            u._id === user._id
+              ? {
+                  ...u,
+                  suspendido: res.data.suspendido,
+                  motivoSuspension: res.data.motivoSuspension,
+                }
+              : u
+          )
+        );
+        toast.success(res.data?.msg || (suspendido ? "Cuenta suspendida." : "Cuenta reactivada."));
       }
     } catch (err) {
       console.error("Error en la petición:", err);
-      alert("Error de conexión con el servidor");
+      toast.error(err?.response?.data?.msg || err.message || "No se pudo completar la acción. Verifica tu conexión e inténtalo de nuevo.");
     } finally {
-      setModal({ show: false, user: null, type: "" });
+      setModal({ show: false, user: null, type: "", reason: "" });
     }
   };
 
@@ -121,10 +146,12 @@ export default function Gusuario() {
 
   return (
     <div className="gestion-usuarios-seccion">
+      <ToastContainer position="top-right" />
       <div className="gestion-header">
         <h2>👤 Gestión de Usuarios</h2>
       </div>
 
+      {pageError ? <p className="gestion-page-error" role="alert">{pageError}</p> : null}
       <div className="gestion-search-container">
         <input
           type="text"
@@ -142,13 +169,14 @@ export default function Gusuario() {
               <th>Nombre</th>
               <th>Email Institucional</th>
               <th>Rol</th>
+              <th>Estado</th>
               <th style={{ textAlign: "center" }}>Acciones</th>
             </tr>
           </thead>
           <tbody>
             {usuariosFiltrados.length === 0 ? (
               <tr>
-                <td colSpan="4" style={{ textAlign: "center", padding: "40px" }}>
+                <td colSpan="5" style={{ textAlign: "center", padding: "40px" }}>
                   {busqueda ? "No se encontraron coincidencias" : "No hay otros usuarios para gestionar"}
                 </td>
               </tr>
@@ -160,6 +188,11 @@ export default function Gusuario() {
                   <td data-label="Rol">
                     <span className={`gestion-badge ${usuario.rol === 'administrador' ? 'admin' : 'usuario'}`}>
                       {usuario.rol}
+                    </span>
+                  </td>
+                  <td data-label="Estado">
+                    <span className={`gestion-badge ${usuario.suspendido ? "suspendido" : "activo"}`}>
+                      {usuario.suspendido ? "Suspendido" : "Activo"}
                     </span>
                   </td>
                   <td className="actions-cell" data-label="Acciones">
@@ -175,6 +208,19 @@ export default function Gusuario() {
                     >
                       🗑️ Eliminar
                     </button>
+                    {usuario.rol === "estudiante" ? (
+                      <button
+                        className={usuario.suspendido ? "btn-unsuspend" : "btn-suspend"}
+                        onClick={() => setModal({
+                          show: true,
+                          user: usuario,
+                          type: usuario.suspendido ? "UNSUSPEND" : "SUSPEND",
+                          reason: "",
+                        })}
+                      >
+                        {usuario.suspendido ? "Reactivar" : "Suspender"}
+                      </button>
+                    ) : null}
                   </td>
                 </tr>
               ))
@@ -187,21 +233,46 @@ export default function Gusuario() {
       {modal.show && (
         <div className="modal-overlay">
           <div className="modal-card">
-            <div className="modal-icon">{modal.type === "DELETE" ? "⚠️" : "👤"}</div>
+            <div className="modal-icon">{modal.type === "DELETE" || modal.type === "SUSPEND" ? "⚠️" : "👤"}</div>
             <h3 className="modal-title">
-              {modal.type === "DELETE" ? "Confirmar Eliminación" : "Cambiar Privilegios"}
+              {modal.type === "DELETE"
+                ? "Confirmar Eliminación"
+                : modal.type === "SUSPEND"
+                  ? "Suspender usuario"
+                  : modal.type === "UNSUSPEND"
+                    ? "Reactivar usuario"
+                    : "Cambiar Privilegios"}
             </h3>
             <p className="modal-text">
-              ¿Estás seguro de que deseas {modal.type === "DELETE" ? "eliminar a" : "cambiar el rol de"} 
+              ¿Estás seguro de que deseas {
+                modal.type === "DELETE"
+                  ? "eliminar a"
+                  : modal.type === "SUSPEND"
+                    ? "suspender a"
+                    : modal.type === "UNSUSPEND"
+                      ? "reactivar a"
+                      : "cambiar el rol de"
+              }
               <strong> {modal.user?.nombre}</strong>?
             </p>
-            
+            {modal.type === "SUSPEND" ? (
+              <textarea
+                className="suspension-reason"
+                aria-label="Motivo de suspensión"
+                placeholder="Motivo de suspensión (opcional)"
+                value={modal.reason}
+                onChange={(event) => setModal((prev) => ({ ...prev, reason: event.target.value }))}
+                maxLength={500}
+                rows={3}
+              />
+            ) : null}
+
             <div className="modal-buttons">
-              <button className="btn-modal-cancel" onClick={() => setModal({ show: false, user: null, type: "" })}>
+              <button className="btn-modal-cancel" onClick={() => setModal({ show: false, user: null, type: "", reason: "" })}>
                 Cancelar
               </button>
-              <button 
-                className={modal.type === "DELETE" ? "btn-modal-confirm-del" : "btn-modal-confirm-rol"} 
+              <button
+                className={modal.type === "DELETE" || modal.type === "SUSPEND" ? "btn-modal-confirm-del" : "btn-modal-confirm-rol"}
                 onClick={confirmarAccion}
               >
                 Confirmar

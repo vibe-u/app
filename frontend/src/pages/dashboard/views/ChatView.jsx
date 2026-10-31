@@ -7,15 +7,9 @@ import {
   sendMessageToUser,
 } from "../../../Services/chat";
 import storeNotifications from "../../../context/storeNotifications";
-import NotifBadge from "../../../components/notifications/NotifBadge";
 import "../../../components/notifications/NotificationAlerts.css";
-
-const formatTime = (isoDate) => {
-  if (!isoDate) return "";
-  const date = new Date(isoDate);
-  if (Number.isNaN(date.getTime())) return "";
-  return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-};
+import ChatConversationList from "./chat/ChatConversationList";
+import ChatConversationPanel from "./chat/ChatConversationPanel";
 
 const areMessagesEqual = (prev = [], next = []) => {
   if (prev.length !== next.length) return false;
@@ -48,6 +42,9 @@ const ChatView = () => {
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
   const [retrying, setRetrying] = useState(false);
+  const [isMobile, setIsMobile] = useState(
+    typeof window !== "undefined" ? window.matchMedia("(max-width: 770px)").matches : false
+  );
   const messagesContainerRef = useRef(null);
   const messagesEndRef = useRef(null);
   const shouldAutoScrollRef = useRef(true);
@@ -102,6 +99,13 @@ const ChatView = () => {
   }, []);
 
   useEffect(() => {
+    const media = window.matchMedia("(max-width: 770px)");
+    const updateLayout = () => setIsMobile(media.matches);
+    media.addEventListener("change", updateLayout);
+    return () => media.removeEventListener("change", updateLayout);
+  }, []);
+
+  useEffect(() => {
     const userIdFromState = location.state?.openUserId;
     if (!userIdFromState) return;
     setActiveUserId(userIdFromState);
@@ -140,10 +144,10 @@ const ChatView = () => {
   const activeUser = recents.find((item) => item.user._id === activeUserId)?.user || null;
 
   useEffect(() => {
-    if (activeUserId) return;
+    if (activeUserId || isMobile) return;
     if (!recents.length) return;
     setActiveUserId(recents[0].user._id);
-  }, [activeUserId, recents]);
+  }, [activeUserId, recents, isMobile]);
 
   useEffect(() => {
     loadMessagesForUser(activeUserId, { syncUnread: true }).catch(() => {
@@ -206,81 +210,32 @@ const ChatView = () => {
   };
 
   return (
-    <section className="chat_layout__dash">
-      <div className="panel__dash">
-        <h3>Chats recientes</h3>
-        <input className="input__dash"
-          value={search}
-          onChange={(e) => handleSearch(e.target.value)}
-          placeholder="Buscar por nombre o correo..."
-        />
-
-        {loading ? <p className="chat_hint__dash">Cargando usuarios...</p> : null}
-        {!loading && error ? (
-          <div className="friend_actions__dash" style={{ margin: "8px 0" }}>
-            <button className="button__dash" type="button" onClick={loadInitialData} disabled={retrying}>
-              {retrying ? "Reintentando..." : "Reintentar"}
-            </button>
-          </div>
-        ) : null}
-        {!loading && !recents.length ? (
-          <p className="chat_hint__dash">No hay usuarios disponibles para chatear.</p>
-        ) : null}
-
-        {recents.map((item) => (
-          <button
-            type="button"
-            key={item.user._id}
-            className={`chat_item__dash ${item.user._id === activeUserId ? "chat_item_active__dash" : ""}`}
-            onClick={() => setActiveUserId(item.user._id)}
-          >
-            <div className="chat_item_row__dash">
-              <strong>{item.user.nombre}</strong>
-              <span className="chat_item_meta__dash">
-                {item.unreadCount > 0 ? <NotifBadge count={item.unreadCount} /> : null}
-                {item.lastMessageAt ? formatTime(item.lastMessageAt) : ""}
-              </span>
-            </div>
-            <p>{item.lastMessage}</p>
-          </button>
-        ))}
-      </div>
-
-      <div className="panel__dash chat_conversation_panel__dash">
-        <h3>Conversacion con {activeUser?.nombre || "..."}</h3>
-        <div className="chat_messages__dash" ref={messagesContainerRef} onScroll={handleMessagesScroll}>
-          {messages.map((msg) => (
-            <p key={msg._id} className={msg.sender === activeUserId ? "" : "mine__dash"}>
-              {msg.content}
-            </p>
-          ))}
-          {!messages.length && activeUser ? (
-            <p className="chat_empty__dash">Aun no hay mensajes. Escribe el primero.</p>
-          ) : null}
-          <div ref={messagesEndRef} />
-        </div>
-        <div className="chat_input__dash">
-          <input
-            className="input__dash"
-            value={draft}
-            onChange={(e) => setDraft(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") handleSendMessage();
-            }}
-            placeholder="Escribe un mensaje..."
-            disabled={!activeUser}
-          />
-          <button
-            className="button__dash"
-            type="button"
-            onClick={handleSendMessage}
-            disabled={!draft.trim() || !activeUser || sending}
-          >
-            {sending ? "Enviando..." : "Enviar"}
-          </button>
-        </div>
-        {error ? <p className="chat_error__dash">{error}</p> : null}
-      </div>
+    <section className={`chat_layout__dash ${activeUserId ? "has-active-chat__dash" : ""}`}>
+      <ChatConversationList
+        recents={recents}
+        activeUserId={activeUserId}
+        onSelectUser={setActiveUserId}
+        search={search}
+        onSearch={handleSearch}
+        loading={loading}
+        error={error}
+        retrying={retrying}
+        onRetry={loadInitialData}
+      />
+      <ChatConversationPanel
+        activeUser={activeUser}
+        activeUserId={activeUserId}
+        messages={messages}
+        draft={draft}
+        onDraftChange={setDraft}
+        onSend={handleSendMessage}
+        sending={sending}
+        error={error}
+        messagesContainerRef={messagesContainerRef}
+        messagesEndRef={messagesEndRef}
+        onMessagesScroll={handleMessagesScroll}
+        onBack={() => setActiveUserId("")}
+      />
     </section>
   );
 };

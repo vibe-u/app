@@ -31,6 +31,8 @@ import Grupos from "./pages/Grupos/Grupos.jsx";
 import Gusuario from "./pages/gusuarios/Gusuarios.jsx";
 import Gautomatizacion from "./pages/Gautomatizacion/Gautomatizacion.jsx";
 import Gmoderacion from "./pages/Gmoderacion/Gmoderacion.jsx";
+import Bitacora from "./pages/Bitacora/Bitacora.jsx";
+import Gsolicitudes from "./pages/Gsolicitudes/Gsolicitudes.jsx";
 
 import PublicRoute from "./routes/PublicRouter.jsx";
 import PrivateRoute from "./routes/PrivateRouter.jsx";
@@ -100,16 +102,18 @@ function App() {
           <Route path="musuario" element={<Navigate to="/dashboard/micuenta" replace />} />
           <Route path="actualizar-info" element={<ActualizarInfo />} />
           <Route path="actualizar-pass" element={<ChangePasswordForm />} />
+          <Route path="grupos" element={<Grupos />} />
           <Route element={<AdminRoute />}>
             <Route element={<AdminLayout />}>
               <Route path="gusuarios" element={<Gusuario />} />
               <Route path="gautomatizacion" element={<Gautomatizacion />} />
               <Route path="gmoderacion" element={<Gmoderacion />} />
+              <Route path="gbitacora" element={<Bitacora />} />
+              <Route path="gsolicitudes" element={<Gsolicitudes />} />
             </Route>
           </Route>
 
           <Route element={<MobileOnlyRoute />}>
-            <Route path="grupos" element={<Grupos />} />
             <Route path="matches" element={<Matches />} />
           </Route>
         </Route>

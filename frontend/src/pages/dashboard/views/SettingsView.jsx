@@ -2,6 +2,7 @@ import { useNavigate } from "react-router-dom";
 import storeAuth from "../../../context/storeAuth";
 import { applyTheme, DARK_THEME, getCurrentTheme, LIGHT_THEME } from "../../../utils/theme";
 import { useState } from "react";
+import AccountDeletionRequest from "./AccountDeletionRequest";
 
 const SettingsView = () => {
   const navigate = useNavigate();
@@ -30,6 +31,7 @@ const SettingsView = () => {
         <button className="button__dash1" onClick={() => navigate("/actualizar-pass")}>Cambiar contraseña</button>
         <button className="button__dash1" onClick={cerrarSesion}>Cerrar sesion</button>
       </div>
+      <AccountDeletionRequest />
     </section>
   );
 };

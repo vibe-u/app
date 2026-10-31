@@ -66,6 +66,7 @@ const ActualizarInfo = () => {
           "Error al cargar datos del usuario, manteniendo la información actual:",
           err.response?.data || err
         );
+        toast.error(err.response?.data?.msg || err.response?.data?.message || "No se pudo cargar la información de tu perfil.");
         return;
       }
     };
@@ -137,7 +138,7 @@ const ActualizarInfo = () => {
       setTimeout(() => navigate("/dashboard/ajustes"), 1200);
     } catch (err) {
       console.error("Error al actualizar la información:", err.response?.data || err);
-      toast.error("Error al guardar la información.");
+      toast.error(err.response?.data?.msg || err.response?.data?.message || "No se pudo guardar la información. Revisa los datos e inténtalo de nuevo.");
     }
   };
 

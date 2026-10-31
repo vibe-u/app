@@ -2153,3 +2153,95 @@ button.grupo-people-row {
 [data-theme="dark"] .grupo-action-ok {
     color: #86efac;
 }
+.archived-group-note {
+  margin: 12px 0;
+  padding: 12px;
+  border: 1px solid #f0c36d;
+  border-radius: 10px;
+  background: #fff7e6;
+  color: #7c4a03;
+}
+
+[data-theme="dark"] .archived-group-note {
+  background: #3f2a10;
+  border-color: #7c5a2a;
+  color: #fcd34d;
+}
+
+.grupos-page,
+.grupos-page * {
+  min-width: 0;
+}
+
+.grupos-page img,
+.grupos-page input,
+.grupos-page textarea {
+  max-width: 100%;
+}
+
+@media (max-width: 770px) {
+  .grupos-page {
+    padding: 12px 8px;
+    overflow-x: hidden;
+  }
+
+  .grupos-header-top {
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+
+  .grupos-page .header-left-side {
+    gap: 8px;
+  }
+
+  .grupos-page .header-left-side h2 {
+    font-size: 1.1rem;
+  }
+
+  .grupos-page .header-right-side {
+    flex: 0 0 auto;
+    gap: 6px;
+  }
+
+  .grupos-page .btn-back-main-page,
+  .grupos-page .header-right-side .btn-crear-grupo {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 38px;
+    width: 38px;
+    min-width: 38px;
+    height: 38px;
+    padding: 0;
+    border-radius: 10px;
+    font-size: 0.9rem;
+  }
+
+  .grupos-page .header-right-side .btn-notif-grupo {
+    min-width: 38px;
+    width: 38px;
+    height: 38px;
+  }
+
+  .grupos-forum-style .post-action-buttons-fb {
+    gap: 2px;
+  }
+
+  .grupos-forum-style .post-action-buttons-fb button {
+    min-width: 0;
+    min-height: 34px;
+    padding: 6px 2px;
+    font-size: 0.68rem;
+    white-space: nowrap;
+  }
+
+  .grupos-page .comment-input-container-with-btn {
+    min-width: 0;
+  }
+
+  .grupos-page .comment-input-field {
+    min-width: 0;
+    font-size: 0.9rem;
+  }
+}

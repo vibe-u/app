@@ -16,6 +16,9 @@ import {
 import { searchRegisteredUsers } from "../../Services/users";
 import { getTokenPayload } from "../../utils/authToken";
 import { resolveAvatarUrl, resolveUploadUrl } from "../../utils/mediaUrl";
+import { reportPost } from "../../Services/posts";
+import ReportContentButton from "../../components/reports/ReportContentButton";
+import "../../components/reports/ReportContentButton.css";
 import "./Dashboard.css";
 
 const titleMap = {
@@ -70,6 +73,12 @@ const UserDashboard = () => {
   }, []);
 
   useEffect(() => {
+    if (isAdmin) {
+      setSearchUsers([]);
+      setSearchGroups([]);
+      setShowSuggestions(false);
+      return undefined;
+    }
     const term = search.trim();
     if (!term) {
       setSearchUsers([]);
@@ -119,7 +128,7 @@ const UserDashboard = () => {
     }, 250);
 
     return () => clearTimeout(timer);
-  }, [search]);
+  }, [search, isAdmin]);
 
   const hasSuggestions = useMemo(
     () => searchUsers.length > 0 || searchGroups.length > 0,
@@ -216,15 +225,17 @@ const UserDashboard = () => {
                     <FaBell />
                     <NotifBadge count={unreadCount} />
                   </button>
-                  <button
-                    type="button"
-                    className="mobile_action_btn__dash"
-                    onClick={() => setShowMobileSearch((prev) => !prev)}
-                    aria-label="Buscar personas y grupos"
-                    title="Buscar"
-                  >
-                    <FaSearch />
-                  </button>
+                  {!isAdmin ? (
+                    <button
+                      type="button"
+                      className="mobile_action_btn__dash"
+                      onClick={() => setShowMobileSearch((prev) => !prev)}
+                      aria-label="Buscar personas y grupos"
+                      title="Buscar"
+                    >
+                      <FaSearch />
+                    </button>
+                  ) : null}
                   {isAdmin ? (
                     <>
                       <button
@@ -287,11 +298,11 @@ const UserDashboard = () => {
                     </>
                   )}
                 </div>
-                {showMobileSearch ? renderSearchBox(true) : null}
+                {!isAdmin && showMobileSearch ? renderSearchBox(true) : null}
               </>
             ) : (
               <>
-                {renderSearchBox()}
+                {!isAdmin ? renderSearchBox() : null}
                 <button
                   type="button"
                   className="topbar_bell__dash"
@@ -397,6 +408,12 @@ export const PostCard = ({ post, onLike, onComment, onDeletePost, onDeleteCommen
         >
           💬 Comentarios ({comentarios})
         </button>
+        {currentUserId && postOwnerId !== currentUserId ? (
+          <ReportContentButton
+            className="feed-report-control"
+            onReport={(reason) => reportPost(post._id, reason)}
+          />
+        ) : null}
       </div>
 
       {showComments ? (
@@ -424,7 +441,7 @@ export const PostCard = ({ post, onLike, onComment, onDeletePost, onDeleteCommen
             })}
           </div>
 
-          <div className="chat_input__dash">
+          <div className="chat_input__dash feed-comment-input__dash">
             <input
               className="input__dash"
               type="text"
@@ -433,7 +450,7 @@ export const PostCard = ({ post, onLike, onComment, onDeletePost, onDeleteCommen
               placeholder="Escribe un comentario..."
             />
             <button
-              className="button__dash"
+              className="button__dash feed-comment-submit__dash"
               type="button"
               onClick={() => {
                 const value = commentText.trim();

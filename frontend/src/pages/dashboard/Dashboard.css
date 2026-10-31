@@ -910,6 +910,17 @@ h3 {
   overflow: hidden;
 }
 
+.chat_list_panel__dash {
+  min-height: 0;
+}
+
+.chat-list-scroll__dash {
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
 .chat_layout__dash > .panel__dash {
   overflow: hidden;
   display: flex;
@@ -976,6 +987,30 @@ h3 {
   display: flex;
   flex-direction: column;
   min-height: 0;
+}
+
+.chat-conversation-header__dash {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.chat-back-button__dash {
+  display: none;
+  width: 40px;
+  min-width: 40px;
+  height: 40px;
+  border: 1px solid #ebc5dc;
+  border-radius: 50%;
+  background: #fff;
+  color: #6c0063;
+  font-size: 1.3rem;
+}
+
+.chat-conversation-header__dash h3 {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .chat_messages__dash {
@@ -1582,13 +1617,39 @@ h3 {
 
   .chat_layout__dash {
     grid-template-columns: 1fr;
-    height: auto;
+    height: calc(100dvh - 172px);
+    min-height: 420px;
+    max-height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 96px);
     overflow: hidden;
   }
 
+  .chat_list_panel__dash,
+  .chat_conversation_panel__dash {
+    min-height: 0;
+    height: 100%;
+  }
+
+  .chat_layout__dash .chat_conversation_panel__dash {
+    display: none;
+  }
+
+  .chat_layout__dash.has-active-chat__dash .chat_list_panel__dash {
+    display: none;
+  }
+
+  .chat_layout__dash.has-active-chat__dash .chat_conversation_panel__dash {
+    display: flex;
+  }
+
+  .chat-back-button__dash {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
   .chat_messages__dash {
-    min-height: 300px;
-    max-height: 55vh;
+    min-height: 0;
+    max-height: none;
   }
 
   .profile_public__dash {
@@ -1656,6 +1717,155 @@ h3 {
 
   .event_card_body_custom__dash {
     grid-template-columns: 1fr;
+  }
+}
+
+.feed-report-control {
+  width: auto;
+}
+
+.feed-report-control .report-trigger {
+  min-height: 34px;
+  padding: 6px 10px;
+  border-radius: 9px;
+  font-size: 0.82rem;
+}
+
+.feed-comment-input__dash {
+  align-items: center;
+}
+
+.feed-comment-input__dash .input__dash {
+  min-width: 0;
+  min-height: 38px;
+  padding: 7px 10px;
+  font-size: 0.88rem;
+}
+
+.feed-comment-submit__dash {
+  flex: 0 0 auto;
+  min-height: 36px;
+  padding: 7px 10px;
+  border-radius: 9px;
+  font-size: 0.8rem;
+}
+
+.chat_list_panel__dash {
+  min-height: 560px;
+}
+
+.chat_item__dash {
+  min-height: 66px;
+  padding: 12px;
+}
+
+.chat_messages__dash p {
+  padding: 10px 13px;
+  font-size: 0.98rem;
+  line-height: 1.45;
+}
+
+.chat_input__dash .input__dash {
+  min-height: 48px;
+  font-size: 1rem;
+}
+
+.chat-send-button__dash {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 48px;
+  min-width: 48px;
+  min-height: 48px;
+  padding: 0;
+  font-size: 1.05rem;
+}
+
+.saved-posts-grid__dash {
+  display: grid;
+  gap: 10px;
+}
+
+.saved-post-card__dash {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid #ebc5dc;
+  border-radius: 12px;
+  background: #fff;
+}
+
+.saved-post-card__dash p {
+  margin: 5px 0;
+  overflow-wrap: anywhere;
+}
+
+.saved-post-card__dash img {
+  width: min(100%, 280px);
+  max-height: 200px;
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+.saved-post-card__dash button {
+  padding: 7px 10px;
+  background: #fef2f2;
+  color: #991b1b;
+  font-size: 0.82rem;
+}
+
+.saved-posts-error__dash {
+  color: #b91c1c;
+}
+
+[data-theme="dark"] .saved-posts-error__dash {
+  color: #fecaca;
+}
+
+[data-theme="dark"] .saved-post-card__dash {
+  background: #0f1622;
+  border-color: #3d5168;
+}
+
+[data-theme="dark"] .saved-post-card__dash button {
+  color: #fecaca;
+  background: #451a1a;
+}
+
+@media (max-width: 770px) {
+  .chat_list_panel__dash {
+    min-height: 0;
+  }
+
+  .feed-comment-input__dash {
+    gap: 6px;
+  }
+
+  .feed-comment-submit__dash {
+    white-space: nowrap;
+  }
+
+  .saved-post-card__dash {
+    grid-template-columns: minmax(0, 1fr);
+    align-items: stretch;
+  }
+
+  .saved-post-card__dash button {
+    width: fit-content;
+    max-width: 100%;
+  }
+
+  .post_actions__dash {
+    gap: 6px;
+  }
+
+  .post_actions__dash > button,
+  .post_actions__dash .feed-report-control .report-trigger {
+    min-height: 34px;
+    padding: 6px 8px;
+    font-size: 0.78rem;
   }
 
   .event_cover_custom__dash {

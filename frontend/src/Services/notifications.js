@@ -5,6 +5,7 @@ import {
   getMatchNotifications,
   getModerationNotifications,
 } from "./users";
+import { getAdminWorkflowNotifications } from "./admin";
 
 const ACTIVE_TYPES = new Set([
   "friend_request",
@@ -13,6 +14,8 @@ const ACTIVE_TYPES = new Set([
   "moderation_alert",
   "match_like",
   "match_success",
+  "content_report",
+  "account_deletion_request",
 ]);
 
 const asList = (payload) => (Array.isArray(payload) ? payload : []);
@@ -34,12 +37,16 @@ export const isBadgeNotification = (item) =>
   isActiveNotification(item) && isSameLocalDay(item.createdAt);
 
 export const fetchAllNotifications = async () => {
-  const [friendsRes, eventsRes, moderationRes, matchRes, groupInvitesRes] = await Promise.all([
+  const adminNotificationsRequest = localStorage.getItem("rol") === "administrador"
+    ? getAdminWorkflowNotifications().catch(() => ({ data: [] }))
+    : Promise.resolve({ data: [] });
+  const [friendsRes, eventsRes, moderationRes, matchRes, groupInvitesRes, adminRes] = await Promise.all([
     getFriendNotifications().catch(() => ({ data: [] })),
     getEventNotifications().catch(() => ({ data: [] })),
     getModerationNotifications().catch(() => ({ data: [] })),
     getMatchNotifications().catch(() => ({ data: [] })),
     getGroupInvites().catch(() => ({ data: [] })),
+    adminNotificationsRequest,
   ]);
 
   return [
@@ -48,6 +55,7 @@ export const fetchAllNotifications = async () => {
     ...asList(moderationRes?.data),
     ...asList(matchRes?.data),
     ...asList(groupInvitesRes?.data),
+    ...asList(adminRes?.data),
   ]
     .filter(isActiveNotification)
     .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));

@@ -1,10 +1,28 @@
 /* --- CONTENEDOR PRINCIPAL --- */
 .gestion-usuarios-seccion {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  margin: 0;
   background-color: #E1BEE7 !important; /* Fondo lila solicitado */
   min-height: 100vh;
-  padding: 40px;
+  padding: clamp(16px, 3vw, 40px);
   font-family: 'Inter', sans-serif;
   color: #1f2937;
+  overflow-x: hidden;
+}
+
+.gestion-page-error {
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #fef2f2;
+  color: #991b1b;
+}
+
+[data-theme="dark"] .gestion-page-error {
+  background: #451a1a;
+  color: #fecaca;
 }
 
 .gestion-header h2 {
@@ -38,12 +56,13 @@
   background: white;
   border-radius: 12px;
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
+  overflow-x: auto;
   border: 1px solid #e5e7eb;
 }
 
 .gestion-table {
   width: 100%;
+  min-width: 760px;
   border-collapse: collapse;
 }
 
@@ -72,6 +91,8 @@
 }
 .gestion-badge.admin { background-color: #f3e8ff; color: #7b1fa2; }
 .gestion-badge.usuario { background-color: #e0f2fe; color: #0369a1; }
+.gestion-badge.activo { background-color: #dcfce7; color: #166534; }
+.gestion-badge.suspendido { background-color: #fee2e2; color: #991b1b; }
 
 /* --- BOTONES DE LA TABLA (Mismo tamaño) --- */
 .actions-cell {
@@ -80,7 +101,7 @@
   justify-content: center;
 }
 
-.btn-promote, .btn-downgrade, .btn-delete {
+.btn-promote, .btn-downgrade, .btn-delete, .btn-suspend, .btn-unsuspend {
   width: 135px; /* Tamaño uniforme */
   height: 36px;
   border-radius: 8px;
@@ -97,8 +118,10 @@
 .btn-promote { background: #f0fdf4; color: #16a34a; border-color: #bbf7d0; }
 .btn-downgrade { background: #fff7ed; color: #c2410c; border-color: #ffedd5; }
 .btn-delete { background: #fef2f2; color: #b91c1c; border-color: #fee2e2; }
+.btn-suspend { background: #fff7ed; color: #c2410c; border-color: #ffedd5; }
+.btn-unsuspend { background: #f0fdf4; color: #15803d; border-color: #bbf7d0; }
 
-.btn-promote:hover, .btn-downgrade:hover, .btn-delete:hover {
+.btn-promote:hover, .btn-downgrade:hover, .btn-delete:hover, .btn-suspend:hover, .btn-unsuspend:hover {
   transform: translateY(-2px);
 }
 
@@ -125,6 +148,16 @@
 .modal-icon { font-size: 40px; margin-bottom: 15px; }
 .modal-title { color: #111827; margin-bottom: 10px; font-size: 20px; }
 .modal-text { color: #4b5563; margin-bottom: 25px; }
+.suspension-reason {
+  box-sizing: border-box;
+  width: 100%;
+  margin: 0 0 18px;
+  padding: 10px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font: inherit;
+  resize: vertical;
+}
 
 /* Botones del Modal separados */
 .modal-buttons {
@@ -237,6 +270,28 @@
   border-color: #7f1d1d;
 }
 
+[data-theme="dark"] .btn-suspend {
+  background: #3f2a10;
+  color: #fdba74;
+  border-color: #7c2d12;
+}
+
+[data-theme="dark"] .btn-unsuspend {
+  background: #123728;
+  color: #86efac;
+  border-color: #166534;
+}
+
+[data-theme="dark"] .gestion-badge.activo {
+  background: #123728;
+  color: #86efac;
+}
+
+[data-theme="dark"] .gestion-badge.suspendido {
+  background: #3f1d1d;
+  color: #fca5a5;
+}
+
 [data-theme="dark"] .modal-card {
   background: #161e2b;
   border: 1px solid #2c3f55;
@@ -249,6 +304,12 @@
 
 [data-theme="dark"] .modal-text {
   color: #b8c7db;
+}
+
+[data-theme="dark"] .suspension-reason {
+  background: #0f1622;
+  color: #e6edf7;
+  border-color: #2f445c;
 }
 
 [data-theme="dark"] .btn-modal-cancel {
@@ -266,16 +327,24 @@
 
 @media (max-width: 770px) {
   .gestion-usuarios-seccion {
-    padding: 16px 12px 24px;
+    width: 100%;
+    padding: 12px 10px 20px;
+    overflow-x: clip;
   }
 
   .gestion-header h2 {
     font-size: 1.2rem;
+    margin: 0 0 12px;
+    overflow-wrap: anywhere;
+  }
+
+  .gestion-search-container {
     margin-bottom: 14px;
   }
 
   .gestion-input-search {
     max-width: 100%;
+    box-sizing: border-box;
   }
 
   .gestion-tabla-wrapper {
@@ -283,6 +352,8 @@
     box-shadow: none;
     border: 0;
     overflow: visible;
+    width: 100%;
+    max-width: 100%;
   }
 
   .gestion-table thead {
@@ -295,6 +366,13 @@
   .gestion-table td {
     display: block;
     width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  .gestion-table {
+    table-layout: fixed;
   }
 
   .gestion-table tr {
@@ -304,11 +382,13 @@
     padding: 12px;
     margin-bottom: 12px;
     box-sizing: border-box;
+    overflow: hidden;
   }
 
   .gestion-table td {
     padding: 8px 0;
     border-bottom: 1px solid #f3f4f6;
+    overflow-wrap: anywhere;
   }
 
   .gestion-table td:last-child {
@@ -326,17 +406,36 @@
     margin-bottom: 4px;
   }
 
-  .actions-cell {
+  .gestion-table td.actions-cell {
+    display: flex;
     flex-wrap: wrap;
-    justify-content: stretch;
+    justify-content: flex-start;
     gap: 8px;
   }
 
   .btn-promote,
   .btn-downgrade,
   .btn-delete {
-    width: 100%;
-    min-height: 40px;
+    width: auto;
+    min-width: 0;
+    min-height: 36px;
+    flex: 1 1 calc(50% - 8px);
+  }
+
+  .btn-suspend,
+  .btn-unsuspend {
+    width: auto;
+    min-width: 0;
+    min-height: 36px;
+    flex: 1 1 calc(50% - 8px);
+  }
+
+  .actions-cell button {
+    box-sizing: border-box;
+    max-width: 100%;
+    padding: 6px 8px;
+    font-size: 0.72rem;
+    white-space: normal;
   }
 
   .modal-card {

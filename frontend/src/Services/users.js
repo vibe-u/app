@@ -51,3 +51,15 @@ export const rejectMatchCandidate = (toUserId) =>
 
 export const getMatchNotifications = () =>
   axios.get("/usuarios/match/notificaciones", getAuthConfig());
+
+export const submitAccountDeletionRequest = (reason) =>
+  axios.post("/usuarios/solicitar-eliminacion", { reason }, getAuthConfig());
+
+export const getAccountDeletionRequest = () =>
+  axios.get("/usuarios/solicitar-eliminacion", getAuthConfig());
+
+export const getSavedPosts = () =>
+  axios.get("/usuarios/guardadas", getAuthConfig());
+
+export const toggleSavedGroupPost = (groupId, postId) =>
+  axios.post("/usuarios/guardadas", { groupId, postId }, getAuthConfig());

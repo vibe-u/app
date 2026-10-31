@@ -1,0 +1,143 @@
+.account-deletion-card {
+  margin-top: 18px;
+  padding: 16px;
+  border: 1px solid #fecaca;
+  border-radius: 14px;
+  background: #fff;
+}
+
+.account-deletion-card h4 {
+  margin: 0 0 6px;
+}
+
+.account-deletion-card > p {
+  margin: 0 0 12px;
+}
+
+.account-deletion-card form {
+  display: grid;
+  gap: 8px;
+}
+
+.account-deletion-confirm {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  color: #263449;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.account-deletion-confirm input {
+  flex: 0 0 18px;
+  width: 18px;
+  height: 18px;
+  accent-color: #8b2f86;
+}
+
+.account-deletion-card textarea {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 680px;
+  padding: 10px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font: inherit;
+  resize: vertical;
+}
+
+.account-deletion-card button {
+  min-height: 42px;
+  width: fit-content;
+  padding: 9px 14px;
+  border: 0;
+  border-radius: 8px;
+  background: #b91c1c;
+  color: #fff;
+  font-weight: 700;
+}
+
+.account-deletion-card button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.account-deletion-status {
+  display: grid;
+  gap: 6px;
+  padding: 12px;
+  border-radius: 8px;
+  background: #fff7ed;
+}
+
+.account-deletion-status p {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.account-deletion-status span {
+  color: #40516a;
+}
+
+.account-deletion-error {
+  padding: 9px 11px;
+  border-radius: 8px;
+  background: #fef2f2;
+  color: #991b1b;
+}
+
+.account-deletion-notice {
+  padding: 10px 12px;
+  border: 1px solid #86efac;
+  border-radius: 8px;
+  background: #f0fdf4;
+  color: #14532d;
+  font-weight: 600;
+}
+
+[data-theme="dark"] .account-deletion-card {
+  background: #161e2b;
+  border-color: #7f1d1d;
+  color: #e6edf7;
+}
+
+[data-theme="dark"] .account-deletion-status {
+  background: #3f2a10;
+}
+
+[data-theme="dark"] .account-deletion-card textarea {
+  background: #0f1622;
+  color: #e6edf7;
+  border-color: #2f445c;
+}
+
+[data-theme="dark"] .account-deletion-confirm {
+  color: #e6edf7;
+  background: #0f1622;
+  border-color: #3d5168;
+}
+
+[data-theme="dark"] .account-deletion-status span {
+  color: #d4dce8;
+}
+
+[data-theme="dark"] .account-deletion-error {
+  color: #fecaca;
+  background: #451a1a;
+}
+
+[data-theme="dark"] .account-deletion-notice {
+  color: #bbf7d0;
+  background: #12301f;
+  border-color: #267347;
+}
+
+@media (max-width: 770px) {
+  .account-deletion-card button {
+    width: 100%;
+  }
+}

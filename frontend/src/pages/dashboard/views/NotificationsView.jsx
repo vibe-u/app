@@ -8,6 +8,7 @@ import {
 } from "../../../Services/users";
 import { getEventNotifications } from "../../../Services/events";
 import { getGroupInvites, respondGroupInvite } from "../../../Services/groups";
+import { getAdminWorkflowNotifications } from "../../../Services/admin";
 import storeNotifications from "../../../context/storeNotifications";
 
 const HISTORY_KEY = "vibeu.notifications.history.v2";
@@ -58,19 +59,25 @@ const NotificationsView = () => {
     for (let attempt = 1; attempt <= 3; attempt += 1) {
       try {
         setError("");
-        const [friendsRes, eventsRes, moderationRes, matchRes, groupInvitesRes] = await Promise.all([
+        const isAdmin = localStorage.getItem("rol") === "administrador";
+        const adminNotificationsRequest = isAdmin
+          ? getAdminWorkflowNotifications()
+          : Promise.resolve({ data: [] });
+        const [friendsRes, eventsRes, moderationRes, matchRes, groupInvitesRes, adminRes] = await Promise.all([
           getFriendNotifications(),
           getEventNotifications(),
           getModerationNotifications(),
           getMatchNotifications(),
           getGroupInvites().catch(() => ({ data: [] })),
+          adminNotificationsRequest,
         ]);
         const friendItems = Array.isArray(friendsRes?.data) ? friendsRes.data : [];
         const eventItems = Array.isArray(eventsRes?.data) ? eventsRes.data : [];
         const moderationItems = Array.isArray(moderationRes?.data) ? moderationRes.data : [];
         const matchItems = Array.isArray(matchRes?.data) ? matchRes.data : [];
         const groupInviteItems = Array.isArray(groupInvitesRes?.data) ? groupInvitesRes.data : [];
-        const merged = [...friendItems, ...eventItems, ...moderationItems, ...matchItems, ...groupInviteItems].sort(
+        const adminItems = Array.isArray(adminRes?.data) ? adminRes.data : [];
+        const merged = [...friendItems, ...eventItems, ...moderationItems, ...matchItems, ...groupInviteItems, ...adminItems].sort(
           (a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0)
         );
         setNotifications(merged);
@@ -236,6 +243,14 @@ const NotificationsView = () => {
                 <div className="friend_actions__dash">
                   <button className="button__dash" type="button" onClick={() => navigate("/dashboard/eventos")}>
                     Ver evento
+                  </button>
+                </div>
+              ) : null}
+
+              {item.type === "content_report" || item.type === "account_deletion_request" ? (
+                <div className="friend_actions__dash">
+                  <button className="button__dash" type="button" onClick={() => navigate("/gsolicitudes")}>
+                    Revisar solicitudes
                   </button>
                 </div>
               ) : null}

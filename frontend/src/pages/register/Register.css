@@ -99,6 +99,30 @@
     box-shadow: 0 0 4px #a100ff;
 }
 
+.register-password-group {
+    position: relative;
+}
+
+.register-form .register-password-group input {
+    padding-right: 48px;
+}
+
+.register-password-toggle {
+    position: absolute;
+    top: 50%;
+    right: 8px;
+    transform: translateY(-50%);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: #5e1b7b;
+}
+
 .error-text {
     color: #d9534f;
     font-size: 0.8rem;

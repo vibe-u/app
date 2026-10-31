@@ -3,13 +3,16 @@
 }
 
 .admin-shell-content {
+  width: 100%;
   min-width: 0;
   overflow-x: hidden;
 }
 
 .admin-shell-content .gestion-usuarios-seccion,
 .admin-shell-content .gauto-container,
-.admin-shell-content .gmod-section {
+.admin-shell-content .gmod-section,
+.admin-shell-content .audit-section,
+.admin-shell-content .admin-requests-page {
   min-height: auto;
   width: 100%;
   box-sizing: border-box;
@@ -21,7 +24,9 @@
   }
 
   .admin-shell-content .gauto-container,
-  .admin-shell-content .gmod-section {
+  .admin-shell-content .gmod-section,
+  .admin-shell-content .audit-section,
+  .admin-shell-content .admin-requests-page {
     padding: 12px 8px 20px;
   }
 }

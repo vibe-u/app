@@ -1,4 +1,11 @@
 import axios from "./axios";
+import { getSessionToken, isTokenExpired } from "../utils/authToken";
+
+const getAuthConfig = () => {
+  const token = getSessionToken();
+  if (!token || isTokenExpired(token)) throw new Error("Sesión expirada");
+  return { headers: { Authorization: "Bearer " + token } };
+};
 
 export const obtenerPosts = ({ page = 1, limit = 20 } = {}) =>
   axios.get("/posts", { params: { page, limit } });
@@ -47,3 +54,9 @@ export const eliminarComentarioPost = (postId, commentId, token) =>
   axios.delete(`/posts/${postId}/comentarios/${commentId}`, {
     headers: { Authorization: `Bearer ${token}` },
   });
+
+export const reportPost = (postId, reason) =>
+  axios.post(`/posts/${postId}/reportar`, { reason }, getAuthConfig());
+
+export const reportGroupPost = (groupId, postId, reason) =>
+  axios.post(`/grupos/${groupId}/post/${postId}/reportar`, { reason }, getAuthConfig());

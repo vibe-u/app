@@ -20,16 +20,21 @@ const Recommendations = ({
   const navigate = useNavigate();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
 
   useEffect(() => {
     let cancelled = false;
     const load = async () => {
       try {
         setLoading(true);
+        setLoadError("");
         const res = await getRecommendations();
         if (!cancelled) setData(res?.data || null);
-      } catch {
-        if (!cancelled) setData(null);
+      } catch (error) {
+        if (!cancelled) {
+          setData(null);
+          setLoadError(error?.response?.data?.msg || "No se pudieron cargar las recomendaciones.");
+        }
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -42,11 +47,14 @@ const Recommendations = ({
 
   const grupos = Array.isArray(data?.grupos) ? data.grupos : [];
   const eventos = Array.isArray(data?.eventos) ? data.eventos : [];
+  const publicaciones = variant === "hub" && Array.isArray(data?.publicaciones)
+    ? data.publicaciones.slice(0, 2)
+    : [];
   const canOpenGrupos = variant === "grupos" || isMobileAccess();
   const showGrupos = (variant === "hub" && canOpenGrupos) || variant === "grupos";
   const showEventos = variant === "hub" || variant === "eventos";
-  const visibleGrupos = showGrupos ? grupos : [];
-  const visibleEventos = showEventos ? eventos : [];
+  const visibleGrupos = showGrupos ? grupos.slice(0, variant === "hub" ? 2 : 6) : [];
+  const visibleEventos = showEventos ? eventos.slice(0, variant === "hub" ? 2 : 6) : [];
 
   const openGroup = (grupo) => {
     if (onSelectGroup) {
@@ -82,19 +90,27 @@ const Recommendations = ({
     );
   }
 
-  if (!visibleGrupos.length && !visibleEventos.length) {
+  if (loadError) {
+    return (
+      <section className={`recs-block recs-block--${variant}`}>
+        <p className="recs-hint" role="alert">{loadError}</p>
+      </section>
+    );
+  }
+
+  if (!visibleGrupos.length && !visibleEventos.length && !publicaciones.length) {
     return (
       <section className={`recs-block recs-block--${variant}`}>
         <div className="recs-head">
           <div>
             <p className="recs-kicker">Para ti</p>
-            <h3>Recomendaciones inteligentes</h3>
+            <h3>Sugerencias para ti</h3>
           </div>
         </div>
         <p className="recs-hint">
           {data?.needsUniversity && showEventos
             ? "Completa tu universidad para recibir eventos de tu campus."
-            : "Aún no hay coincidencias. Elige tus intereses para personalizar sugerencias."}
+            : "Aún no hay coincidencias claras. Elige intereses o participa en publicaciones para personalizar sugerencias."}
         </p>
         <Link className="recs-cta" to="/actualizar-info">
           Elegir intereses
@@ -113,12 +129,10 @@ const Recommendations = ({
               ? "Comunidades recomendadas"
               : variant === "eventos"
                 ? "Eventos recomendados"
-                : "Recomendado según tus intereses"}
+                : "Sugerencias para ti"}
           </h3>
           <p className="recs-hint">
-            {data?.hasInterests
-              ? "Sugerencias alineadas con lo que te gusta."
-              : "Inferimos afinidades con tu perfil. Afina el resultado eligiendo intereses."}
+            Cada sugerencia indica si coincide con tus intereses, perfil o publicaciones y comentarios.
           </p>
         </div>
         {!data?.hasInterests ? (
@@ -144,12 +158,37 @@ const Recommendations = ({
                     <strong>{grupo.nombre}</strong>
                     <span>{grupo.miembrosCount || 0} miembros</span>
                     <div className="recs-reasons">
-                      {(grupo.reasons || []).slice(0, 2).map((reason) => (
+                      {(grupo.reasons || []).slice(0, 1).map((reason) => (
                         <em key={reason}>{reason}</em>
                       ))}
                     </div>
                   </div>
                 </button>
+              </article>
+            ))}
+          </div>
+        </div>
+      ) : null}
+
+      {publicaciones.length ? (
+        <div className="recs-section recs-publications">
+          <h4>Publicaciones que pueden interesarte</h4>
+          <div className="recs-publication-list">
+            {publicaciones.map((post) => (
+              <article className="recs-publication-card" key={post._id}>
+                {post.imagen ? (
+                  <img src={post.imagen} alt="" />
+                ) : (
+                  <div className="recs-publication-cover" aria-hidden="true" />
+                )}
+                <div className="recs-publication-content">
+                  <strong>{post.autor}</strong>
+                  <p>{post.texto || "Publicación con conversación activa."}</p>
+                  <span className="recs-publication-meta">{post.comentariosCount} comentarios</span>
+                  <span className="recs-match-reason">
+                    {(post.reasons || [])[0] || "Publicación reciente para descubrir"}
+                  </span>
+                </div>
               </article>
             ))}
           </div>
@@ -173,7 +212,7 @@ const Recommendations = ({
                     <span>{formatDate(evento.fechaHora)}</span>
                     <span>{evento.lugar}</span>
                     <div className="recs-reasons">
-                      {(evento.reasons || []).slice(0, 2).map((reason) => (
+                      {(evento.reasons || []).slice(0, 1).map((reason) => (
                         <em key={reason}>{reason}</em>
                       ))}
                     </div>

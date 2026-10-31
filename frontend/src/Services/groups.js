@@ -15,5 +15,10 @@ const getAuthConfig = () => {
 
 export const getGroupInvites = () => axios.get("/grupos/invitaciones", getAuthConfig());
 
+export const getArchivedGroups = () => axios.get("/grupos/archivados", getAuthConfig());
+
+export const setGroupArchived = (groupId, archivado) =>
+  axios.patch(`/grupos/${groupId}/archivar`, { archivado }, getAuthConfig());
+
 export const respondGroupInvite = (grupoId, action) =>
   axios.post(`/grupos/invitaciones/${grupoId}/responder`, { action }, getAuthConfig());

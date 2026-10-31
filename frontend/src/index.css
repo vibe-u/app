@@ -135,6 +135,29 @@ h1 {
     font-size: clamp(1.5rem, 8vw, 2.2rem);
   }
 }
+
+@media (max-width: 770px) {
+  #root,
+  .shell__dash,
+  .content__dash,
+  .panel__dash,
+  .view__dash {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .shell__dash,
+  .admin-shell-content {
+    overflow-x: clip;
+  }
+
+  button,
+  input,
+  textarea,
+  select {
+    max-width: 100%;
+  }
+}
 button {
   border-radius: 8px;
   border: 1px solid transparent;

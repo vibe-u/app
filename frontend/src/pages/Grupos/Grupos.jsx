@@ -15,6 +15,11 @@ import { sanitizeInterests } from "../../utils/interests";
 import storeNotifications from "../../context/storeNotifications";
 import NotifBadge from "../../components/notifications/NotifBadge";
 import "../../components/notifications/NotificationAlerts.css";
+import { getArchivedGroups, setGroupArchived } from "../../Services/groups";
+import { getSavedPosts, toggleSavedGroupPost } from "../../Services/users";
+import { reportGroupPost } from "../../Services/posts";
+import ReportContentButton from "../../components/reports/ReportContentButton";
+import "../../components/reports/ReportContentButton.css";
 
 const API_URL = `${import.meta.env.VITE_BACKEND_URL}/api/grupos`;
 const DEFAULT_AVATAR = "/default-avatar.svg";
@@ -24,6 +29,7 @@ const Grupos = () => {
     const unreadCount = storeNotifications((state) => state.unreadCount);
     // --- ESTADOS DE DATOS ---
     const [grupos, setGrupos] = useState([]);
+    const [gruposArchivados, setGruposArchivados] = useState([]);
     const [filtro, setFiltro] = useState("");
     const [pestana, setPestana] = useState("todos");
     const [menuAbiertoId, setMenuAbiertoId] = useState(null);
@@ -44,6 +50,7 @@ const Grupos = () => {
     const [fotoPost, setFotoPost] = useState(null);
     const [likes, setLikes] = useState({});
     const [guardados, setGuardados] = useState({});
+    const [saveError, setSaveError] = useState("");
 
     // --- ESTADOS DE COMENTARIOS (AUMENTADOS) ---
     const [comentarioTexto, setComentarioTexto] = useState({});
@@ -73,12 +80,49 @@ const Grupos = () => {
     const postFotoRef = useRef(null);
     const token = localStorage.getItem("token");
 
+    useEffect(() => {
+        getSavedPosts()
+            .then(({ data }) => {
+                const saved = Array.isArray(data) ? data : [];
+                setGuardados(Object.fromEntries(saved.map((post) => [post.postId, true])));
+            })
+            .catch((error) => {
+                setSaveError(error?.response?.data?.msg || "No se pudieron cargar tus publicaciones guardadas.");
+            });
+    }, []);
+
     // --- LÓGICA DE DESPLIEGUE ---
     const toggleComentarios = (postId) => {
         setComentariosAbiertos(prev => ({
             ...prev,
             [postId]: !prev[postId]
         }));
+    };
+
+    const handleArchivarGrupo = async (grupo, archivado) => {
+        try {
+            const response = await setGroupArchived(grupo._id, archivado);
+            if (archivado) {
+                setGrupos((prev) => prev.filter((item) => item._id !== grupo._id));
+                setGruposArchivados((prev) => [response.data.grupo, ...prev.filter((item) => item._id !== grupo._id)]);
+                if (grupoActivo?._id === grupo._id) salirDeGrupo();
+            } else {
+                setGruposArchivados((prev) => prev.filter((item) => item._id !== grupo._id));
+                setGrupos((prev) => [response.data.grupo, ...prev.filter((item) => item._id !== grupo._id)]);
+            }
+            setMenuAbiertoId(null);
+        } catch (error) {
+            window.alert(error?.response?.data?.message || "No se pudo cambiar el estado de la comunidad.");
+        }
+    };
+
+    const cargarArchivados = async () => {
+        try {
+            const { data } = await getArchivedGroups();
+            setGruposArchivados(Array.isArray(data) ? data : []);
+        } catch (error) {
+            console.error("Error al cargar comunidades archivadas:", error);
+        }
     };
 
     // --- 1. CARGAR PERFIL ---
@@ -111,6 +155,10 @@ const Grupos = () => {
     };
 
     useEffect(() => { cargarGrupos(); }, []);
+
+    useEffect(() => {
+        if (pestana === "archivados") cargarArchivados();
+    }, [pestana]);
 
     useEffect(() => {
         const interval = setInterval(() => {
@@ -359,7 +407,18 @@ const Grupos = () => {
         setMiembros([]);
     };
     const toggleLike = (postId) => setLikes(prev => ({ ...prev, [postId]: !prev[postId] }));
-    const toggleGuardar = (postId) => setGuardados(prev => ({ ...prev, [postId]: !prev[postId] }));
+    const toggleGuardar = async (group, post) => {
+        try {
+            setSaveError("");
+            const { data } = await toggleSavedGroupPost(group._id, post._id);
+            setGuardados((previous) => ({
+                ...previous,
+                [post._id]: data.saved,
+            }));
+        } catch (error) {
+            setSaveError(error?.response?.data?.msg || "No se pudo actualizar la publicación guardada.");
+        }
+    };
 
     const cargarMiembros = async (grupoId) => {
         try {
@@ -473,9 +532,10 @@ const Grupos = () => {
 
     // --- RENDER MURO (GRUPO ACTIVO) ---
     if (grupoActivo) {
-        const grupoData = grupos.find(g => g._id === grupoActivo._id) || grupoActivo;
+        const grupoData = [...grupos, ...gruposArchivados].find(g => g._id === grupoActivo._id) || grupoActivo;
         const esCreadorGrupo = grupoData.creadorEmail === userEmail;
         const esAdminGlobal = userRole === "administrador";
+        const puedeGestionarArchivo = esCreadorGrupo || esAdminGlobal;
         return (
             <div className="fb-layout grupos-forum-style">
                 <div className="fb-header-container">
@@ -492,7 +552,16 @@ const Grupos = () => {
                                 <p className="grupo-active-meta"><FaGlobeAmericas /> Grupo Público · <b>{grupoData.miembrosArray?.length || 1} miembros</b></p>
                             </div>
                             <div className="fb-header-btns">
-                                {esCreadorGrupo || grupoData.miembrosArray?.includes(userEmail) || esAdminGlobal ? (
+                                {puedeGestionarArchivo ? (
+                                    <button
+                                        className="btn-fb-gray"
+                                        type="button"
+                                        onClick={() => handleArchivarGrupo(grupoData, !grupoData.archivado)}
+                                    >
+                                        {grupoData.archivado ? "Activar comunidad" : "Archivar comunidad"}
+                                    </button>
+                                ) : null}
+                                {!grupoData.archivado && (esCreadorGrupo || grupoData.miembrosArray?.includes(userEmail) || esAdminGlobal) ? (
                                     <button className="btn-fb-blue" type="button" onClick={abrirInvitar}>
                                         <FaPlus /> Invitar
                                     </button>
@@ -507,7 +576,7 @@ const Grupos = () => {
 
                 <div className="fb-body-grid single-column">
                     <main className="fb-feed-center">
-                        <div className="fb-card-white publish-area">
+                        {!grupoData.archivado ? <div className="fb-card-white publish-area">
                             <div className="publish-input-row">
                                 <div className="avatar-circle-wrapper">
                                     {avatar ? <img src={resolveAvatarUrl(avatar)} className="mini-avatar-fb" alt="yo" /> : <FaUserCircle size={40} color="#ccc" className="mini-avatar-fb" />}
@@ -527,7 +596,7 @@ const Grupos = () => {
                                 <button onClick={handlePublicar} disabled={loading} className="btn-send-fb">Publicar</button>
                                 <input type="file" ref={postFotoRef} style={{display: 'none'}} accept="image/*" onChange={(e) => handleImagePreview(e, 'post')} />
                             </div>
-                        </div>
+                        </div> : <p className="archived-group-note">Esta comunidad está archivada y no es visible públicamente. Solo el creador o un administrador puede activarla.</p>}
 
                         {grupoData.posts?.map(post => {
                             const esMiPost = post.autorEmail === userEmail || post.autor === userName;
@@ -548,11 +617,19 @@ const Grupos = () => {
                                         </div>
                                         <div className="post-actions-right">
                                             <button className="btn-fb-options" onClick={() => setMenuAbiertoId(menuAbiertoId === post._id ? null : post._id)}><FaEllipsisH /></button>
-                                            {menuAbiertoId === post._id && puedeEliminarPost ? (
+                                            {menuAbiertoId === post._id ? (
                                                 <div className="dropdown-fb-style post-dropdown-menu" style={{ display: "block" }}>
-                                                    <button onClick={() => handleEliminarPost(post._id)} style={{ color: "red" }}>
-                                                        <FaTrash /> Eliminar publicación
-                                                    </button>
+                                                    {puedeEliminarPost ? (
+                                                        <button onClick={() => handleEliminarPost(post._id)} style={{ color: "red" }}>
+                                                            <FaTrash /> Eliminar publicación
+                                                        </button>
+                                                    ) : null}
+                                                    {!esMiPost ? (
+                                                        <ReportContentButton
+                                                            onReport={(reason) => reportGroupPost(grupoData._id, post._id, reason)}
+                                                            label="Reportar publicación"
+                                                        />
+                                                    ) : null}
                                                 </div>
                                             ) : null}
                                         </div>
@@ -571,26 +648,26 @@ const Grupos = () => {
                                     </div>
                                     ) : null}
                                     
-                                    <div className="post-action-buttons-fb">
-                                        <button type="button" onClick={() => toggleLike(post._id)} className={likes[post._id] ? "liked" : ""}>
-                                            <FaThumbsUp /> Me gusta
-                                        </button>
-                                        
-                                        <button type="button" onClick={() => toggleComentarios(post._id)}>
-                                            <FaComment /> Comentar
-                                        </button>
-                                        
-                                        <button
-                                            type="button"
-                                            className={`btn-save-post ${guardados[post._id] ? "active" : ""}`}
-                                            onClick={() => toggleGuardar(post._id)}
-                                        >
-                                            {guardados[post._id] ? <FaBookmark /> : <FaRegBookmark />} Guardar
-                                        </button>
-                                    </div>
+                                    {!grupoData.archivado ? (
+                                        <div className="post-action-buttons-fb">
+                                            <button type="button" onClick={() => toggleLike(post._id)} className={likes[post._id] ? "liked" : ""}>
+                                                <FaThumbsUp /> Me gusta
+                                            </button>
+                                            <button type="button" onClick={() => toggleComentarios(post._id)}>
+                                                <FaComment /> Comentar
+                                            </button>
+                                            <button
+                                                type="button"
+                                                className={`btn-save-post ${guardados[post._id] ? "active" : ""}`}
+                                                onClick={() => toggleGuardar(grupoData, post)}
+                                            >
+                                                {guardados[post._id] ? <FaBookmark /> : <FaRegBookmark />} Guardar
+                                            </button>
+                                        </div>
+                                    ) : null}
 
                                     {/* SECCIÓN DE COMENTARIOS CON DESPLIEGUE Y BOTÓN DE ENVIAR A LA DERECHA */}
-                                    {estaAbierto && (
+                                    {!grupoData.archivado && estaAbierto && (
                                         <div className="fb-comments-section">
                                             {post.comentarios?.map((com, index) => {
                                                 const puedeEliminarComentario =
@@ -765,9 +842,18 @@ const Grupos = () => {
                         <FaBell />
                         <NotifBadge count={unreadCount} />
                     </button>
-                    <button className="btn-crear-grupo" onClick={() => setIsModalOpen(true)}><FaPlus /></button>
+                    <button
+                        className="btn-crear-grupo"
+                        type="button"
+                        onClick={() => setIsModalOpen(true)}
+                        aria-label="Crear comunidad"
+                        title="Crear comunidad"
+                    >
+                        <FaPlus />
+                    </button>
                 </div>
             </div>
+            {saveError ? <p className="grupo-action-error" role="alert">{saveError}</p> : null}
             
             <div className="search-bar-pure-white">
                 <FaSearch className="icon-s" />
@@ -777,13 +863,15 @@ const Grupos = () => {
             <div className="tabs-vibe">
                 <button className={pestana === "todos" ? "active" : ""} onClick={() => setPestana("todos")}>Todos</button>
                 <button className={pestana === "mis-grupos" ? "active" : ""} onClick={() => setPestana("mis-grupos")}>Mis Grupos</button>
+                <button className={pestana === "archivados" ? "active" : ""} onClick={() => setPestana("archivados")}>Archivados</button>
             </div>
 
             <div className="grupos-grid-moderno">
-                {grupos
+                {(pestana === "archivados" ? gruposArchivados : grupos)
                 .filter(g => {
                     const match = (g.nombre || "").toLowerCase().includes(filtro.toLowerCase())
                         || (g.descripcion || "").toLowerCase().includes(filtro.toLowerCase());
+                    if (pestana === "archivados") return match;
                     return pestana === "mis-grupos" ? (match && g.miembrosArray?.includes(userEmail)) : match;
                 })
                 .map(grupo => {
@@ -802,7 +890,9 @@ const Grupos = () => {
                                 </div>
                             </div>
                             <div className="grupo-card-actions-row">
-                                {!esMiembro ? (
+                                {grupo.archivado ? (
+                                    <button className="btn-ver-grupo-vibe-blue" onClick={() => handleArchivarGrupo(grupo, false)}>Activar</button>
+                                ) : !esMiembro ? (
                                     <button className="btn-ver-grupo-vibe-blue" onClick={() => handleUnirseGrupo(grupo)}>Unirse</button>
                                 ) : (
                                     <button className="btn-ver-grupo-vibe-blue" onClick={() => entrarAGrupo(grupo)}>Ver</button>
@@ -813,7 +903,12 @@ const Grupos = () => {
                                     {menuAbiertoId === grupo._id && (
                                         <div className="dropdown-fb-style" style={{ display: 'block' }}>
                                             {(esCreador || esAdminGlobal) ? (
-                                                <button onClick={() => handleEliminarGrupo(grupo._id)} style={{color: 'red'}}><FaTrash /> Eliminar Grupo</button>
+                                                <>
+                                                    {!grupo.archivado ? (
+                                                        <button onClick={() => handleArchivarGrupo(grupo, true)}>Archivar comunidad</button>
+                                                    ) : null}
+                                                    <button onClick={() => handleEliminarGrupo(grupo._id)} style={{color: 'red'}}><FaTrash /> Eliminar Grupo</button>
+                                                </>
                                             ) : (
                                                 esMiembro ? (
                                                     <button onClick={() => handleAbandonarGrupo(grupo._id)}><FaSignOutAlt /> Abandonar Grupo</button>

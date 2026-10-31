@@ -2,49 +2,64 @@
 .download-cta-section {
     background: linear-gradient(90deg, #6C0063, #D6006D);
     color: #ffffff;
-    text-align: center;
     overflow: hidden;
+    padding: 16px 20px;
 }
 .download-cta-section .section-title {
-    font-size: clamp(1.5rem, 4vw, 2.5rem);
+    font-size: clamp(1.15rem, 2vw, 1.65rem);
     font-weight: 700;
-    margin-bottom: 20px;
-    padding: 0 12px;
+    margin: 0;
+    padding: 0;
+}
+.download-cta-section .container {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 8px 24px;
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: 0;
+}
+.download-cta-copy {
+    min-width: 0;
 }
 .download-cta-section p {
-    font-size: 1.2rem;
-    margin-bottom: 40px;
-    max-width: 700px;
-    margin-left: auto;
-    margin-right: auto;
+    font-size: 0.9rem;
+    margin: 4px 0 0;
+    overflow-wrap: anywhere;
 }
 .app-buttons-cta {
     display: flex;
     justify-content: center;
-    gap: 20px;
+    gap: 12px;
     flex-wrap: wrap;
-    padding: 14px 18px;
+    padding: 0;
 }
-.container {
+.pwa-install-button {
+    display: inline-flex;
     align-items: center;
     justify-content: center;
-    color: #ffffff;
-    padding: 4px 2px;
+    gap: 10px;
+    min-height: 42px;
+    padding: 9px 18px;
+    border: 0;
     border-radius: 12px;
-    text-decoration: none;
-    min-width: 80px;
+    background: #fff;
+    color: #6c0063;
+    font-size: 1rem;
+    font-weight: 700;
 }
-.btn img {
-    height: auto;
-    width: 100%;
-    object-fit: contain;
-    transition: background-color 0.3s, transform 0.2s;
-    margin: 0px;
-    border-radius: 2px;
-    display: flex;
+
+.pwa-install-button:hover {
+    background: #f7e8f5;
+    border-color: transparent;
 }
-.btn.btn-googleplay, .btn.btn-appstore {
-    background-color: #000000;
+
+.pwa-install-help {
+    grid-column: 1 / -1;
+    margin: 0 !important;
+    font-size: 0.85rem !important;
+    text-align: center;
 }
 [data-theme="dark"] .download-cta-section {
     background: linear-gradient(90deg, #0F1115, #441952b7);
@@ -53,20 +68,20 @@
 
 @media (max-width: 768px) {
     .download-cta-section {
-        padding: 28px 12px 36px;
+        padding: 16px 14px;
+    }
+    .download-cta-section .container {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 12px;
     }
     .download-cta-section p {
-        font-size: 1rem;
-        margin-bottom: 24px;
-        padding: 0 8px;
+        font-size: 0.84rem;
     }
     .app-buttons-cta {
-        gap: 12px;
-        padding: 8px;
+        justify-content: flex-start;
     }
-    .app-buttons-cta .btn {
-        width: min(100%, 260px);
-        margin: 0;
-        padding: 0;
+    .pwa-install-button {
+        width: auto;
+        min-height: 40px;
     }
 }

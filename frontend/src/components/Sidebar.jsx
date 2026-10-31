@@ -14,6 +14,8 @@ import {
   FaUserShield,
   FaChartBar,
   FaRobot,
+  FaClipboardList,
+  FaFlag,
   FaBars,
   FaTimes,
 } from "react-icons/fa";
@@ -81,6 +83,12 @@ const Sidebar = () => {
             </NavLink>
             <NavLink className={adminNavClass} to="/gmoderacion" onClick={handleNavClick}>
               <FaRobot /> Moderacion IA
+            </NavLink>
+            <NavLink className={adminNavClass} to="/gbitacora" onClick={handleNavClick}>
+              <FaClipboardList /> Bitácora
+            </NavLink>
+            <NavLink className={adminNavClass} to="/gsolicitudes" onClick={handleNavClick}>
+              <FaFlag /> Solicitudes y reportes
             </NavLink>
             <NavLink className={adminNavClass} to="/dashboard/notificaciones" onClick={handleNavClick}>
               <span className="notif_icon_wrap">
@@ -165,7 +173,7 @@ const Sidebar = () => {
             <>
               <span className="menu_label__dash">Comunidad</span>
               <NavLink className={navClass} to="/grupos" onClick={handleNavClick}>
-                <FaUsers /> Grupos
+                <FaUsers /> Comunidades
               </NavLink>
               <NavLink className={navClass} to="/matches" onClick={handleNavClick}>
                 <FaHeart /> Match

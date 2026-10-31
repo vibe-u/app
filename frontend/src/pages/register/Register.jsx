@@ -3,22 +3,30 @@ import { useForm } from "react-hook-form";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import axios from "axios";
+import { useState } from "react";
+import { FaEye, FaEyeSlash } from "react-icons/fa";
 import "./Register.css";
 
 const Register = () => {
   const navigate = useNavigate();
   const { register, handleSubmit, formState: { errors } } = useForm();
+  const [showPassword, setShowPassword] = useState(false);
+
+  const notifyFormErrors = (formErrors) => {
+    if (formErrors.email) toast.error(formErrors.email.message);
+    else if (formErrors.password) toast.error(formErrors.password.message);
+    else if (formErrors.name) toast.error(formErrors.name.message);
+  };
 
   // 🔹 Registro en backend
   const registerUser = async (dataForm) => {
     const url = `${import.meta.env.VITE_BACKEND_URL}/api/usuarios/register`;
 
     const body = {
-  nombre: dataForm.name,
-  correoInstitucional: dataForm.email, // 🔥 CLAVE
-  password: dataForm.password,
-};
-
+      nombre: dataForm.name,
+      correoInstitucional: dataForm.email, // 🔥 CLAVE
+      password: dataForm.password,
+    };
 
     try {
       const response = await axios.post(url, body);
@@ -70,7 +78,7 @@ const Register = () => {
             <NavLink to="/login" className="login-link">Inicia sesión</NavLink>
           </p>
 
-          <form className="register-form" onSubmit={handleSubmit(registerUser)}>
+          <form className="register-form" onSubmit={handleSubmit(registerUser, notifyFormErrors)}>
             <div className="input-group">
               <input
                 type="text"
@@ -84,17 +92,31 @@ const Register = () => {
               <input
                 type="email"
                 placeholder="Correo institucional"
-                {...register("email", { required: "El correo es obligatorio" })}
+                {...register("email", {
+                  required: "El correo es obligatorio",
+                  pattern: {
+                    value: /^[^\s@]+@epn\.edu\.ec$/i,
+                    message: "Correo inválido, debes usar un correo institucional @epn.edu.ec.",
+                  },
+                })}
               />
               {errors.email && <p className="error-text">{errors.email.message}</p>}
             </div>
 
-            <div className="input-group">
+            <div className="input-group register-password-group">
               <input
-                type="password"
+                type={showPassword ? "text" : "password"}
                 placeholder="Contraseña"
                 {...register("password", { required: "La contraseña es obligatoria" })}
               />
+              <button
+                type="button"
+                className="register-password-toggle"
+                onClick={() => setShowPassword((visible) => !visible)}
+                aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+              >
+                {showPassword ? <FaEyeSlash /> : <FaEye />}
+              </button>
               {errors.password && <p className="error-text">{errors.password.message}</p>}
             </div>
 

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { FaBell, FaChartBar, FaHeart, FaPlus, FaRobot, FaSearch, FaUserShield, FaUsers } from "react-icons/fa";
 import Sidebar from "../../components/Sidebar";
@@ -353,7 +353,17 @@ const UserDashboard = () => {
   );
 };
 
-export const PostCard = ({ post, onLike, onComment, onDeletePost, onDeleteComment, currentUserId }) => {
+export const PostCard = ({
+  post,
+  onLike,
+  onComment,
+  onDeletePost,
+  onDeleteComment,
+  currentUserId,
+  focusPost = false,
+  openPostComments = false,
+  focusRequestKey,
+}) => {
   const usuario = post?.usuario || {};
   const postOwnerId = usuario?._id?.toString?.() || "";
   const nombre = usuario.nombre || "Usuario";
@@ -362,10 +372,17 @@ export const PostCard = ({ post, onLike, onComment, onDeletePost, onDeleteCommen
   const postVideo = resolveUploadUrl(post.video, "posts");
   const comentarios = Array.isArray(post.comentarios) ? post.comentarios.length : 0;
   const [commentText, setCommentText] = useState("");
-  const [showComments, setShowComments] = useState(false);
+  const [showComments, setShowComments] = useState(openPostComments);
+
+  useEffect(() => {
+    if (focusPost && openPostComments) setShowComments(true);
+  }, [focusPost, openPostComments, focusRequestKey]);
 
   return (
-    <article className="post_card__dash">
+    <article
+      id={`feed-post-${post._id}`}
+      className={`post_card__dash ${focusPost ? "post_card_recommended__dash" : ""}`}
+    >
       <div className="post_meta__dash">
         <span style={{ display: "flex", alignItems: "center", gap: "8px" }}>
           <img src={avatar} alt={nombre} style={{ width: "28px", height: "28px", borderRadius: "50%" }} />
@@ -468,7 +485,12 @@ export const PostCard = ({ post, onLike, onComment, onDeletePost, onDeleteCommen
   );
 };
 
-export const Feed = ({ refreshKey = 0 }) => {
+export const Feed = ({
+  refreshKey = 0,
+  focusPostId = "",
+  openPostComments = false,
+  focusRequestKey = "",
+}) => {
   const [posts, setPosts] = useState([]);
   const [loadingPosts, setLoadingPosts] = useState(true);
   const [feedError, setFeedError] = useState("");
@@ -479,15 +501,15 @@ export const Feed = ({ refreshKey = 0 }) => {
     commentId: null,
   });
 
-  const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-
-  const cargarPostsConRetry = async () => {
+  const cargarPostsConRetry = useCallback(async (targetPostId = focusPostId) => {
     setLoadingPosts(true);
     setFeedError("");
 
     for (let attempt = 1; attempt <= 3; attempt += 1) {
       try {
-        const res = await obtenerPosts({ page: 1, limit: 20 });
+        const res = await obtenerPosts(targetPostId
+          ? { postId: targetPostId }
+          : { page: 1, limit: 20 });
         setPosts(Array.isArray(res.data) ? res.data : []);
         setLoadingPosts(false);
         return;
@@ -497,10 +519,10 @@ export const Feed = ({ refreshKey = 0 }) => {
           setLoadingPosts(false);
           return;
         }
-        await wait(attempt * 450);
+        await new Promise((resolve) => setTimeout(resolve, attempt * 450));
       }
     }
-  };
+  }, [focusPostId]);
 
   useEffect(() => {
     cargarPostsConRetry();
@@ -510,7 +532,15 @@ export const Feed = ({ refreshKey = 0 }) => {
     };
     window.addEventListener("dash:post-created", handlePostCreated);
     return () => window.removeEventListener("dash:post-created", handlePostCreated);
-  }, [refreshKey]);
+  }, [cargarPostsConRetry, refreshKey]);
+
+  useEffect(() => {
+    if (loadingPosts || !focusPostId || !posts.some((post) => post._id === focusPostId)) return;
+    document.getElementById(`feed-post-${focusPostId}`)?.scrollIntoView({
+      behavior: "smooth",
+      block: "center",
+    });
+  }, [focusPostId, focusRequestKey, loadingPosts, posts]);
 
   const token = localStorage.getItem("token");
   const currentUserId = getTokenPayload(token)?.id || "";
@@ -595,11 +625,19 @@ export const Feed = ({ refreshKey = 0 }) => {
           </button>
         </div>
       ) : null}
+      {!loadingPosts && focusPostId && !posts.length && !feedError ? (
+        <p className="chat_hint__dash" role="status">
+          Esta publicación ya no está disponible.
+        </p>
+      ) : null}
       <div className="card_grid__dash">
         {posts.map((post) => (
           <PostCard
             key={post._id}
             post={post}
+            focusPost={post._id === focusPostId}
+            openPostComments={post._id === focusPostId && openPostComments}
+            focusRequestKey={focusRequestKey}
             onLike={handleLike}
             onComment={handleComment}
             onDeletePost={handleDeletePost}

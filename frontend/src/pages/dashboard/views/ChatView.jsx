@@ -46,7 +46,6 @@ const ChatView = () => {
     typeof window !== "undefined" ? window.matchMedia("(max-width: 770px)").matches : false
   );
   const messagesContainerRef = useRef(null);
-  const messagesEndRef = useRef(null);
   const shouldAutoScrollRef = useRef(true);
   const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -168,7 +167,8 @@ const ChatView = () => {
 
   useEffect(() => {
     if (!shouldAutoScrollRef.current) return;
-    messagesEndRef.current?.scrollIntoView({ behavior: "auto", block: "end" });
+    const container = messagesContainerRef.current;
+    if (container) container.scrollTop = container.scrollHeight;
   }, [messages]);
 
   useEffect(() => {
@@ -232,7 +232,6 @@ const ChatView = () => {
         sending={sending}
         error={error}
         messagesContainerRef={messagesContainerRef}
-        messagesEndRef={messagesEndRef}
         onMessagesScroll={handleMessagesScroll}
         onBack={() => setActiveUserId("")}
       />

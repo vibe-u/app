@@ -8,26 +8,27 @@ const ExploraConecta = () => {
     return (
         <section className="explora-conecta" id="explora-conecta">
         <h2>Explora y Conecta</h2>
+        <p className="explora-conecta__intro">La vida universitaria se disfruta más cuando sabes qué está pasando y encuentras con quién vivirlo.</p>
         <div className="explora-conecta__container">
             <div className="paso">
-            <img src={evento1} alt="Evento 1" loading="lazy" />
+            <img src={evento1} alt="Estudiantes descubriendo un evento" loading="lazy" />
             <h3>Explora eventos en todos los campus</h3>
-            <p>Descubre actividades sociales y académicas en tu campus.</p>
+            <p>Encuentra actividades sociales, culturales y académicas de tu universidad y de otros campus asociados. Guarda las que te interesan y organiza tus próximos planes.</p>
             </div>
             <div className="paso">
-            <img src={paso2} alt="Paso 2" loading="lazy" />
+            <img src={paso2} alt="Estudiante explorando opciones" loading="lazy" />
             <h3>Desliza para guardar o ignorar</h3>
-            <p>Elige si te interesan con solo un gesto.</p>
+            <p>Revisa cada evento a tu ritmo. Guarda tus favoritos para volver a ellos y descarta los que no encajan con tus intereses.</p>
             </div>
             <div className="paso">
-            <img src={paso3} alt="Paso 3" loading="lazy" />
+            <img src={paso3} alt="Estudiantes conectando por un evento" loading="lazy" />
             <h3>Haz match con quien vaya</h3>
-            <p>Conéctate con otros estudiantes que asistirán al mismo evento.</p>
+            <p>Conoce a estudiantes que también quieren asistir. Comparte intereses y encuentra compañía antes de llegar al evento.</p>
             </div>
             <div className="paso">
-            <img src={paso4} alt="Paso 4" loading="lazy" />
+            <img src={paso4} alt="Estudiantes coordinando un plan" loading="lazy" />
             <h3>Chatea y coordina</h3>
-            <p>Planea detalles con tus nuevos contactos para asistir juntos.</p>
+            <p>Habla con tus nuevos contactos, acuerden dónde encontrarse y conviertan una actividad del campus en una experiencia compartida.</p>
             </div>
         </div>
         </section>

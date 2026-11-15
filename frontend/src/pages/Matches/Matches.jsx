@@ -216,7 +216,7 @@ const Matches = () => {
         <div className="matches-heading">
           <h2 className="matches-title">Tus posibles matches</h2>
           <p className="matches-subtitle">
-            Desliza a la derecha para dar like. Si es mutuo, se abre el chat.
+            Desliza a la derecha para dar like.
           </p>
         </div>
         <button
@@ -240,7 +240,7 @@ const Matches = () => {
       {isMobile ? (
         <div className="matches-swipe-wrapper">
           {!loading && !error && !currentUser ? (
-            <p className="matches-state">Ya no hay mas perfiles por hoy.</p>
+            <p className="matches-state">Ya no hay más perfiles por hoy.</p>
           ) : null}
 
           {currentUser ? (

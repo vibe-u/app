@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useLocation } from "react-router-dom";
 import { Feed } from "../UserDashboard";
 import Recommendations from "../../../components/recommendations/Recommendations";
 
@@ -13,6 +14,7 @@ const sanitizeQuoteText = (text = "") =>
     .trim();
 
 const FeedView = () => {
+  const location = useLocation();
   const [quote, setQuote] = useState(null);
 
   useEffect(() => {
@@ -42,7 +44,11 @@ const FeedView = () => {
         ) : null}
       </section>
       <Recommendations variant="hub" />
-      <Feed />
+      <Feed
+        focusPostId={location.state?.focusPostId || ""}
+        openPostComments={Boolean(location.state?.openPostComments)}
+        focusRequestKey={location.key}
+      />
     </section>
   );
 };

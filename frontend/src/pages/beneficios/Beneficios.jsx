@@ -2,6 +2,7 @@ import React from 'react';
 import './Beneficios.css';
 import { useNavigate } from 'react-router';
 import ThemeToggle from '../../components/theme/ThemeToggle';
+import BackHomeButton from '../../components/BackHomeButton';
 
 const Beneficios = () => {
     const navigate = useNavigate();
@@ -10,6 +11,7 @@ const Beneficios = () => {
     };
     return (
         <section className="beneficios-section">
+            <BackHomeButton />
             <ThemeToggle />
             <h2 className="beneficios-title">Beneficios de Unirte a Vibe-U 🎓</h2>
             <p className="beneficios-subtitulo">

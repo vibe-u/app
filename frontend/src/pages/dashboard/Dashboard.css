@@ -1720,6 +1720,101 @@ h3 {
   }
 }
 
+.chat_layout__dash {
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  height: clamp(420px, calc(100dvh - 170px), 760px);
+  max-height: calc(100dvh - 112px);
+  grid-template-columns: minmax(220px, 0.36fr) minmax(0, 1fr);
+  grid-auto-rows: minmax(0, 1fr);
+}
+
+.chat_layout__dash > .panel__dash {
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  padding: 12px;
+  box-sizing: border-box;
+}
+
+.chat_layout__dash .chat_list_panel__dash {
+  min-height: 0;
+}
+
+.chat_layout__dash .chat-list-scroll__dash {
+  flex: 1 1 auto;
+  height: 0;
+}
+
+.chat_layout__dash .chat_conversation_panel__dash {
+  min-width: 0;
+}
+
+.chat_layout__dash .chat-conversation-header__dash {
+  flex: 0 0 auto;
+  min-width: 0;
+}
+
+.chat_layout__dash .chat_messages__dash {
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 0;
+}
+
+.chat_layout__dash .chat_input__dash {
+  flex: 0 0 auto;
+  min-width: 0;
+  align-items: center;
+}
+
+.chat_layout__dash .chat_input__dash .input__dash {
+  min-width: 0;
+}
+
+.post_card_recommended__dash {
+  border-color: #a76ac0;
+  box-shadow: 0 0 0 2px rgba(167, 106, 192, 0.16), 0 10px 24px rgba(108, 0, 99, 0.1);
+}
+
+[data-theme="dark"] .post_card_recommended__dash {
+  border-color: #b58bd0;
+  box-shadow: 0 0 0 2px rgba(181, 139, 208, 0.2);
+}
+
+@media (max-width: 770px) {
+  .chat_layout__dash {
+    height: min(68dvh, calc(100dvh - 150px));
+    min-height: min(420px, calc(100dvh - 150px));
+    max-height: calc(100dvh - 150px);
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .chat_layout__dash > .panel__dash {
+    padding: 10px;
+  }
+
+  .chat_layout__dash.has-active-chat__dash .chat_conversation_panel__dash {
+    min-height: 0;
+  }
+
+  .chat_layout__dash .chat_messages__dash {
+    padding: 10px;
+  }
+
+  .chat_layout__dash .chat_input__dash .input__dash {
+    min-height: 42px;
+    font-size: 16px;
+  }
+
+  .chat_layout__dash .chat-send-button__dash {
+    flex-basis: 42px;
+    min-width: 42px;
+    min-height: 42px;
+  }
+}
+
 .feed-report-control {
   width: auto;
 }

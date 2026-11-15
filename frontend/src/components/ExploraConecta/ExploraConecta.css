@@ -1,23 +1,33 @@
 .explora-conecta {
     color: black;
     text-align: center;
-    padding: 50px 20px;
+    padding: clamp(36px, 6vw, 72px) 20px;
     background-color: #ffe6f1;
-    border-radius: 10px;
+}
+.explora-conecta > h2 {
+    margin: 0;
+    color: #4a4e69;
+    font-size: clamp(1.6rem, 4vw, 2.5rem);
+}
+.explora-conecta__intro {
+    width: min(100%, 760px);
+    margin: 12px auto 0;
+    color: #4b5563;
+    font-size: clamp(1rem, 1.7vw, 1.12rem);
+    line-height: 1.65;
 }
 .explora-conecta__container {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 30px;
-    margin-top: 20px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 235px), 1fr));
+    gap: clamp(14px, 2.5vw, 24px);
+    width: min(100%, 1200px);
+    margin: 32px auto 0;
 }
 .paso {
-    width: 250px;
-    min-height: 300px;
-    height: auto;
+    min-width: 0;
+    min-height: 100%;
     background: white;
-    padding: 20px;
+    padding: clamp(18px, 2.5vw, 26px);
     border-radius: 15px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     text-align: center;
@@ -36,21 +46,19 @@
 }
 .paso h3 {
     margin-top: 15px;
-    font-size: 1.5rem;
+    font-size: clamp(1.15rem, 1.6vw, 1.35rem);
     color: #6c0063;
 }
 .paso p {
     font-size: 1rem;
     color: #333;
+    line-height: 1.65;
 }
 @media (max-width: 768px) {
     .explora-conecta {
         padding: 32px 16px;
-        border-radius: 0;
     }
     .paso {
-        width: 100%;
-        max-width: 360px;
         min-height: auto;
     }
 }
@@ -59,8 +67,14 @@
     background: linear-gradient(90deg, #0F1115, #441952b7);
     color: #f0f0f0;
 }
+[data-theme="dark"] .explora-conecta > h2 {
+    color: #e6edf7;
+}
+[data-theme="dark"] .explora-conecta__intro {
+    color: #c5cdd8;
+}
 [data-theme="dark"] .paso {
-    background: #7d369527;
+    background: #251b2b;
     color: #f0f0f0;
     box-shadow: 0 4px 6px rgba(255, 255, 255, 0.1);
 }

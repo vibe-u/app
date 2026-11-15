@@ -16,19 +16,29 @@ const NotificationAlerts = () => {
   const clearToast = storeNotifications((state) => state.clearToast);
   const reset = storeNotifications((state) => state.reset);
 
+  
   useEffect(() => {
-    const unlock = () => unlockNotificationAudio();
+    const unlock = () => {
+      unlockNotificationAudio();
+    };
+
     window.addEventListener("pointerdown", unlock, { once: true });
+    window.addEventListener("keydown", unlock, { once: true });
+
     reset();
     refresh({ announce: false });
+
     const timer = setInterval(() => {
       refresh({ announce: true });
     }, POLL_MS);
+
     return () => {
       window.removeEventListener("pointerdown", unlock);
+      window.removeEventListener("keydown", unlock);
       clearInterval(timer);
     };
   }, [token, refresh, reset]);
+
 
   useEffect(() => {
     if (!toast) return undefined;

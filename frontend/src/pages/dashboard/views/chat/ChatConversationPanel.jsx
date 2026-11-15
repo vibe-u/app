@@ -10,7 +10,6 @@ export default function ChatConversationPanel({
   sending,
   error,
   messagesContainerRef,
-  messagesEndRef,
   onMessagesScroll,
   onBack,
 }) {
@@ -32,7 +31,6 @@ export default function ChatConversationPanel({
           <p className="chat_empty__dash">Aún no hay mensajes. Escribe el primero.</p>
         ) : null}
         {!activeUser ? <p className="chat_empty__dash">Elige un chat para comenzar.</p> : null}
-        <div ref={messagesEndRef} />
       </div>
       <div className="chat_input__dash">
         <input

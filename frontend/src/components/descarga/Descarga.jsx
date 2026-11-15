@@ -43,7 +43,7 @@ const Descarga = () => {
         <div className="container">
             <div className="download-cta-copy">
                 <h2 className="section-title">¿Listo para vivir la mejor experiencia universitaria?</h2>
-                <p>Instala Vibe-U para acceder rápidamente desde tu dispositivo.</p>
+                <p className="download-cta-subtitle">Instala Vibe-U para acceder rápidamente desde tu dispositivo.</p>
             </div>
             <div className="app-buttons-cta">
                 <button type="button" className="pwa-install-button" onClick={installApp}>

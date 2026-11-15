@@ -7,8 +7,8 @@ const getAuthConfig = () => {
   return { headers: { Authorization: "Bearer " + token } };
 };
 
-export const obtenerPosts = ({ page = 1, limit = 20 } = {}) =>
-  axios.get("/posts", { params: { page, limit } });
+export const obtenerPosts = ({ page = 1, limit = 20, postId } = {}) =>
+  axios.get("/posts", { params: { page, limit, ...(postId ? { postId } : {}) } });
 
 export const crearPost = (data, token) =>
   axios.post("/posts", data, {

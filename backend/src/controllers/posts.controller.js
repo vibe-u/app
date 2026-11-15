@@ -11,6 +11,16 @@ const POSTS_UPLOAD_DIR = path.join(__dirname, "..", "..", "uploads", "posts");
 
 export const obtenerPosts = async (req, res) => {
   try {
+    const postId = String(req.query?.postId || "").trim();
+    if (postId) {
+      const post = await Post.findOne({
+        _id: postId,
+        "moderation.status": { $ne: "disabled" },
+      }).populate("usuario", "nombre avatar correoInstitucional");
+
+      return res.json(post ? [mapPostMediaToPublicUrl(req, post.toObject())] : []);
+    }
+
     const pageRaw = Number(req.query?.page);
     const limitRaw = Number(req.query?.limit);
     const page = Number.isFinite(pageRaw) && pageRaw > 0 ? Math.floor(pageRaw) : 1;

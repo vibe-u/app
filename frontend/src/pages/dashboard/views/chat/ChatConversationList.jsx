@@ -20,7 +20,6 @@ export default function ChatConversationList({
 }) {
   return (
     <div className="panel__dash chat_list_panel__dash">
-      <h3>Chats</h3>
       <input
         className="input__dash"
         value={search}

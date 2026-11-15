@@ -3,6 +3,7 @@ import "./Eventos.css";
 import evento1 from '../../assets/grupo-eventos.png';
 import evento2 from '../../assets/comparte-ideas.png';
 import ThemeToggle from '../../components/theme/ThemeToggle';
+import BackHomeButton from '../../components/BackHomeButton';
 
 const eventosData = [
     {
@@ -33,6 +34,7 @@ const Eventos = () => {
 
     return (
         <section className="eventos-section">
+            <BackHomeButton />
             <ThemeToggle />
             <h2 className="slider-title">Descubre lo mejor de tu vida universitaria</h2>
             <p className="slider-subtitle">Vibe-U te mantiene al tanto de todo lo que sucede en tu campus. ¡Desplázate para ver!</p>

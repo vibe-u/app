@@ -1,11 +1,10 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
-import { IoArrowBack } from 'react-icons/io5';
 import integrante2 from '../../assets/integrante2.jpeg';
 import integrante1 from '../../assets/integrante1.jpeg';
 
 import Grupo from '../../assets/equipo-vibe-u.png';
 import ThemeToggle from '../../components/theme/ThemeToggle';
+import BackHomeButton from '../../components/BackHomeButton';
 import './Contacto.css';
 
 const stars = [
@@ -66,24 +65,27 @@ const Contacto = () => {
                     />
                 ))}
             </div>
-            <Link to="/" className="contacto-back-btn" aria-label="Volver a la página principal">
-                <IoArrowBack size={22} />
-            </Link>
+            <BackHomeButton />
             <ThemeToggle />
             <h2 className="contacto-title">Conoce al Equipo detrás de Vibe-U 🤝</h2>
             <p className="subtitulo">Somos un dúo de universitarios apasionados por crear conexiones auténticas.</p>
 
-            <div className="imagen-grupal-container">
-                {/* Imagen grupal con carga diferida y formato WebP */}
-                <picture>
-                    <source srcSet={Grupo} type="image/webp" />
+            <div className="equipo-presentacion">
+                <div className="imagen-grupal-container">
                     <img
-                        src={Grupo} // fallback a JPG
+                        src={Grupo}
                         alt="Foto grupal del equipo Vibe-U"
                         className="imagen-grupal"
                         loading="lazy"
                     />
-                </picture>
+                </div>
+                <div className="equipo-presentacion-copy">
+                    <span className="equipo-presentacion-kicker">De estudiantes, para estudiantes</span>
+                    <h3>Una idea nacida en la universidad</h3>
+                    <p>Vibe-U empezó con una experiencia que muchos compartimos: querer conocer gente, encontrar actividades y sentirnos parte de la vida del campus.</p>
+                    <p>Como equipo universitario, diseñamos cada espacio pensando en conexiones auténticas, comunidades con intereses comunes y planes que se viven mejor juntos.</p>
+                    <p>Seguimos construyendo la plataforma con curiosidad, cercanía y las ideas de quienes forman parte de la comunidad.</p>
+                </div>
             </div>
 
             <div className="equipo-container">

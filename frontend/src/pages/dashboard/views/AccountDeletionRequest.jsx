@@ -13,6 +13,7 @@ export default function AccountDeletionRequest() {
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
+  const [rejectionDismissed, setRejectionDismissed] = useState(false);
 
   const loadRequest = async () => {
     try {
@@ -62,8 +63,16 @@ export default function AccountDeletionRequest() {
           <p>Motivo: {request.reason}</p>
         </div>
       ) : null}
-      {request?.status === "rechazada" ? (
-        <div className="account-deletion-status">
+      {request?.status === "rechazada" && !rejectionDismissed ? (
+        <div className="account-deletion-status account-deletion-rejected" role="status">
+          <button
+            type="button"
+            className="account-deletion-dismiss"
+            aria-label="Cerrar aviso de solicitud rechazada"
+            onClick={() => setRejectionDismissed(true)}
+          >
+            ×
+          </button>
           <strong>La solicitud anterior fue rechazada</strong>
           {request.reviewNote ? <p>Respuesta: {request.reviewNote}</p> : null}
           <p>Puedes enviar una nueva solicitud con más información.</p>

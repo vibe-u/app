@@ -176,19 +176,28 @@ const Recommendations = ({
           <div className="recs-publication-list">
             {publicaciones.map((post) => (
               <article className="recs-publication-card" key={post._id}>
-                {post.imagen ? (
-                  <img src={post.imagen} alt="" />
-                ) : (
-                  <div className="recs-publication-cover" aria-hidden="true" />
-                )}
-                <div className="recs-publication-content">
-                  <strong>{post.autor}</strong>
-                  <p>{post.texto || "Publicación con conversación activa."}</p>
-                  <span className="recs-publication-meta">{post.comentariosCount} comentarios</span>
-                  <span className="recs-match-reason">
-                    {(post.reasons || [])[0] || "Publicación reciente para descubrir"}
-                  </span>
-                </div>
+                <button
+                  type="button"
+                  className="recs-publication-main"
+                  onClick={() => navigate("/dashboard/feed", {
+                    state: { focusPostId: post._id, openPostComments: true },
+                  })}
+                  aria-label={`Abrir publicación de ${post.autor} y sus comentarios`}
+                >
+                  {post.imagen ? (
+                    <img src={post.imagen} alt="" />
+                  ) : (
+                    <div className="recs-publication-cover" aria-hidden="true" />
+                  )}
+                  <div className="recs-publication-content">
+                    <strong>{post.autor}</strong>
+                    <p>{post.texto || "Publicación con conversación activa."}</p>
+                    <span className="recs-publication-meta">{post.comentariosCount} comentarios</span>
+                    <span className="recs-match-reason">
+                      {(post.reasons || [])[0] || "Publicación reciente para descubrir"}
+                    </span>
+                  </div>
+                </button>
               </article>
             ))}
           </div>

@@ -26,7 +26,7 @@
     animation-iteration-count: infinite;
     opacity: 0.85;
 }
-.contacto-section > :not(.contacto-stars):not(.theme_toggle_global):not(.contacto-back-btn) {
+.contacto-section > :not(.contacto-stars):not(.theme_toggle_global):not(.public-back-btn) {
     position: relative;
     z-index: 1;
 }
@@ -77,11 +77,50 @@
     overflow: hidden;
     animation: zoomIn 1.2s ease-in-out;
 }
+.equipo-presentacion {
+    display: grid;
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+    align-items: center;
+    gap: clamp(24px, 5vw, 64px);
+    width: min(100%, 1080px);
+    margin: 0 auto 50px;
+    text-align: left;
+}
 .imagen-grupal {
     width: 100%;
     height: auto;
     object-fit: contain;
     display: block;
+}
+.equipo-presentacion .imagen-grupal-container {
+    width: 100%;
+    max-width: none;
+    margin: 0;
+}
+.equipo-presentacion-copy {
+    padding: clamp(20px, 4vw, 40px);
+    border: 1px solid rgba(118, 99, 224, 0.14);
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.76);
+    box-shadow: 0 10px 30px rgba(30, 41, 59, 0.08);
+    animation: fadeInDown 1s ease-in-out;
+}
+.equipo-presentacion-kicker {
+    color: #7663e0;
+    font-size: 0.82rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+.equipo-presentacion-copy h3 {
+    margin: 10px 0 14px;
+    color: #4a4e69;
+    font-size: clamp(1.35rem, 2.5vw, 1.8rem);
+}
+.equipo-presentacion-copy p {
+    color: #596273;
+    font-size: 1rem;
+    line-height: 1.7;
 }
 .equipo-container {
     display: grid;
@@ -217,12 +256,14 @@
 }
 
 [data-theme="dark"] .contacto-title,
+[data-theme="dark"] .equipo-presentacion-copy h3,
 [data-theme="dark"] .miembro-card h3,
 [data-theme="dark"] .contacto-info h3 {
     color: #e6edf7;
 }
 
 [data-theme="dark"] .subtitulo,
+[data-theme="dark"] .equipo-presentacion-copy p,
 [data-theme="dark"] .miembro-card p,
 [data-theme="dark"] .contacto-info p {
     color: #c5cdd8;
@@ -238,7 +279,8 @@
 }
 
 [data-theme="dark"] .miembro-card,
-[data-theme="dark"] .contacto-info {
+[data-theme="dark"] .contacto-info,
+[data-theme="dark"] .equipo-presentacion-copy {
     background-color: #1a1d27;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
 }
@@ -267,6 +309,18 @@
         max-width: 320px;
         margin-bottom: 28px;
         border-radius: 14px;
+    }
+    .equipo-presentacion {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 18px;
+        margin-bottom: 28px;
+    }
+    .equipo-presentacion .imagen-grupal-container {
+        display: none;
+    }
+    .equipo-presentacion-copy {
+        padding: 22px 18px;
+        text-align: left;
     }
     .equipo-container {
         grid-template-columns: 1fr;

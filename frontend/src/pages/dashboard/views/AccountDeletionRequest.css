@@ -74,6 +74,38 @@
   background: #fff7ed;
 }
 
+.account-deletion-rejected {
+  position: relative;
+  padding-right: 44px;
+}
+
+.account-deletion-dismiss {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  min-height: 30px !important;
+  padding: 0 !important;
+  border: 0;
+  border-radius: 7px;
+  background: transparent !important;
+  color: #713f12 !important;
+  font-size: 1.35rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.account-deletion-dismiss:hover {
+  background: rgba(113, 63, 18, 0.1) !important;
+}
+
+.account-deletion-dismiss:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 1px;
+}
+
 .account-deletion-status p {
   margin: 0;
   overflow-wrap: anywhere;
@@ -107,6 +139,10 @@
 
 [data-theme="dark"] .account-deletion-status {
   background: #3f2a10;
+}
+
+[data-theme="dark"] .account-deletion-dismiss {
+  color: #fed7aa !important;
 }
 
 [data-theme="dark"] .account-deletion-card textarea {

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import "./Header.css";
 import { Link, useNavigate } from "react-router";
 import logo from "../../assets/logo-vibe-u.webp";
@@ -9,8 +9,22 @@ const Header = () => {
     const navigate = useNavigate();
     const token = storeAuth((state) => state.token);
     const [menuOpen, setMenuOpen] = useState(false);
+    const menuOpenRef = useRef(false);
+    const menuButtonRef = useRef(null);
 
-    const closeMenu = () => setMenuOpen(false);
+    const closeMenu = () => {
+        if (!menuOpenRef.current) return;
+        menuOpenRef.current = false;
+        menuButtonRef.current?.focus();
+        setMenuOpen(false);
+    };
+
+    const toggleMenu = () => {
+        const nextOpen = !menuOpenRef.current;
+        menuOpenRef.current = nextOpen;
+        if (!nextOpen) menuButtonRef.current?.focus();
+        setMenuOpen(nextOpen);
+    };
 
     const handleLoginClick = () => {
         closeMenu();
@@ -65,10 +79,8 @@ const Header = () => {
                         <img src={logo} alt="Vibe-U Logo" className="logo" loading="lazy" />
                     </Link>
                     <a
-                        href="https://play.google.com/store/games?hl=es_EC"
+                        href="#descarga"
                         className="header-download"
-                        target="_blank"
-                        rel="noopener noreferrer"
                     >
                         Descarga la App
                     </a>
@@ -82,11 +94,13 @@ const Header = () => {
                     </button>
                     <ThemeToggle placement="header" />
                     <button
+                        ref={menuButtonRef}
                         type="button"
                         className={`header-menu-btn ${menuOpen ? "is-open" : ""}`}
                         aria-label={menuOpen ? "Cerrar menú" : "Abrir menú"}
                         aria-expanded={menuOpen}
-                        onClick={() => setMenuOpen((open) => !open)}
+                        aria-controls="header-drawer"
+                        onClick={toggleMenu}
                     >
                         <span />
                         <span />
@@ -99,10 +113,17 @@ const Header = () => {
                 type="button"
                 className={`header-drawer-backdrop ${menuOpen ? "is-open" : ""}`}
                 aria-label="Cerrar menú"
+                aria-hidden={!menuOpen}
+                tabIndex={menuOpen ? 0 : -1}
                 onClick={closeMenu}
             />
 
-            <aside className={`header-drawer ${menuOpen ? "is-open" : ""}`} aria-hidden={!menuOpen}>
+            <aside
+                id="header-drawer"
+                className={`header-drawer ${menuOpen ? "is-open" : ""}`}
+                aria-hidden={!menuOpen}
+                inert={!menuOpen}
+            >
                 <div className="header-drawer-head">
                     <img src={logo} alt="" className="header-drawer-logo" />
                     <button type="button" className="header-drawer-close" onClick={closeMenu} aria-label="Cerrar menú">
@@ -112,10 +133,8 @@ const Header = () => {
                 <nav className="header-drawer-nav">{navLinks}</nav>
                 <div className="header-drawer-actions">
                     <a
-                        href="https://play.google.com/store/games?hl=es_EC"
+                        href="#descarga"
                         className="btn btn-primary descarga-chica"
-                        target="_blank"
-                        rel="noopener noreferrer"
                     >
                         Descarga la App
                     </a>

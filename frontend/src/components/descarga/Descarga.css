@@ -24,7 +24,7 @@
     min-width: 0;
 }
 .download-cta-section p {
-    font-size: 0.9rem;
+    font-size: 0.96rem;
     margin: 4px 0 0;
     overflow-wrap: anywhere;
 }
@@ -81,10 +81,10 @@
         gap: 12px;
     }
     .download-cta-section p {
-        font-size: 0.84rem;
+        font-size: 0.96rem;
     }
     .download-cta-section .download-cta-subtitle {
-        font-size: 0.84rem;
+        font-size: 1rem;
     }
     .app-buttons-cta {
         justify-content: center;

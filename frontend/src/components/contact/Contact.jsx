@@ -42,7 +42,7 @@ const Contact = () => {
             <h2 className="contact__title">¿Tienes preguntas? Escríbenos</h2>
             <div className="contact__form-container">
                 <div className="contact__img">
-                    <img src={PrototipoCelular} alt="Imagen de contacto" />
+                    <img src={PrototipoCelular} alt="Imagen de contacto" width="354" height="704" loading="lazy" />
                 </div>
 
                 <form onSubmit={handleSubmit} className="contact__form">

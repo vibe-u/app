@@ -11,14 +11,25 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="Vibe-U" />
     <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="describedby" href="/llms.txt" />
+    <link rel="preload" as="image" href="/images/header-hero-mobile.webp" fetchpriority="high" media="(max-width: 1080px)" />
+    <link rel="preload" as="image" href="/images/header-hero.webp" fetchpriority="high" media="(min-width: 1081px)" />
     <link rel="apple-touch-icon" href="/icons/icon-192.png" />
     <link rel="icon" href="/logo-vibe-u.png" type="image/png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      rel="stylesheet"
+      rel="preload"
+      as="style"
       href="https://fonts.googleapis.com/css2?family=Lato:wght@100;300;400;700;900&family=Roboto:wght@100;300;400;700;900&family=Orbitron:wght@400;700&family=Poppins:wght@400;600&display=swap"
+      onload="this.onload=null;this.rel='stylesheet'"
     />
+    <noscript>
+      <link
+        rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Lato:wght@100;300;400;700;900&family=Roboto:wght@100;300;400;700;900&family=Orbitron:wght@400;700&family=Poppins:wght@400;600&display=swap"
+      />
+    </noscript>
   </head>
   <body>
     <div id="root"></div>

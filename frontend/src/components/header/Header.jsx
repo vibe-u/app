@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import "./Header.css";
 import { Link, useNavigate } from "react-router";
-import logo from "../../assets/logo-vibe-u.webp";
 import storeAuth from "../../context/storeAuth";
 import ThemeToggle from "../theme/ThemeToggle";
 
@@ -76,7 +75,7 @@ const Header = () => {
             <div className="header-bar">
                 <div className="logo-block">
                     <Link to="/" className="logo-link" onClick={closeMenu}>
-                        <img src={logo} alt="Vibe-U Logo" className="logo" loading="lazy" />
+                        <img src="/images/logo-vibe-u.webp" alt="Vibe-U Logo" className="logo" width="192" height="160" />
                     </Link>
                     <a
                         href="#descarga"
@@ -125,7 +124,7 @@ const Header = () => {
                 inert={!menuOpen}
             >
                 <div className="header-drawer-head">
-                    <img src={logo} alt="" className="header-drawer-logo" />
+                    <img src="/images/logo-vibe-u.webp" alt="" className="header-drawer-logo" width="192" height="160" />
                     <button type="button" className="header-drawer-close" onClick={closeMenu} aria-label="Cerrar menú">
                         ×
                     </button>

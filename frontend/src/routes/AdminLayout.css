@@ -16,6 +16,7 @@
   min-height: auto;
   width: 100%;
   box-sizing: border-box;
+  border-radius: 12px;
 }
 
 @media (max-width: 770px) {

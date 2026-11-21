@@ -1,0 +1,118 @@
+.confirm-action-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(6px);
+}
+
+.confirm-action-card {
+  width: min(100%, 420px);
+  padding: 32px;
+  border: 1px solid #e5e7eb;
+  border-radius: 20px;
+  background: #fff;
+  color: #111827;
+  text-align: center;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  animation: confirm-action-slide-up 0.3s ease-out;
+}
+
+.confirm-action-icon {
+  margin-bottom: 12px;
+  font-size: 40px;
+}
+
+.confirm-action-title {
+  margin: 0 0 10px;
+  color: #111827;
+  font-size: 20px;
+}
+
+.confirm-action-description {
+  margin-bottom: 24px;
+  color: #4b5563;
+}
+
+.confirm-action-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+}
+
+.confirm-action-buttons button {
+  flex: 1;
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: 10px;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.confirm-action-buttons button:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+.confirm-action-cancel {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.confirm-action-confirm {
+  background: #7b1fa2;
+  color: #fff;
+}
+
+.confirm-action-confirm.is-destructive {
+  background: #b91c1c;
+}
+
+[data-theme="dark"] .confirm-action-card {
+  border-color: #2c3f55;
+  background: #161e2b;
+  color: #e6edf7;
+}
+
+[data-theme="dark"] .confirm-action-title {
+  color: #e6edf7;
+}
+
+[data-theme="dark"] .confirm-action-description {
+  color: #b8c7db;
+}
+
+[data-theme="dark"] .confirm-action-cancel {
+  background: #1f2a3b;
+  color: #dbe8f8;
+}
+
+[data-theme="dark"] .confirm-action-confirm {
+  background: #36506e;
+}
+
+[data-theme="dark"] .confirm-action-confirm.is-destructive {
+  background: #b91c1c;
+}
+
+@keyframes confirm-action-slide-up {
+  from { transform: translateY(32px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@media (max-width: 480px) {
+  .confirm-action-card {
+    padding: 24px 18px;
+  }
+
+  .confirm-action-buttons {
+    flex-direction: column;
+    gap: 9px;
+  }
+}

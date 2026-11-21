@@ -1,5 +1,5 @@
 .header {
-    background: url('../../assets/estudiantes_felices.webp') no-repeat center center/cover;
+    background: url('/images/header-hero.webp') no-repeat center center/cover;
     min-height: 100dvh;
     display: flex;
     flex-direction: column;
@@ -78,7 +78,7 @@
 .nav-links a {
     color: white;
     font-weight: 600;
-    font-size: 0.92rem;
+    font-size: clamp(0.95rem, 1vw, 1.05rem);
     text-decoration: none;
     position: relative;
     min-height: 36px;
@@ -162,6 +162,11 @@
     background-color: #b0005c;
     transform: translateY(-2px);
 }
+.header .boton-descarga .btn:hover,
+.header .boton-descarga .btn:focus-visible {
+    background-color: #ffaec9;
+    color: #3b0a38;
+}
 .btn-primary {
     background-color: #dd208254;
     color: rgb(235, 223, 223);
@@ -191,8 +196,8 @@
     transition: background-color 0.3s ease, transform 0.2s ease;
 }
 .btn-secondary:hover {
-    background-color: rgb(255, 255, 255);
-    color: #6c0063;
+    background-color: rgb(217 170 170 / 82%);
+    color: #541c48;
     transform: translateY(-2px);
 }
 .descarga-chica {
@@ -216,6 +221,9 @@
 }
 
 @media (max-width: 1080px) {
+    .header {
+        background-image: url('/images/header-hero-mobile.webp');
+    }
     .header {
         padding-left: 16px;
         padding-right: 16px;

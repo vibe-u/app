@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
 import { getPendingDeletionRequests, reviewDeletionRequest } from "../../Services/admin";
+import ConfirmActionModal from "../../components/ConfirmActionModal";
 
 export default function DeletionRequestQueue() {
   const [requests, setRequests] = useState([]);
   const [notes, setNotes] = useState({});
   const [error, setError] = useState("");
   const [busyId, setBusyId] = useState("");
+  const [approvalRequest, setApprovalRequest] = useState(null);
 
   const load = async () => {
     try {
@@ -22,17 +24,24 @@ export default function DeletionRequestQueue() {
   }, []);
 
   const review = async (request, status) => {
-    if (status === "aprobada" && !window.confirm(`¿Eliminar permanentemente la cuenta de ${request.userName}?`)) return;
     try {
       setBusyId(request._id);
       setError("");
       await reviewDeletionRequest(request._id, status, notes[request._id] || "");
       setRequests((current) => current.filter((item) => item._id !== request._id));
+      return true;
     } catch (reviewError) {
       setError(reviewError?.response?.data?.msg || "No se pudo revisar la solicitud.");
+      return false;
     } finally {
       setBusyId("");
     }
+  };
+
+  const confirmApproval = async () => {
+    if (!approvalRequest || busyId) return;
+    const approved = await review(approvalRequest, "aprobada");
+    if (approved) setApprovalRequest(null);
   };
 
   return (
@@ -65,7 +74,7 @@ export default function DeletionRequestQueue() {
               />
             </label>
             <div className="admin-request-actions">
-              <button type="button" className="admin-request-danger" disabled={busyId === request._id} onClick={() => review(request, "aprobada")}>
+              <button type="button" className="admin-request-danger" disabled={busyId === request._id} onClick={() => setApprovalRequest(request)}>
                 Aprobar y eliminar cuenta
               </button>
               <button type="button" className="admin-request-secondary" disabled={busyId === request._id} onClick={() => review(request, "rechazada")}>
@@ -75,6 +84,18 @@ export default function DeletionRequestQueue() {
           </article>
         ))}
       </div>
+      {approvalRequest ? (
+        <ConfirmActionModal
+          title="Confirmar Eliminación"
+          description={<>¿Eliminar permanentemente la cuenta de <strong>{approvalRequest.userName}</strong>? Esta acción no se puede deshacer.</>}
+          icon="⚠️"
+          confirmLabel="Eliminar cuenta"
+          destructive
+          busy={busyId === approvalRequest._id}
+          onCancel={() => setApprovalRequest(null)}
+          onConfirm={confirmApproval}
+        />
+      ) : null}
     </section>
   );
 }

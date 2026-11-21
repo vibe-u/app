@@ -9,6 +9,8 @@ const HowItWorks = () => {
                         <img
                         src="https://cdn-icons-png.flaticon.com/128/8224/8224757.png"
                         alt="Icono perfil universitario"
+                        width="60"
+                        height="60"
                         /> 
                         <h3>
                             CREA<br />
@@ -19,6 +21,8 @@ const HowItWorks = () => {
                         <img
                         src="https://cdn-icons-png.flaticon.com/128/10351/10351986.png"
                         alt="Icono eventos y comunidades"
+                        width="60"
+                        height="60"
                         />
                         <h3>
                             DESCUBRE<br />
@@ -29,6 +33,8 @@ const HowItWorks = () => {
                         <img
                         src="https://cdn-icons-png.flaticon.com/128/18868/18868531.png"
                         alt="Icono amigos reales"
+                        width="60"
+                        height="60"
                         />
                         <h3>
                             CONECTA<br />

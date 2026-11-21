@@ -1,0 +1,9 @@
+{
+  "specVersion": "1.0",
+  "host": {
+    "displayName": "Vibe-U",
+    "identifier": "https://vibeu-app.linkpc.net",
+    "documentationUrl": "https://vibeu-app.linkpc.net/llms.txt"
+  },
+  "entries": []
+}

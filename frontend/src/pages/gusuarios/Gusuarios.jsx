@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import storeAuth from "../../context/storeAuth";
 import { setUserSuspension } from "../../Services/admin";
+import ConfirmActionModal from "../../components/ConfirmActionModal";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import "./Gusuarios.css";
@@ -230,57 +231,42 @@ export default function Gusuario() {
       </div>
 
       {/* --- MODAL DE CONFIRMACIÓN --- */}
-      {modal.show && (
-        <div className="modal-overlay">
-          <div className="modal-card">
-            <div className="modal-icon">{modal.type === "DELETE" || modal.type === "SUSPEND" ? "⚠️" : "👤"}</div>
-            <h3 className="modal-title">
-              {modal.type === "DELETE"
-                ? "Confirmar Eliminación"
-                : modal.type === "SUSPEND"
-                  ? "Suspender usuario"
-                  : modal.type === "UNSUSPEND"
-                    ? "Reactivar usuario"
-                    : "Cambiar Privilegios"}
-            </h3>
-            <p className="modal-text">
-              ¿Estás seguro de que deseas {
-                modal.type === "DELETE"
-                  ? "eliminar a"
-                  : modal.type === "SUSPEND"
-                    ? "suspender a"
-                    : modal.type === "UNSUSPEND"
-                      ? "reactivar a"
-                      : "cambiar el rol de"
-              }
-              <strong> {modal.user?.nombre}</strong>?
-            </p>
-            {modal.type === "SUSPEND" ? (
-              <textarea
-                className="suspension-reason"
-                aria-label="Motivo de suspensión"
-                placeholder="Motivo de suspensión (opcional)"
-                value={modal.reason}
-                onChange={(event) => setModal((prev) => ({ ...prev, reason: event.target.value }))}
-                maxLength={500}
-                rows={3}
-              />
-            ) : null}
-
-            <div className="modal-buttons">
-              <button className="btn-modal-cancel" onClick={() => setModal({ show: false, user: null, type: "", reason: "" })}>
-                Cancelar
-              </button>
-              <button
-                className={modal.type === "DELETE" || modal.type === "SUSPEND" ? "btn-modal-confirm-del" : "btn-modal-confirm-rol"}
-                onClick={confirmarAccion}
-              >
-                Confirmar
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {modal.show ? (
+        <ConfirmActionModal
+          title={modal.type === "DELETE"
+            ? "Confirmar Eliminación"
+            : modal.type === "SUSPEND"
+              ? "Suspender usuario"
+              : modal.type === "UNSUSPEND"
+                ? "Reactivar usuario"
+                : "Cambiar Privilegios"}
+          description={<>¿Estás seguro de que deseas {
+            modal.type === "DELETE"
+              ? "eliminar a"
+              : modal.type === "SUSPEND"
+                ? "suspender a"
+                : modal.type === "UNSUSPEND"
+                  ? "reactivar a"
+                  : "cambiar el rol de"
+          }<strong> {modal.user?.nombre}</strong>?</>}
+          icon={modal.type === "DELETE" || modal.type === "SUSPEND" ? "⚠️" : "👤"}
+          destructive={modal.type === "DELETE" || modal.type === "SUSPEND"}
+          onCancel={() => setModal({ show: false, user: null, type: "", reason: "" })}
+          onConfirm={confirmarAccion}
+        >
+          {modal.type === "SUSPEND" ? (
+            <textarea
+              className="suspension-reason"
+              aria-label="Motivo de suspensión"
+              placeholder="Motivo de suspensión (opcional)"
+              value={modal.reason}
+              onChange={(event) => setModal((prev) => ({ ...prev, reason: event.target.value }))}
+              maxLength={500}
+              rows={3}
+            />
+          ) : null}
+        </ConfirmActionModal>
+      ) : null}
     </div>
   );
 }

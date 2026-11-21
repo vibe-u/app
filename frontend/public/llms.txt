@@ -1,0 +1,17 @@
+# Vibe-U
+
+> Vibe-U es una plataforma universitaria para descubrir eventos y beneficios, conectar con otros estudiantes y participar en comunidades.
+
+## Páginas principales
+
+- [Inicio](https://vibeu-app.linkpc.net/): presentación de Vibe-U y acceso a la plataforma.
+- [Eventos](https://vibeu-app.linkpc.net/eventos): información pública sobre eventos universitarios.
+- [Beneficios](https://vibeu-app.linkpc.net/beneficios): beneficios disponibles para la comunidad universitaria.
+- [Contacto](https://vibeu-app.linkpc.net/contacto): canales de contacto con el equipo de Vibe-U.
+
+## Acceso a la plataforma
+
+- [Crear una cuenta](https://vibeu-app.linkpc.net/register): registro de estudiantes.
+- [Iniciar sesión](https://vibeu-app.linkpc.net/login): acceso a una cuenta existente.
+
+Las secciones de comunidades, publicaciones y chat requieren iniciar sesión. Usa los enlaces del sitio para consultar la información pública más reciente.

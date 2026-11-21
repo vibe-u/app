@@ -3,7 +3,6 @@ import {
   getAccountDeletionRequest,
   submitAccountDeletionRequest,
 } from "../../../Services/users";
-import termsDocument from "../../../assets/terminos-y-condiciones.md?raw";
 import "./AccountDeletionRequest.css";
 
 const rejectionDismissalKey = (request) => {
@@ -20,18 +19,6 @@ export default function AccountDeletionRequest() {
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [rejectionDismissed, setRejectionDismissed] = useState(false);
-
-  const downloadTerms = () => {
-    const documentBlob = new Blob([termsDocument], { type: "text/markdown;charset=utf-8" });
-    const documentUrl = URL.createObjectURL(documentBlob);
-    const downloadLink = document.createElement("a");
-    downloadLink.href = documentUrl;
-    downloadLink.download = "terminos-y-condiciones-vibe-u.md";
-    document.body.appendChild(downloadLink);
-    downloadLink.click();
-    downloadLink.remove();
-    window.setTimeout(() => URL.revokeObjectURL(documentUrl), 1000);
-  };
 
   const loadRequest = async () => {
     try {
@@ -123,20 +110,15 @@ export default function AccountDeletionRequest() {
       ) : null}
       {!loading && request?.status !== "pendiente" ? (
         <form onSubmit={submitRequest}>
-          <div className="account-deletion-terms">
-            <label className="account-deletion-confirm" htmlFor="account-deletion-confirmed">
-              <span>Acepto los términos y condiciones y confirmo que deseo solicitar la eliminación de mi cuenta.</span>
+          <label className="account-deletion-confirm" htmlFor="account-deletion-confirmed">
+              <span>Confirmo que deseo solicitar la eliminación de mi cuenta.</span>
               <input
                 id="account-deletion-confirmed"
                 type="checkbox"
                 checked={confirmed}
                 onChange={(event) => setConfirmed(event.target.checked)}
               />
-            </label>
-            <button className="account-deletion-terms-download" type="button" onClick={downloadTerms}>
-              Descargar términos y condiciones
-            </button>
-          </div>
+          </label>
           <label htmlFor="account-deletion-reason">Motivo (obligatorio, mínimo 10 caracteres)</label>
           <textarea
             id="account-deletion-reason"

@@ -88,7 +88,6 @@ html {
   color: #1b2430;
 }
 
-[data-theme="dark"] .login-container,
 [data-theme="dark"] .register-page,
 [data-theme="dark"] .forgot-page {
   filter: brightness(0.92);

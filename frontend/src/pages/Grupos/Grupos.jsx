@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import Cropper from 'react-easy-crop';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { 
     FaPlus, FaArrowLeft, FaThumbsUp, FaComment, FaSearch, FaTimes, FaEllipsisH, 
     FaGlobeAmericas, FaRegImage, FaUserFriends, FaUserCircle, FaTrash, FaSignOutAlt, FaRegFileAlt,
@@ -20,12 +20,14 @@ import { getSavedPosts, toggleSavedGroupPost } from "../../Services/users";
 import { reportGroupPost } from "../../Services/posts";
 import ReportContentButton from "../../components/reports/ReportContentButton";
 import "../../components/reports/ReportContentButton.css";
+import ConfirmActionModal from "../../components/ConfirmActionModal";
 
 const API_URL = `${import.meta.env.VITE_BACKEND_URL}/api/grupos`;
 const DEFAULT_AVATAR = "/default-avatar.svg";
 
 const Grupos = () => {
     const navigate = useNavigate();
+    const location = useLocation();
     const unreadCount = storeNotifications((state) => state.unreadCount);
     // --- ESTADOS DE DATOS ---
     const [grupos, setGrupos] = useState([]);
@@ -51,6 +53,10 @@ const Grupos = () => {
     const [likes, setLikes] = useState({});
     const [guardados, setGuardados] = useState({});
     const [saveError, setSaveError] = useState("");
+    const [groupMessage, setGroupMessage] = useState("");
+    const [joinRequestsPending, setJoinRequestsPending] = useState({});
+    const [confirmAction, setConfirmAction] = useState(null);
+    const handledSavedTarget = useRef("");
 
     // --- ESTADOS DE COMENTARIOS (AUMENTADOS) ---
     const [comentarioTexto, setComentarioTexto] = useState({});
@@ -74,6 +80,7 @@ const Grupos = () => {
     const [inviteConfirm, setInviteConfirm] = useState(null);
     const [invitePool, setInvitePool] = useState([]);
     const [miembros, setMiembros] = useState([]);
+    const [solicitudesIngreso, setSolicitudesIngreso] = useState([]);
     const [membersError, setMembersError] = useState("");
 
     const fileInputRef = useRef(null);
@@ -157,6 +164,21 @@ const Grupos = () => {
     useEffect(() => { cargarGrupos(); }, []);
 
     useEffect(() => {
+        const target = location.state?.savedPostTarget;
+        if (!target?.groupId || !target?.postId) return;
+        const targetKey = `${target.groupId}:${target.postId}`;
+        if (handledSavedTarget.current === targetKey) return;
+        const group = [...grupos, ...gruposArchivados].find((item) => item._id === target.groupId);
+        if (!group) return;
+        handledSavedTarget.current = targetKey;
+        setGrupoActivo(group);
+        setComentariosAbiertos((current) => ({ ...current, [target.postId]: true }));
+        window.setTimeout(() => {
+            document.querySelector(`[data-saved-post-id="${target.postId}"]`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+        }, 180);
+    }, [location.state, grupos, gruposArchivados]);
+
+    useEffect(() => {
         if (pestana === "archivados") cargarArchivados();
     }, [pestana]);
 
@@ -204,6 +226,7 @@ const Grupos = () => {
     const handleUnirseGrupo = async (grupo) => {
         try {
             if (!token) return navigate("/login");
+            setGroupMessage("");
             const res = await fetch(`${API_URL}/${grupo._id}/unirse`, {
                 method: 'POST',
                 headers: {
@@ -211,8 +234,19 @@ const Grupos = () => {
                     Authorization: `Bearer ${token}`
                 }
             });
-            if (res.ok) { cargarGrupos(); }
-        } catch (error) { console.error(error); }
+            const data = await res.json().catch(() => ({}));
+            if (res.ok && data.requested) {
+                setJoinRequestsPending((current) => ({ ...current, [grupo._id]: true }));
+                setGroupMessage(data.message || "Solicitud enviada al creador de la comunidad.");
+                return;
+            }
+            setGroupMessage(data.message || "No se pudo solicitar el ingreso.");
+            if (res.status === 409 && /pendiente/i.test(data.message || "")) {
+                setJoinRequestsPending((current) => ({ ...current, [grupo._id]: true }));
+            }
+        } catch (error) {
+            setGroupMessage(error?.message || "No se pudo solicitar el ingreso.");
+        }
     };
 
     const handleAbandonarGrupo = async (id) => {
@@ -333,7 +367,6 @@ const Grupos = () => {
     };
 
     const handleEliminarPost = async (postId) => {
-        if (!window.confirm("¿Eliminar esta publicación?")) return;
         try {
             if (!token) return navigate("/login");
             const res = await fetch(`${API_URL}/${grupoActivo._id}/post/${postId}`, {
@@ -356,7 +389,6 @@ const Grupos = () => {
     };
 
     const handleEliminarComentario = async (postId, comentarioId) => {
-        if (!window.confirm("¿Eliminar este comentario?")) return;
         try {
             if (!token) return navigate("/login");
             const res = await fetch(`${API_URL}/${grupoActivo._id}/post/${postId}/comentario/${comentarioId}`, {
@@ -444,7 +476,87 @@ const Grupos = () => {
 
     const abrirMiembros = async (grupoId) => {
         setMembersOpen(true);
+        const group = [...grupos, ...gruposArchivados].find((item) => item._id === grupoId) || grupoActivo;
         await cargarMiembros(grupoId);
+        if (group?.creadorEmail?.toLowerCase() === userEmail?.toLowerCase() || userRole === "administrador") {
+            await cargarSolicitudesIngreso(grupoId);
+        } else {
+            setSolicitudesIngreso([]);
+        }
+    };
+
+    const cargarSolicitudesIngreso = async (grupoId) => {
+        try {
+            const res = await fetch(`${API_URL}/${grupoId}/solicitudes-ingreso`, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            const data = await res.json().catch(() => []);
+            if (!res.ok) {
+                setMembersError(data?.message || "No se pudieron cargar las solicitudes de ingreso.");
+                return [];
+            }
+            setSolicitudesIngreso(Array.isArray(data) ? data : []);
+            return Array.isArray(data) ? data : [];
+        } catch (error) {
+            setMembersError(error?.message || "No se pudieron cargar las solicitudes de ingreso.");
+            return [];
+        }
+    };
+
+    const handleResponderSolicitudIngreso = async (group, request, action) => {
+        try {
+            const res = await fetch(`${API_URL}/${group._id}/solicitudes-ingreso/responder`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({ correoInstitucional: request.correoInstitucional, action }),
+            });
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) {
+                setMembersError(data?.message || "No se pudo responder la solicitud.");
+                return;
+            }
+            setMembersError("");
+            setSolicitudesIngreso((current) => current.filter((item) => item.correoInstitucional !== request.correoInstitucional));
+            if (action === "accept") {
+                await Promise.all([cargarGrupos(), cargarMiembros(group._id)]);
+            }
+        } catch (error) {
+            setMembersError(error?.message || "No se pudo responder la solicitud.");
+        }
+    };
+
+    const handleEliminarMiembro = async (group, member) => {
+        try {
+            const res = await fetch(`${API_URL}/${group._id}/miembros`, {
+                method: "DELETE",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({ correoInstitucional: member.correoInstitucional }),
+            });
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) {
+                setMembersError(data?.message || "No se pudo eliminar al miembro.");
+                return;
+            }
+            setMembersError("");
+            setGrupos((current) => current.map((item) => item._id === group._id
+                ? { ...item, miembrosArray: item.miembrosArray.filter((email) => email.toLowerCase() !== member.correoInstitucional.toLowerCase()) }
+                : item));
+            if (grupoActivo?._id === group._id) {
+                setGrupoActivo((current) => ({
+                    ...current,
+                    miembrosArray: (current.miembrosArray || []).filter((email) => email.toLowerCase() !== member.correoInstitucional.toLowerCase()),
+                }));
+                await cargarMiembros(group._id);
+            }
+        } catch (error) {
+            setMembersError(error?.message || "No se pudo eliminar al miembro.");
+        }
     };
 
     const filterInvitePeople = (people = [], membersList = miembros) => {
@@ -533,8 +645,10 @@ const Grupos = () => {
     // --- RENDER MURO (GRUPO ACTIVO) ---
     if (grupoActivo) {
         const grupoData = [...grupos, ...gruposArchivados].find(g => g._id === grupoActivo._id) || grupoActivo;
-        const esCreadorGrupo = grupoData.creadorEmail === userEmail;
+        const esCreadorGrupo = grupoData.creadorEmail?.toLowerCase() === userEmail?.toLowerCase();
         const esAdminGlobal = userRole === "administrador";
+        const esMiembroGrupo = esCreadorGrupo || (grupoData.miembrosArray || []).some((email) => email.toLowerCase() === userEmail?.toLowerCase());
+        const solicitudPendiente = Boolean(joinRequestsPending[grupoData._id]);
         const puedeGestionarArchivo = esCreadorGrupo || esAdminGlobal;
         return (
             <div className="fb-layout grupos-forum-style">
@@ -556,7 +670,9 @@ const Grupos = () => {
                                     <button
                                         className="btn-fb-gray"
                                         type="button"
-                                        onClick={() => handleArchivarGrupo(grupoData, !grupoData.archivado)}
+                                        onClick={() => grupoData.archivado
+                                            ? handleArchivarGrupo(grupoData, false)
+                                            : setConfirmAction({ type: "archive", group: grupoData })}
                                     >
                                         {grupoData.archivado ? "Activar comunidad" : "Archivar comunidad"}
                                     </button>
@@ -564,6 +680,11 @@ const Grupos = () => {
                                 {!grupoData.archivado && (esCreadorGrupo || grupoData.miembrosArray?.includes(userEmail) || esAdminGlobal) ? (
                                     <button className="btn-fb-blue" type="button" onClick={abrirInvitar}>
                                         <FaPlus /> Invitar
+                                    </button>
+                                ) : null}
+                                {!grupoData.archivado && !esMiembroGrupo ? (
+                                    <button className="btn-fb-blue" type="button" onClick={() => handleUnirseGrupo(grupoData)} disabled={solicitudPendiente}>
+                                        {solicitudPendiente ? "Solicitud enviada" : "Solicitar unirme"}
                                     </button>
                                 ) : null}
                                 <button className="btn-fb-gray" type="button" onClick={() => abrirMiembros(grupoData._id)}>
@@ -576,7 +697,8 @@ const Grupos = () => {
 
                 <div className="fb-body-grid single-column">
                     <main className="fb-feed-center">
-                        {!grupoData.archivado ? <div className="fb-card-white publish-area">
+                        {groupMessage ? <p className="grupo-action-ok" role="status">{groupMessage}</p> : null}
+                        {!grupoData.archivado && esMiembroGrupo ? <div className="fb-card-white publish-area">
                             <div className="publish-input-row">
                                 <div className="avatar-circle-wrapper">
                                     {avatar ? <img src={resolveAvatarUrl(avatar)} className="mini-avatar-fb" alt="yo" /> : <FaUserCircle size={40} color="#ccc" className="mini-avatar-fb" />}
@@ -596,17 +718,21 @@ const Grupos = () => {
                                 <button onClick={handlePublicar} disabled={loading} className="btn-send-fb">Publicar</button>
                                 <input type="file" ref={postFotoRef} style={{display: 'none'}} accept="image/*" onChange={(e) => handleImagePreview(e, 'post')} />
                             </div>
-                        </div> : <p className="archived-group-note">Esta comunidad está archivada y no es visible públicamente. Solo el creador o un administrador puede activarla.</p>}
+                        </div> : grupoData.archivado ? <p className="archived-group-note">Esta comunidad está archivada y no es visible públicamente. Solo el creador o un administrador puede activarla.</p> : (
+                            <div className="fb-card-white grupo-readonly-note">
+                                <p>Solo los miembros pueden publicar o comentar. Puedes ver las publicaciones mientras esperas la aprobación del creador.</p>
+                            </div>
+                        )}
 
                         {grupoData.posts?.map(post => {
                             const esMiPost = post.autorEmail === userEmail || post.autor === userName;
-                            const puedeEliminarPost = esMiPost || esCreadorGrupo || esAdminGlobal;
+                            const puedeEliminarPost = (esMiembroGrupo && esMiPost) || esCreadorGrupo || esAdminGlobal;
                             const estaAbierto = comentariosAbiertos[post._id];
                             const nComentarios = post.comentarios?.length || 0;
                             const nLikes = likes[post._id] ? 1 : 0;
 
                             return (
-                                <div key={post._id} className="fb-card-white post-container">
+                                <div key={post._id} data-saved-post-id={post._id} className="fb-card-white post-container">
                                     <div className="post-top-header">
                                         <div className="mini-avatar-fb avatar-circle-wrapper">
                                             {esMiPost ? (avatar ? <img src={resolveAvatarUrl(avatar)} alt="yo" className="round-img" /> : <FaUserCircle size={40} color="#ccc" />) : (post.autorFoto ? <img src={resolveAvatarUrl(post.autorFoto)} alt="autor" className="round-img" /> : <FaUserCircle size={40} color="#ccc" />)}
@@ -620,7 +746,7 @@ const Grupos = () => {
                                             {menuAbiertoId === post._id ? (
                                                 <div className="dropdown-fb-style post-dropdown-menu" style={{ display: "block" }}>
                                                     {puedeEliminarPost ? (
-                                                        <button onClick={() => handleEliminarPost(post._id)} style={{ color: "red" }}>
+                                                        <button onClick={() => setConfirmAction({ type: "post", postId: post._id })} style={{ color: "red" }}>
                                                             <FaTrash /> Eliminar publicación
                                                         </button>
                                                     ) : null}
@@ -650,19 +776,19 @@ const Grupos = () => {
                                     
                                     {!grupoData.archivado ? (
                                         <div className="post-action-buttons-fb">
-                                            <button type="button" onClick={() => toggleLike(post._id)} className={likes[post._id] ? "liked" : ""}>
+                                            {esMiembroGrupo ? <button type="button" onClick={() => toggleLike(post._id)} className={likes[post._id] ? "liked" : ""}>
                                                 <FaThumbsUp /> Me gusta
-                                            </button>
+                                            </button> : null}
                                             <button type="button" onClick={() => toggleComentarios(post._id)}>
-                                                <FaComment /> Comentar
+                                                <FaComment /> {esMiembroGrupo ? "Comentar" : "Ver comentarios"}
                                             </button>
-                                            <button
+                                            {esMiembroGrupo ? <button
                                                 type="button"
                                                 className={`btn-save-post ${guardados[post._id] ? "active" : ""}`}
                                                 onClick={() => toggleGuardar(grupoData, post)}
                                             >
                                                 {guardados[post._id] ? <FaBookmark /> : <FaRegBookmark />} Guardar
-                                            </button>
+                                            </button> : null}
                                         </div>
                                     ) : null}
 
@@ -671,7 +797,7 @@ const Grupos = () => {
                                         <div className="fb-comments-section">
                                             {post.comentarios?.map((com, index) => {
                                                 const puedeEliminarComentario =
-                                                    com.autorEmail === userEmail || esMiPost || esCreadorGrupo || esAdminGlobal;
+                                                    (esMiembroGrupo && (com.autorEmail === userEmail || esMiPost)) || esCreadorGrupo || esAdminGlobal;
                                                 return (
                                                 <div key={com._id || index} className="comment-item">
                                                     <img src={resolveAvatarUrl(com.autorFoto) || "https://via.placeholder.com/32"} alt="avatar" className="comment-mini-avatar" />
@@ -683,7 +809,7 @@ const Grupos = () => {
                                                         <button
                                                             type="button"
                                                             className="btn-delete-comment-mini"
-                                                            onClick={() => handleEliminarComentario(post._id, com._id)}
+                                                            onClick={() => setConfirmAction({ type: "comment", postId: post._id, commentId: com._id })}
                                                         >
                                                             <FaTrash />
                                                         </button>
@@ -691,7 +817,7 @@ const Grupos = () => {
                                                 </div>
                                             )})}
                                             
-                                            <form onSubmit={(e) => handleComentar(e, post._id)} className="comment-input-wrapper">
+                                            {esMiembroGrupo ? <form onSubmit={(e) => handleComentar(e, post._id)} className="comment-input-wrapper">
                                                 <div className="avatar-circle-wrapper">
                                                     {avatar ? <img src={resolveAvatarUrl(avatar)} className="comment-mini-avatar" alt="yo" /> : <FaUserCircle size={32} color="#ccc" />}
                                                 </div>
@@ -706,7 +832,7 @@ const Grupos = () => {
                                                         <FaPaperPlane />
                                                     </button>
                                                 </div>
-                                            </form>
+                                            </form> : null}
                                         </div>
                                     )}
                                 </div>
@@ -800,6 +926,37 @@ const Grupos = () => {
                             </div>
                             <div className="vibe-modal-content-body">
                                 {membersError ? <p className="grupo-action-error">{membersError}</p> : null}
+                                {(esCreadorGrupo || esAdminGlobal) ? (
+                                    <section className="grupo-join-requests">
+                                        <h4>Solicitudes para unirse ({solicitudesIngreso.length})</h4>
+                                        <div className="grupo-people-list">
+                                            {solicitudesIngreso.map((request) => (
+                                                <div key={request.correoInstitucional} className="grupo-people-row">
+                                                    <img src={resolveAvatarUrl(request.avatar) || DEFAULT_AVATAR} alt="" className="grupo-people-avatar" />
+                                                    <div className="grupo-people-meta">
+                                                        <strong>{request.nombre}</strong>
+                                                        <span>{request.correoInstitucional}</span>
+                                                    </div>
+                                                    <button
+                                                        type="button"
+                                                        className="grupo-request-accept"
+                                                        aria-label={`Aceptar a ${request.nombre}`}
+                                                        title="Aceptar solicitud"
+                                                        onClick={() => setConfirmAction({ type: "joinRequest", action: "accept", group: grupoData, request })}
+                                                    ><FaCheck /></button>
+                                                    <button
+                                                        type="button"
+                                                        className="grupo-remove-member"
+                                                        aria-label={`Rechazar a ${request.nombre}`}
+                                                        title="Rechazar solicitud"
+                                                        onClick={() => setConfirmAction({ type: "joinRequest", action: "reject", group: grupoData, request })}
+                                                    ><FaTimes /></button>
+                                                </div>
+                                            ))}
+                                            {!solicitudesIngreso.length ? <p>No hay solicitudes pendientes.</p> : null}
+                                        </div>
+                                    </section>
+                                ) : null}
                                 <div className="grupo-people-list">
                                     {miembros.map((user) => (
                                         <div key={user._id || user.correoInstitucional} className="grupo-people-row">
@@ -812,6 +969,17 @@ const Grupos = () => {
                                                 <strong>{user.nombre}</strong>
                                                 <span>{user.correoInstitucional}</span>
                                             </div>
+                                            {esCreadorGrupo && user.correoInstitucional?.toLowerCase() !== grupoData.creadorEmail?.toLowerCase() ? (
+                                                <button
+                                                    type="button"
+                                                    className="grupo-remove-member"
+                                                    aria-label={`Eliminar a ${user.nombre} de la comunidad`}
+                                                    title="Eliminar miembro"
+                                                    onClick={() => setConfirmAction({ type: "member", group: grupoData, member: user })}
+                                                >
+                                                    <FaTimes />
+                                                </button>
+                                            ) : null}
                                         </div>
                                     ))}
                                     {!membersError && !miembros.length ? <p>Este grupo aún no tiene miembros visibles.</p> : null}
@@ -819,6 +987,33 @@ const Grupos = () => {
                             </div>
                         </div>
                     </div>
+                ) : null}
+                {confirmAction ? (
+                    <ConfirmActionModal
+                        title={confirmAction.type === "comment" ? "Eliminar comentario" : confirmAction.type === "post" ? "Eliminar publicación" : confirmAction.type === "member" ? "Eliminar miembro" : confirmAction.type === "joinRequest" ? confirmAction.action === "accept" ? "Aceptar solicitud" : "Rechazar solicitud" : "Archivar comunidad"}
+                        description={confirmAction.type === "comment"
+                            ? "¿Seguro que quieres eliminar este comentario? Esta acción no se puede deshacer."
+                            : confirmAction.type === "post"
+                                ? "¿Seguro que quieres eliminar esta publicación de la comunidad? Esta acción no se puede deshacer."
+                                : confirmAction.type === "member"
+                                    ? `¿Quieres eliminar a ${confirmAction.member?.nombre || "esta persona"} de la comunidad ${confirmAction.group?.nombre || ""}?`
+                                    : confirmAction.type === "joinRequest"
+                                        ? `${confirmAction.action === "accept" ? "¿Quieres aceptar" : "¿Quieres rechazar"} la solicitud de ${confirmAction.request?.nombre || "esta persona"} para unirse a ${confirmAction.group?.nombre || "la comunidad"}?`
+                                        : `¿Quieres archivar la comunidad “${confirmAction.group?.nombre || ""}”?`}
+                        icon={confirmAction.type === "archive" ? "📦" : confirmAction.type === "joinRequest" && confirmAction.action === "accept" ? "✅" : "🗑️"}
+                        confirmLabel={confirmAction.type === "archive" ? "Archivar" : confirmAction.type === "member" ? "Eliminar miembro" : confirmAction.type === "post" ? "Eliminar publicación" : confirmAction.type === "joinRequest" ? confirmAction.action === "accept" ? "Aceptar" : "Rechazar" : "Eliminar comentario"}
+                        destructive={confirmAction.type !== "joinRequest" || confirmAction.action !== "accept"}
+                        onCancel={() => setConfirmAction(null)}
+                        onConfirm={async () => {
+                            const action = confirmAction;
+                            if (action.type === "comment") await handleEliminarComentario(action.postId, action.commentId);
+                            else if (action.type === "post") await handleEliminarPost(action.postId);
+                            else if (action.type === "member") await handleEliminarMiembro(action.group, action.member);
+                            else if (action.type === "joinRequest") await handleResponderSolicitudIngreso(action.group, action.request, action.action);
+                            else await handleArchivarGrupo(action.group, true);
+                            setConfirmAction(null);
+                        }}
+                    />
                 ) : null}
             </div>
         );
@@ -854,6 +1049,7 @@ const Grupos = () => {
                 </div>
             </div>
             {saveError ? <p className="grupo-action-error" role="alert">{saveError}</p> : null}
+            {groupMessage ? <p className="grupo-action-ok" role="status">{groupMessage}</p> : null}
             
             <div className="search-bar-pure-white">
                 <FaSearch className="icon-s" />
@@ -876,7 +1072,9 @@ const Grupos = () => {
                 })
                 .map(grupo => {
                     const esCreador = grupo.creadorEmail === userEmail;
-                    const esMiembro = grupo.miembrosArray?.includes(userEmail);
+                    const esMiembro = grupo.creadorEmail?.toLowerCase() === userEmail?.toLowerCase()
+                        || grupo.miembrosArray?.some((email) => email.toLowerCase() === userEmail?.toLowerCase());
+                    const solicitudPendiente = Boolean(joinRequestsPending[grupo._id]);
                     const esAdminGlobal = userRole === "administrador" || userRole === "administradores";
 
                     return (
@@ -893,7 +1091,9 @@ const Grupos = () => {
                                 {grupo.archivado ? (
                                     <button className="btn-ver-grupo-vibe-blue" onClick={() => handleArchivarGrupo(grupo, false)}>Activar</button>
                                 ) : !esMiembro ? (
-                                    <button className="btn-ver-grupo-vibe-blue" onClick={() => handleUnirseGrupo(grupo)}>Unirse</button>
+                                    <button className="btn-ver-grupo-vibe-blue" onClick={() => handleUnirseGrupo(grupo)} disabled={solicitudPendiente}>
+                                        {solicitudPendiente ? "Solicitud enviada" : "Solicitar unirme"}
+                                    </button>
                                 ) : (
                                     <button className="btn-ver-grupo-vibe-blue" onClick={() => entrarAGrupo(grupo)}>Ver</button>
                                 )}
@@ -905,7 +1105,7 @@ const Grupos = () => {
                                             {(esCreador || esAdminGlobal) ? (
                                                 <>
                                                     {!grupo.archivado ? (
-                                                        <button onClick={() => handleArchivarGrupo(grupo, true)}>Archivar comunidad</button>
+                                                        <button onClick={() => { setMenuAbiertoId(null); setConfirmAction({ type: "archive", group: grupo }); }}>Archivar comunidad</button>
                                                     ) : null}
                                                     <button onClick={() => handleEliminarGrupo(grupo._id)} style={{color: 'red'}}><FaTrash /> Eliminar Grupo</button>
                                                 </>
@@ -913,7 +1113,7 @@ const Grupos = () => {
                                                 esMiembro ? (
                                                     <button onClick={() => handleAbandonarGrupo(grupo._id)}><FaSignOutAlt /> Abandonar Grupo</button>
                                                 ) : (
-                                                    <button onClick={() => handleUnirseGrupo(grupo)}><FaPlus /> Unirse</button>
+                                                    <button onClick={() => handleUnirseGrupo(grupo)} disabled={solicitudPendiente}><FaPlus /> {solicitudPendiente ? "Solicitud enviada" : "Solicitar unirme"}</button>
                                                 )
                                             )}
                                         </div>
@@ -977,6 +1177,21 @@ const Grupos = () => {
                     </div>
                 </div>
             )}
+            {confirmAction ? (
+                <ConfirmActionModal
+                    title="Archivar comunidad"
+                    description={`¿Quieres archivar la comunidad “${confirmAction.group?.nombre || ""}”?`}
+                    icon="📦"
+                    confirmLabel="Archivar"
+                    destructive
+                    onCancel={() => setConfirmAction(null)}
+                    onConfirm={async () => {
+                        const action = confirmAction;
+                        setConfirmAction(null);
+                        await handleArchivarGrupo(action.group, true);
+                    }}
+                />
+            ) : null}
         </section>
     );
 };

@@ -144,6 +144,54 @@
     background: #7c00c6;
 }
 
+[data-theme="dark"] .register-page {
+    filter: none;
+    background: #11131a;
+    color: #e6edf7;
+}
+
+[data-theme="dark"] .register-right {
+    background: #11131a;
+}
+
+[data-theme="dark"] .register-card {
+    background: #1b2230;
+    color: #e6edf7;
+    border: 1px solid #344054;
+    box-shadow: 0 14px 38px rgba(0, 0, 0, 0.38);
+}
+
+[data-theme="dark"] .register-title {
+    color: #f0c9e4;
+}
+
+[data-theme="dark"] .register-subtitle {
+    color: #c0c8d5;
+}
+
+[data-theme="dark"] .register-subtitle .login-link {
+    color: #e3a6dc;
+}
+
+[data-theme="dark"] .register-form input {
+    background: #101722;
+    color: #e6edf7;
+    border-color: #435168;
+}
+
+[data-theme="dark"] .register-form input::placeholder {
+    color: #9aa8ba;
+}
+
+[data-theme="dark"] .register-form input:focus {
+    border-color: #c45bb0;
+    box-shadow: 0 0 0 3px rgba(196, 91, 176, 0.2);
+}
+
+[data-theme="dark"] .register-password-toggle {
+    color: #e3a6dc;
+}
+
 @media (max-width: 768px) {
     .register-page {
         display: block;

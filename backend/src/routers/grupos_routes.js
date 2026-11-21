@@ -13,8 +13,11 @@ router.post('/invitaciones/:grupoId/responder', verificarTokenJWT, grupoControll
 router.post('/crear', verificarTokenJWT, grupoController.crearGrupo);
 router.delete('/:id', verificarTokenJWT, grupoController.eliminarGrupo);
 router.post('/:id/unirse', verificarTokenJWT, grupoController.unirseGrupo);
+router.get('/:id/solicitudes-ingreso', verificarTokenJWT, grupoController.listarSolicitudesIngreso);
+router.post('/:id/solicitudes-ingreso/responder', verificarTokenJWT, grupoController.responderSolicitudIngreso);
 router.post('/:id/abandonar', verificarTokenJWT, grupoController.abandonarGrupo);
 router.get('/:id/miembros', verificarTokenJWT, grupoController.listarMiembros);
+router.delete('/:id/miembros', verificarTokenJWT, grupoController.eliminarMiembro);
 router.post('/:id/invitar', verificarTokenJWT, grupoController.invitarMiembro);
 router.post('/:id/post', verificarTokenJWT, grupoController.crearPost);
 router.delete('/:id/post/:postId', verificarTokenJWT, grupoController.eliminarPost);

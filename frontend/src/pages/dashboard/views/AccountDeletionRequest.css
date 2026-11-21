@@ -19,38 +19,15 @@
   gap: 8px;
 }
 
-.account-deletion-terms {
-  display: grid;
-  gap: 8px;
-}
-
-.account-deletion-terms-download {
-  width: fit-content;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  color: #6c0063;
-  font: inherit;
-  font-size: 0.92rem;
-  font-weight: 700;
-  text-align: left;
-  text-decoration: underline;
-  text-underline-offset: 3px;
-  cursor: pointer;
-}
-
-.account-deletion-terms-download:focus-visible {
-  outline: 2px solid currentColor;
-  outline-offset: 3px;
-  border-radius: 2px;
-}
-
 .account-deletion-confirm {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 10px 12px;
+  justify-content: flex-start;
+  gap: 8px;
+  width: fit-content;
+  max-width: 100%;
+  box-sizing: border-box;
+  padding: 8px 10px;
   border: 1px solid #cbd5e1;
   border-radius: 8px;
   color: #263449;
@@ -185,10 +162,6 @@
   color: #e6edf7;
   background: #0f1622;
   border-color: #3d5168;
-}
-
-[data-theme="dark"] .account-deletion-terms-download {
-  color: #e9d5ff;
 }
 
 [data-theme="dark"] .account-deletion-status span {

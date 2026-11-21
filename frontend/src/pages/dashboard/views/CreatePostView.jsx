@@ -307,19 +307,21 @@ const CreatePostView = ({ asModal = false, onClose, onPublished }) => {
         ) : null}
 
         {error ? <p className="chat_error__dash">{error}</p> : null}
-        <button className="button__dash" type="submit" disabled={!canPublish}>
-          {loading ? "Publicando..." : "Publicar"}
-        </button>
-        {asModal ? (
-          <button
-            className="button__dash"
-            type="button"
-            onClick={() => onClose?.()}
-            disabled={loading || uploading}
-          >
-            Cancelar
+        <div className="publish-form-actions__dash">
+          <button className="button__dash" type="submit" disabled={!canPublish}>
+            {loading ? "Publicando..." : "Publicar"}
           </button>
-        ) : null}
+          {asModal ? (
+            <button
+              className="button__dash publish-cancel__dash"
+              type="button"
+              onClick={() => onClose?.()}
+              disabled={loading || uploading}
+            >
+              Cancelar
+            </button>
+          ) : null}
+        </div>
       </form>
 
       {cropOpen ? (

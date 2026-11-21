@@ -232,3 +232,36 @@
 [data-theme="dark"] .icon-circle {
   border-color: #c4b5fd;
 }
+
+.password-change-card .btn-row {
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.password-change-card .btn-row .cancel-btn,
+.password-change-card .btn-row .save-btn {
+  flex: 0 0 auto;
+  min-height: 34px;
+  width: auto;
+  margin: 0;
+  padding: 6px 11px;
+  font-size: 0.86rem;
+}
+
+.password-change-card .btn-row .cancel-btn {
+  background-color: #bbbbbb82;
+}
+
+.password-change-card .btn-row .save-btn {
+  background-color: #5d3f6a;
+}
+
+@media (max-width: 480px) {
+  .password-change-card .btn-row .cancel-btn,
+  .password-change-card .btn-row .save-btn {
+    flex: 0 0 auto;
+    min-width: 0;
+    padding: 6px 10px;
+    font-size: 0.82rem;
+  }
+}

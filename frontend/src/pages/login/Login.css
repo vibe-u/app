@@ -42,6 +42,13 @@
     z-index: 1;
 }
 
+[data-theme="dark"] .login-card {
+    background-color: #161e2b;
+    border: 1px solid #2c3f55;
+    color: #e6edf7;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.42);
+}
+
 /* ===============================
    TEXTO
 ================================ */
@@ -55,6 +62,14 @@
     font-size: 1em;
     color: #6a6a6a;
     margin-bottom: 30px;
+}
+
+[data-theme="dark"] .login-title {
+    color: #e6edf7;
+}
+
+[data-theme="dark"] .login-subtitle {
+    color: #b8c7db;
 }
 
 /* ===============================
@@ -79,6 +94,24 @@
     border-radius: 10px;
     font-size: 16px;
     transition: all 0.3s ease;
+}
+
+[data-theme="dark"] .input-group input {
+    border-color: #3b4e66;
+    background-color: #0f1622;
+    color: #e6edf7;
+}
+
+[data-theme="dark"] .input-group input::placeholder {
+    color: #9baabd;
+}
+
+[data-theme="dark"] .input-group input:-webkit-autofill,
+[data-theme="dark"] .input-group input:-webkit-autofill:hover,
+[data-theme="dark"] .input-group input:-webkit-autofill:focus {
+    -webkit-text-fill-color: #e6edf7;
+    box-shadow: 0 0 0 1000px #0f1622 inset;
+    transition: background-color 9999s ease-out;
 }
 
 .input-group input:focus {
@@ -149,11 +182,14 @@
     color: #7663e0;
     text-decoration: none;
     font-size: 0.95em;
+    transition: color 160ms ease, text-decoration-color 160ms ease, transform 160ms ease;
 }
 
-.register-link:hover {
+.register-link:hover,
+.register-link:focus-visible {
     color: #5d49c8;
     text-decoration: underline;
+    text-underline-offset: 3px;
 }
 
 .Forgot-link {
@@ -161,6 +197,14 @@
     font-size: 0.9em;
     color: #5d49c8;
     text-decoration: none;
+}
+[data-theme="dark"] .Forgot-link,
+[data-theme="dark"] .register-link {
+    color: #c4b5fd;
+}
+[data-theme="dark"] .register-link:hover,
+[data-theme="dark"] .register-link:focus-visible {
+    color: #e9d5ff;
 }
 .Forgot-link:hover {
     color: #5d49c8;

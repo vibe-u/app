@@ -1136,6 +1136,11 @@ body-grupos,
 }
 
 .grupos-page .btn-crear-grupo {
+    width: 42px;
+    min-width: 42px;
+    height: 42px;
+    padding: 0;
+    justify-content: center;
     background: linear-gradient(135deg, #5f2bd5 0%, #8f3be0 100%);
     color: #fff;
     border-radius: 12px;
@@ -1592,7 +1597,9 @@ body-grupos,
 .btn-fb-blue,
 .btn-fb-gray {
     border-radius: 12px;
-    padding: 10px 14px;
+    min-height: 34px;
+    padding: 6px 10px;
+    font-size: 0.88rem;
     border: 1px solid transparent;
 }
 
@@ -1610,6 +1617,18 @@ body-grupos,
     background: #2a2248;
     color: #ece4ff;
     border-color: #44376f;
+}
+
+@media (max-width: 768px) {
+    .grupos-forum-style .fb-header-btns {
+        align-items: center;
+    }
+
+    .grupos-forum-style .fb-header-btns .btn-fb-blue,
+    .grupos-forum-style .fb-header-btns .btn-fb-gray {
+        width: fit-content;
+        max-width: 100%;
+    }
 }
 
 /* =========================================================
@@ -2085,6 +2104,80 @@ button.grupo-people-row {
     flex: 1;
     min-width: 0;
     text-align: left;
+}
+
+.grupo-remove-member {
+    display: inline-flex;
+    flex: 0 0 30px;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    border: 1px solid #f0c6d3;
+    border-radius: 50%;
+    background: #fff1f2;
+    color: #b4233d;
+    cursor: pointer;
+}
+
+.grupo-request-accept {
+    display: inline-flex;
+    flex: 0 0 30px;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    border: 1px solid #bbebcf;
+    border-radius: 50%;
+    background: #ecfdf3;
+    color: #16834b;
+    cursor: pointer;
+}
+
+.grupo-request-accept:hover,
+.grupo-request-accept:focus-visible {
+    background: #d9f7e5;
+}
+
+.grupo-join-requests {
+    margin-bottom: 14px;
+}
+
+.grupo-join-requests h4 {
+    margin: 0 0 8px;
+}
+
+.grupo-readonly-note {
+    padding: 12px;
+    text-align: center;
+}
+
+.grupo-readonly-note p {
+    margin: 0 0 10px;
+}
+
+.grupo-remove-member:hover,
+.grupo-remove-member:focus-visible {
+    background: #ffe1e7;
+}
+
+[data-theme="dark"] .grupo-remove-member {
+    color: #ffc4cf;
+    border-color: #704354;
+    background: #41212d;
+}
+
+[data-theme="dark"] .grupo-request-accept {
+    border-color: #286647;
+    background: #123c2a;
+    color: #92e0b4;
+}
+
+[data-theme="dark"] .grupo-request-accept:hover,
+[data-theme="dark"] .grupo-request-accept:focus-visible {
+    background: #1c563b;
 }
 
 .grupo-people-meta strong,

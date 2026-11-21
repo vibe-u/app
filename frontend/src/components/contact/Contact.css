@@ -24,7 +24,7 @@
   flex-direction: column;
   gap: 1rem;
 }
-.contact input,
+.contact input:not([type="checkbox"]),
 .contact textarea {
     padding: 0.75rem;
     border: 1px solid #1111119c;
@@ -66,6 +66,35 @@
   text-align: center;
   line-height: 1.4;
 }
+.contact .checkbox__label input[type="checkbox"] {
+  flex: 0 0 18px;
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  padding: 0;
+  accent-color: #6c0063;
+}
+.contact-terms-group {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  width: 100%;
+}
+.contact .contact-terms-download {
+  width: fit-content;
+  padding: 2px 4px;
+  border: 0;
+  background: transparent;
+  color: #fff;
+  font-size: 0.9rem;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.contact .contact-terms-download:hover,
+.contact .contact-terms-download:focus-visible {
+  background: transparent;
+  color: #ffe0ef;
+}
 @media (max-width: 768px) {
   .contact {
     padding: 2.5rem 1rem;
@@ -83,7 +112,7 @@
   .contact__img {
     display: none;    
   }
-  .contact input,
+  .contact input:not([type="checkbox"]),
   .contact textarea,
   .contact button {
     width: 100%;
@@ -114,4 +143,7 @@
 
 [data-theme="dark"] .checkbox__label {
     color: #e6edf7;
+}
+[data-theme="dark"] .contact .contact-terms-download {
+    color: #e9d5ff;
 }

@@ -242,11 +242,11 @@
 
 /* Cancelar */
 .cancel-btn {
-  flex: 0 1 160px;
+  flex: 0 0 auto;
   background-color: #bbb;
   color: #000;
-  min-height: 40px;
-  padding: 9px 14px;
+  min-height: 36px;
+  padding: 7px 12px;
   border-radius: 10px;
   border: none;
   font-weight: 600;
@@ -260,11 +260,11 @@
 
 /* Guardar */
 .save-btn {
-  flex: 0 1 180px;
+  flex: 0 0 auto;
   background-color: black;
   color: white;
-  min-height: 40px;
-  padding: 9px 14px;
+  min-height: 36px;
+  padding: 7px 12px;
   border: none;
   border-radius: 10px;
   font-weight: 600;
@@ -382,5 +382,34 @@
     width: 48px;
     height: 48px;
     border-radius: 12px;
+  }
+}
+
+/* Acciones compactas y aisladas para esta pantalla */
+.actualizar-page .btn-row {
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.actualizar-page .btn-row .cancel-btn,
+.actualizar-page .btn-row .save-btn {
+  flex: 0 0 auto;
+  min-height: 34px;
+  width: auto;
+  padding: 6px 11px;
+  font-size: 0.86rem;
+}
+
+@media (max-width: 480px) {
+  .actualizar-page .btn-row {
+    justify-content: flex-end;
+  }
+
+  .actualizar-page .btn-row .cancel-btn,
+  .actualizar-page .btn-row .save-btn {
+    flex: 0 0 auto;
+    min-width: 0;
+    padding: 6px 10px;
+    font-size: 0.82rem;
   }
 }

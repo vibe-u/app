@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import './Contact.css';
 import PrototipoCelular from '../../assets/prototipo-celular.png';
+import { downloadTermsDocument } from '../../utils/downloadTermsDocument';
 
 const WHATSAPP_NUMBER = '593963267963';
 
@@ -78,8 +79,10 @@ const Contact = () => {
                         onChange={handleChange}
                     />
 
-                    <label className="checkbox__label">
+                    <div className="contact-terms-group">
+                    <label className="checkbox__label" htmlFor="contact-terms-checkbox">
                         <input
+                            id="contact-terms-checkbox"
                             type="checkbox"
                             name="terminos"
                             checked={form.terminos}
@@ -88,6 +91,10 @@ const Contact = () => {
                         />{' '}
                         Acepto términos y condiciones
                     </label>
+                    <button type="button" className="contact-terms-download" onClick={downloadTermsDocument}>
+                        Descargar resumen de términos y condiciones
+                    </button>
+                    </div>
                     <button type="submit" className="btn button">Enviar por WhatsApp</button>
                 </form>
             </div>

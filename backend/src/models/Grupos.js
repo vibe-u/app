@@ -30,6 +30,10 @@ const GrupoSchema = new mongoose.Schema({
     archivadoAt: { type: Date, default: null },
     archivadoPor: { type: String, default: "" },
     miembrosArray: { type: [String], default: [] },
+    solicitudesIngreso: [{
+        correoInstitucional: { type: String, required: true },
+        createdAt: { type: Date, default: Date.now },
+    }],
     tags: { type: [String], default: [] },
     posts: [PostSchema]
 }, { timestamps: true });

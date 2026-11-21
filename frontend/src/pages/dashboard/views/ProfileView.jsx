@@ -66,7 +66,7 @@ const ProfileView = () => {
   };
 
   return (
-    <section className="view__dash">
+    <section className="profile-view__dash">
       {profileError ? <p className="saved-posts-error__dash" role="alert">{profileError}</p> : null}
       <section className="panel__dash profile__dash">
         <img
@@ -131,13 +131,20 @@ const ProfileView = () => {
         <div className="saved-posts-grid__dash">
           {savedPosts.map((post) => (
             <article className="saved-post-card__dash" key={post.postKey}>
-              <div>
-                <strong>{post.autor || "Usuario"} · {post.groupName}</strong>
-                {post.contenido ? <p>{post.contenido}</p> : null}
+              <button
+                type="button"
+                className={`saved-post-open__dash ${post.foto ? "has-image" : ""}`}
+                onClick={() => navigate("/grupos", { state: { savedPostTarget: { groupId: post.groupId, postId: post.postId } } })}
+                aria-label={`Abrir publicación de ${post.autor || "Usuario"} en ${post.groupName || "la comunidad"}`}
+              >
+                <span className="saved-post-copy__dash">
+                  <strong>{post.autor || "Usuario"} · {post.groupName}</strong>
+                  {post.contenido ? <span className="saved-post-text__dash">{post.contenido}</span> : null}
+                </span>
                 {post.foto ? <img src={post.foto} alt="Publicación guardada" /> : null}
-              </div>
-              <button type="button" onClick={() => removeSavedPost(post)}>
-                Quitar de guardados
+              </button>
+              <button className="saved-post-remove__dash" type="button" onClick={() => removeSavedPost(post)} aria-label="Quitar publicación de guardados" title="Quitar de guardados">
+                Quitar
               </button>
             </article>
           ))}

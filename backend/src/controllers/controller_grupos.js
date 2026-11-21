@@ -15,10 +15,20 @@ const mapPostMedia = (req, post = {}) => ({
     comentarios: (post.comentarios || []).map((comment) => mapCommentMedia(req, comment)),
 });
 
-const mapGroupMedia = (req, grupo = {}) => ({
-    ...grupo,
-    posts: (grupo.posts || []).map((post) => mapPostMedia(req, post)),
-});
+const mapGroupMedia = (req, grupo = {}) => {
+    const publicGroup = { ...grupo };
+    delete publicGroup.solicitudesIngreso;
+    return {
+        ...publicGroup,
+        posts: (grupo.posts || []).map((post) => mapPostMedia(req, post)),
+    };
+};
+
+const perteneceAlGrupo = (grupo, correo = "") => {
+    const email = String(correo).toLowerCase();
+    return String(grupo.creadorEmail || "").toLowerCase() === email ||
+        (grupo.miembrosArray || []).some((member) => String(member).toLowerCase() === email);
+};
 
 // Listar grupos
 export const listarGrupos = async (req, res) => {
@@ -114,7 +124,7 @@ export const crearGrupo = async (req, res) => {
     }
 };
 
-// Unirse a un grupo
+// Solicitar unirse a un grupo; el creador aprueba el ingreso.
 export const unirseGrupo = async (req, res) => {
     try {
         const correo = req.usuario?.correoInstitucional;
@@ -126,13 +136,83 @@ export const unirseGrupo = async (req, res) => {
         if (!grupo) return res.status(404).json({ message: "Grupo no encontrado" });
         if (grupo.archivado) return res.status(409).json({ message: "Esta comunidad está archivada." });
 
-        if (!grupo.miembrosArray.includes(correo)) {
-            grupo.miembrosArray.push(correo);
+        const correoNormalizado = correo.toLowerCase();
+        const yaEsMiembro = (grupo.miembrosArray || []).some((item) => item.toLowerCase() === correoNormalizado);
+        if (yaEsMiembro) return res.status(409).json({ message: "Ya perteneces a esta comunidad." });
+
+        const solicitudPendiente = (grupo.solicitudesIngreso || []).some(
+            (item) => item.correoInstitucional?.toLowerCase() === correoNormalizado
+        );
+        if (!solicitudPendiente) {
+            grupo.solicitudesIngreso.push({ correoInstitucional: correoNormalizado });
             await grupo.save();
         }
-        res.json({ message: "Unido con exito", grupo: mapGroupMedia(req, grupo.toObject()) });
+        res.json({ message: "Solicitud enviada al creador de la comunidad.", requested: true });
     } catch (error) {
         res.status(400).json({ message: "Error al unirse" });
+    }
+};
+
+export const listarSolicitudesIngreso = async (req, res) => {
+    try {
+        const grupo = await Grupo.findById(req.params.id).lean();
+        if (!grupo) return res.status(404).json({ message: "Comunidad no encontrada." });
+        const correo = req.usuario?.correoInstitucional;
+        if (grupo.creadorEmail !== correo && req.usuario?.rol !== "administrador") {
+            return res.status(403).json({ message: "Solo el creador puede revisar estas solicitudes." });
+        }
+
+        const requests = grupo.solicitudesIngreso || [];
+        const users = await Usuario.find({
+            correoInstitucional: { $in: requests.map((request) => request.correoInstitucional) },
+        }).select("nombre avatar correoInstitucional").lean();
+        const userByEmail = new Map(users.map((user) => [user.correoInstitucional.toLowerCase(), user]));
+        return res.json(requests.map((request) => {
+            const email = request.correoInstitucional;
+            const user = userByEmail.get(email.toLowerCase());
+            return {
+                correoInstitucional: email,
+                nombre: user?.nombre || email.split("@")[0],
+                avatar: toPublicUploadUrl(req, "avatars", user?.avatar),
+                createdAt: request.createdAt,
+            };
+        }));
+    } catch (error) {
+        console.error("Error al listar solicitudes de ingreso:", error);
+        return res.status(500).json({ message: "No se pudieron cargar las solicitudes." });
+    }
+};
+
+export const responderSolicitudIngreso = async (req, res) => {
+    try {
+        const grupo = await Grupo.findById(req.params.id);
+        if (!grupo) return res.status(404).json({ message: "Comunidad no encontrada." });
+        const correo = req.usuario?.correoInstitucional;
+        if (grupo.creadorEmail !== correo && req.usuario?.rol !== "administrador") {
+            return res.status(403).json({ message: "Solo el creador puede responder solicitudes." });
+        }
+
+        const email = String(req.body?.correoInstitucional || "").trim().toLowerCase();
+        const action = String(req.body?.action || "").toLowerCase();
+        if (!email || !["accept", "reject"].includes(action)) {
+            return res.status(400).json({ message: "Solicitud o acción inválida." });
+        }
+        const isPending = (groupRequest) => groupRequest.correoInstitucional?.toLowerCase() === email;
+        if (!(grupo.solicitudesIngreso || []).some(isPending)) {
+            return res.status(404).json({ message: "La solicitud ya fue atendida." });
+        }
+        if (action === "accept") {
+            if (grupo.archivado) return res.status(409).json({ message: "No se puede aceptar solicitudes en una comunidad archivada." });
+            if (!(grupo.miembrosArray || []).some((member) => member.toLowerCase() === email)) {
+                grupo.miembrosArray.push(email);
+            }
+        }
+        grupo.solicitudesIngreso = (grupo.solicitudesIngreso || []).filter((request) => !isPending(request));
+        await grupo.save();
+        return res.json({ message: action === "accept" ? "La persona ya pertenece a la comunidad." : "Solicitud eliminada." });
+    } catch (error) {
+        console.error("Error al responder solicitud de ingreso:", error);
+        return res.status(500).json({ message: "No se pudo procesar la solicitud." });
     }
 };
 
@@ -156,7 +236,7 @@ export const abandonarGrupo = async (req, res) => {
 };
 
 const esMiembroDelGrupo = (grupo, correo, rol) =>
-    rol === "administrador" || grupo.creadorEmail === correo || (grupo.miembrosArray || []).includes(correo);
+    rol === "administrador" || perteneceAlGrupo(grupo, correo);
 
 export const listarMiembros = async (req, res) => {
     try {
@@ -195,6 +275,35 @@ export const listarMiembros = async (req, res) => {
         res.json(miembros);
     } catch (error) {
         res.status(400).json({ message: "Error al listar miembros" });
+    }
+};
+
+export const eliminarMiembro = async (req, res) => {
+    try {
+        const correoSolicitante = req.usuario?.correoInstitucional;
+        if (!correoSolicitante) return res.status(401).json({ message: "No autenticado" });
+
+        const grupo = await Grupo.findById(req.params.id);
+        if (!grupo) return res.status(404).json({ message: "Comunidad no encontrada" });
+        const esCreador = grupo.creadorEmail === correoSolicitante;
+        const esAdministrador = req.usuario?.rol === "administrador";
+        if (!esCreador && !esAdministrador) {
+            return res.status(403).json({ message: "Solo el creador o un administrador pueden eliminar miembros." });
+        }
+
+        const correoMiembro = String(req.body?.correoInstitucional || "").trim().toLowerCase();
+        if (!correoMiembro || correoMiembro === String(grupo.creadorEmail).toLowerCase()) {
+            return res.status(400).json({ message: "No se puede eliminar al creador de la comunidad." });
+        }
+        const miembroActual = (grupo.miembrosArray || []).some((correo) => String(correo).toLowerCase() === correoMiembro);
+        if (!miembroActual) return res.status(404).json({ message: "La persona ya no pertenece a esta comunidad." });
+
+        grupo.miembrosArray = grupo.miembrosArray.filter((correo) => String(correo).toLowerCase() !== correoMiembro);
+        await grupo.save();
+        return res.json({ message: "Miembro eliminado de la comunidad." });
+    } catch (error) {
+        console.error("Error al eliminar miembro:", error);
+        return res.status(500).json({ message: "No se pudo eliminar al miembro." });
     }
 };
 
@@ -384,6 +493,9 @@ export const crearPost = async (req, res) => {
         const grupo = await Grupo.findById(req.params.id);
         if (!grupo) return res.status(404).json({ message: "Grupo no encontrado" });
         if (grupo.archivado) return res.status(409).json({ message: "Esta comunidad está archivada." });
+        if (!perteneceAlGrupo(grupo, req.usuario?.correoInstitucional)) {
+            return res.status(403).json({ message: "Solo los miembros pueden publicar en esta comunidad." });
+        }
 
         const autor = req.usuario?.nombre || "Usuario";
         const autorFoto = extractStoredFilename(req.usuario?.avatar || "");
@@ -419,6 +531,9 @@ export const comentarPost = async (req, res) => {
         const grupo = await Grupo.findById(id);
         if (!grupo) return res.status(404).json({ message: "Grupo no encontrado" });
         if (grupo.archivado) return res.status(409).json({ message: "Esta comunidad está archivada." });
+        if (!perteneceAlGrupo(grupo, req.usuario?.correoInstitucional)) {
+            return res.status(403).json({ message: "Solo los miembros pueden comentar en esta comunidad." });
+        }
 
         const post = grupo.posts.id(postId);
         if (!post) return res.status(404).json({ message: "Post no encontrado" });
@@ -455,7 +570,8 @@ export const eliminarPost = async (req, res) => {
         const correo = req.usuario?.correoInstitucional || "";
         const rol = req.usuario?.rol || "";
         const esAdminGlobal = rol === "administrador";
-        const puedeEliminar = post.autorEmail === correo || grupo.creadorEmail === correo || esAdminGlobal;
+        const esCreador = String(grupo.creadorEmail).toLowerCase() === correo.toLowerCase();
+        const puedeEliminar = (perteneceAlGrupo(grupo, correo) && post.autorEmail === correo) || esCreador || esAdminGlobal;
 
         if (!puedeEliminar) {
             return res.status(403).json({ message: "No tienes permisos para eliminar este post" });
@@ -485,10 +601,10 @@ export const eliminarComentario = async (req, res) => {
         const correo = req.usuario?.correoInstitucional || "";
         const rol = req.usuario?.rol || "";
         const esAdminGlobal = rol === "administrador";
+        const esCreador = String(grupo.creadorEmail).toLowerCase() === correo.toLowerCase();
         const puedeEliminar =
-            comentario.autorEmail === correo ||
-            post.autorEmail === correo ||
-            grupo.creadorEmail === correo ||
+            (perteneceAlGrupo(grupo, correo) && (comentario.autorEmail === correo || post.autorEmail === correo)) ||
+            esCreador ||
             esAdminGlobal;
 
         if (!puedeEliminar) {

@@ -143,7 +143,7 @@ const UserPublicProfileView = () => {
 
     return (
       <button
-        className="button__dash"
+        className="button__dash friend-add-btn__dash"
         type="button"
         onClick={() =>
           openConfirm(

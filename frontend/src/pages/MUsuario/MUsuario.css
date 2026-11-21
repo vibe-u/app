@@ -308,6 +308,10 @@
     object-fit: cover;
 }
 
+.input-file-hidden {
+    display: none;
+}
+
 .default-avatar-large {
     font-size: 80px;
     color: #920ae6;

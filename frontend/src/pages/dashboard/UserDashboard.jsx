@@ -73,6 +73,14 @@ const UserDashboard = () => {
   }, []);
 
   useEffect(() => {
+    setShowSuggestions(false);
+    setSearchUsers([]);
+    setSearchGroups([]);
+    setSearch("");
+    setShowMobileSearch(false);
+  }, [location.pathname]);
+
+  useEffect(() => {
     if (isAdmin) {
       setSearchUsers([]);
       setSearchGroups([]);
@@ -87,12 +95,14 @@ const UserDashboard = () => {
       return;
     }
 
+    let cancelled = false;
     const timer = setTimeout(async () => {
       try {
         const [usersRes, groupsRes] = await Promise.all([
           searchRegisteredUsers(term),
           fetch(`${import.meta.env.VITE_BACKEND_URL}/api/grupos/listar`),
         ]);
+        if (cancelled) return;
 
         const users = Array.isArray(usersRes?.data) ? usersRes.data : [];
         const groupsData = await groupsRes.json();
@@ -121,13 +131,17 @@ const UserDashboard = () => {
         setSearchGroups(similarGroups.slice(0, 5));
         setShowSuggestions(true);
       } catch {
+        if (cancelled) return;
         setSearchUsers([]);
         setSearchGroups([]);
         setShowSuggestions(false);
       }
     }, 250);
 
-    return () => clearTimeout(timer);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
   }, [search, isAdmin]);
 
   const hasSuggestions = useMemo(
@@ -145,7 +159,7 @@ const UserDashboard = () => {
           if (search.trim()) setShowSuggestions(true);
         }}
         onBlur={() => {
-          setTimeout(() => setShowSuggestions(false), 120);
+          setTimeout(() => setShowSuggestions(false), 240);
         }}
         placeholder="Buscar personas, grupos o eventos..."
       />
@@ -156,9 +170,14 @@ const UserDashboard = () => {
               type="button"
               key={user._id}
               className="suggestion_item__dash"
+              onPointerDown={(event) => event.preventDefault()}
+              onMouseDown={(event) => event.preventDefault()}
               onClick={() => {
-                setSearch(user.nombre);
+                if (!user._id) return;
+                setSearch("");
                 setShowSuggestions(false);
+                setSearchUsers([]);
+                setSearchGroups([]);
                 if (isMobile) setShowMobileSearch(false);
                 navigate(`/dashboard/usuario/${user._id}`);
               }}
@@ -315,12 +334,12 @@ const UserDashboard = () => {
                 </button>
                 {isAdmin ? (
                   <>
-                    <button className="button__dash" onClick={() => navigate("/gusuarios")}>Gestion usuarios</button>
-                    <button className="button__dash" onClick={() => navigate("/gautomatizacion")}>Automatizacion</button>
-                    <button className="button__dash" onClick={() => navigate("/gmoderacion")}>Moderacion IA</button>
+                    <button className="topbar_admin_icon__dash" type="button" onClick={() => navigate("/gusuarios")} aria-label="Gestión de usuarios" title="Gestión de usuarios"><FaUserShield /></button>
+                    <button className="topbar_admin_icon__dash" type="button" onClick={() => navigate("/gautomatizacion")} aria-label="Automatización" title="Automatización"><FaChartBar /></button>
+                    <button className="topbar_admin_icon__dash" type="button" onClick={() => navigate("/gmoderacion")} aria-label="Moderación IA" title="Moderación IA"><FaRobot /></button>
                   </>
                 ) : (
-                  <button className="button__dash" onClick={() => setShowCreateModal(true)}>Nueva publicacion</button>
+                  <button className="button__dash new-post-trigger__dash" type="button" onClick={() => setShowCreateModal(true)}>Nueva publicacion</button>
                 )}
               </>
             )}
@@ -404,7 +423,7 @@ export const PostCard = ({
         </video>
       ) : null}
 
-      <div className="post_meta__dash">
+      <div className="post_meta__dash post_stats__dash">
         <span>{post.likes || 0} likes</span>
         <span>{comentarios} comentarios</span>
       </div>
